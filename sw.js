@@ -1,4 +1,4 @@
-const CACHE_NAME = 'silisa-v1';
+const CACHE_NAME = 'silisa-v2';
 const ASSETS = [
     '/',
     '/index.html',
