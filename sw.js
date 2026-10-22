@@ -1,4 +1,4 @@
-const CACHE_NAME = 'silisa-v4';
+const CACHE_NAME = 'tematikmap-v6';
 const ASSETS = [
     './',
     './index.html',
@@ -14,7 +14,9 @@ const ASSETS = [
     './js/mobile-nav.js',
     './manifest.json',
     './images/logo.png',
-    './images/favicon.png'
+    './images/favicon.png',
+    './images/pwa-192.png',
+    './images/pwa-512.png'
 ];
 
 // Install Event
@@ -23,7 +25,7 @@ self.addEventListener('install', event => {
         caches.open(CACHE_NAME).then(cache => {
             console.log('Caching static assets');
             return cache.addAll(ASSETS);
-        })
+        }).then(() => self.skipWaiting())
     );
 });
 
@@ -35,7 +37,7 @@ self.addEventListener('activate', event => {
                 .filter(key => key !== CACHE_NAME)
                 .map(key => caches.delete(key))
             );
-        })
+        }).then(() => self.clients.claim())
     );
 });
 
@@ -54,3 +56,4 @@ self.addEventListener('fetch', event => {
         );
     }
 });
+

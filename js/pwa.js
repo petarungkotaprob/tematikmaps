@@ -45,7 +45,7 @@ if ('serviceWorker' in navigator) {
         e.preventDefault();
         // Option to inject clean empty clipboard
         if (e.clipboardData) {
-            e.clipboardData.setData('text/plain', '[Data Dilindungi - SILISA]');
+            e.clipboardData.setData('text/plain', '[Data Dilindungi - Peta Tematik]');
         }
     });
 })();

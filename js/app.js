@@ -1,5 +1,5 @@
 /**
- * Main Application Logic for SILISA (Sistem Layanan Informasi Lahan Baku Sawah)
+ * Main Application Logic for Peta Tematik Kantor Pertanahan Kota Probolinggo
  */
 
 document.addEventListener('DOMContentLoaded', () => {
