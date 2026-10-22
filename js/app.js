@@ -3,7 +3,8 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    
+    const mobileQuery = window.matchMedia('(max-width: 768px), (max-width: 900px) and (max-height: 500px)');
+
     // ======== 1. INISIALISASI PETA (LEAFLET.JS) ========
     const mapElement = document.getElementById('map');
     let map;
@@ -11,7 +12,61 @@ document.addEventListener('DOMContentLoaded', () => {
     if (mapElement) {
         // Koordinat Kota Probolinggo
         map = L.map('map', { zoomControl: false }).setView([-7.7543, 113.2159], 13);
-        L.control.zoom({ position: 'bottomright' }).addTo(map);
+        const isMobileView = mobileQuery.matches;
+        L.control.zoom({ position: isMobileView ? 'topright' : 'bottomright' }).addTo(map);
+        window.silisaMap = map;
+
+        // 1b. Lokasi Saya (mobile FAB)
+        const locateBtn = document.getElementById('btnLocate');
+        if (locateBtn) {
+            let locationMarker = null;
+            locateBtn.addEventListener('click', () => {
+                if (!navigator.geolocation) {
+                    alert('Perangkat ini tidak mendukung layanan lokasi.');
+                    return;
+                }
+
+                const originalIcon = locateBtn.innerHTML;
+                locateBtn.disabled = true;
+                locateBtn.innerHTML = '<i data-feather="loader"></i>';
+                if (typeof feather !== 'undefined') feather.replace();
+
+                const resetButton = () => {
+                    locateBtn.disabled = false;
+                    locateBtn.innerHTML = originalIcon;
+                    if (typeof feather !== 'undefined') feather.replace();
+                };
+
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+
+                        if (locationMarker) {
+                            locationMarker.setLatLng([lat, lng]);
+                        } else {
+                            locationMarker = L.circleMarker([lat, lng], {
+                                radius: 9,
+                                color: '#ffffff',
+                                weight: 3,
+                                fillColor: '#1d4ed8',
+                                fillOpacity: 1
+                            }).addTo(map);
+                            locationMarker.bindPopup('Lokasi Anda saat ini');
+                        }
+
+                        map.flyTo([lat, lng], 17, { animate: true, duration: 1 });
+                        locationMarker.openPopup();
+                        resetButton();
+                    },
+                    error => {
+                        resetButton();
+                        alert('Gagal mendapatkan lokasi: ' + error.message);
+                    },
+                    { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 }
+                );
+            });
+        }
 
         const osmStandard = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap', maxZoom: 19
@@ -239,7 +294,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 map.flyTo([lat, lng], 17, { animate: true, duration: 1.2 });
                 // Show toast
                 const toast = document.createElement('div');
-                toast.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1d4ed8;color:#fff;padding:10px 22px;border-radius:30px;font-size:0.88rem;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.4);pointer-events:none;';
+                const toastBottom = mobileQuery.matches
+                    ? 'calc(82px + env(safe-area-inset-bottom))'
+                    : '30px';
+                toast.style.cssText = 'position:fixed;bottom:' + toastBottom + ';left:50%;transform:translateX(-50%);background:#1d4ed8;color:#fff;padding:10px 22px;border-radius:30px;font-size:0.88rem;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.4);pointer-events:none;';
                 toast.textContent = '📍 Menampilkan lokasi: ' + nama;
                 document.body.appendChild(toast);
                 setTimeout(() => toast.remove(), 3500);
@@ -433,6 +491,7 @@ document.addEventListener('DOMContentLoaded', () => {
             listItem.addEventListener('click', () => {
                 map.flyTo([item.latitude, item.longitude], 16, { animate: true, duration: 1 });
                 if (item._marker) item._marker.openPopup();
+                if (window.MobileUI && MobileUI.isMobile()) MobileUI.closeSheets();
             });
 
             container.appendChild(listItem);
@@ -448,6 +507,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // ======== 4. FUNGSI UNTUK HALAMAN REPORT ========
     const reportForm = document.getElementById('reportForm');
     if (reportForm) {
+        if (document.body.classList.contains('report-page') && !document.getElementById('mobileSubmitFab')) {
+            const submitFab = document.createElement('button');
+            submitFab.type = 'button';
+            submitFab.id = 'mobileSubmitFab';
+            submitFab.className = 'mobile-submit-fab';
+            submitFab.innerHTML = '<i data-feather="save"></i> Simpan Data Permohonan';
+            document.body.appendChild(submitFab);
+            if (typeof feather !== 'undefined') feather.replace();
+
+            submitFab.addEventListener('click', () => {
+                if (typeof reportForm.requestSubmit === 'function') {
+                    reportForm.requestSubmit();
+                } else {
+                    reportForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                }
+            });
+        }
+
         reportForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
