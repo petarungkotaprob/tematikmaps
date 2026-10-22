@@ -13,8 +13,10 @@ tematikmap.zip
 uploads/*
 !uploads/.gitkeep
 !uploads/basemaps/
+uploads/basemaps/*
 !uploads/basemaps/.gitkeep
 !uploads/shp/
+uploads/shp/*
 !uploads/shp/.gitkeep
 
 # Editor, OS, logs
