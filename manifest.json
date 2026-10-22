@@ -1,0 +1,22 @@
+{
+    "name": "SILISA - Sistem Informasi Lahan Baku Sawah",
+    "short_name": "SILISA",
+    "description": "Sistem Informasi Geografis untuk Pemantauan dan Layanan Lahan Baku Sawah",
+    "start_url": "index.html",
+    "display": "standalone",
+    "background_color": "#070e1c",
+    "theme_color": "#070e1c",
+    "icons": [
+        {
+            "src": "images/logo.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "images/logo1.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

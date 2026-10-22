@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Peta Tematik</title>
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
+    <script src="js/pwa.js"></script>
+    <style>
+        .admin-container {
+            max-width: 1000px;
+            margin: 2rem auto;
+        }
+        .admin-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 10px;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            border-radius: 8px;
+        }
+        .tab-btn.active {
+            background: rgba(255,255,255,0.05);
+            color: var(--accent-orange);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .upload-zone {
+            border: 2px dashed var(--glass-border);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            background: rgba(255,255,255,0.02);
+            transition: all 0.3s;
+            cursor: pointer;
+            margin-bottom: 2rem;
+        }
+        .upload-zone:hover {
+            border-color: var(--accent-blue);
+            background: rgba(255,255,255,0.05);
+        }
+        .file-list, .user-list {
+            margin-top: 1rem;
+        }
+        .file-item, .user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+        }
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        /* === Category Panel (admin) === */
+        .cat-admin-panel {
+            margin-top: 12px;
+            border-top: 1px solid var(--glass-border);
+            padding-top: 12px;
+        }
+        .cat-admin-title {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .cat-admin-body { display: none; }
+        .cat-admin-body.open { display: block; animation: fadeInAdmin 0.25s ease; }
+        @keyframes fadeInAdmin { from {opacity:0;transform:translateY(-4px);} to {opacity:1;transform:translateY(0);} }
+        .cat-toggle-btn {
+            background: rgba(139,92,246,0.1);
+            color: #a78bfa;
+            border: 1px solid rgba(139,92,246,0.25);
+            border-radius: 6px;
+            padding: 4px 12px;
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .cat-toggle-btn:hover { background: rgba(139,92,246,0.2); }
+        .cat-toggle-btn.active { background: rgba(139,92,246,0.2); border-color: #a78bfa; }
+        .cat-field-badge {
+            font-size: 0.72rem;
+            background: rgba(139,92,246,0.15);
+            color: #a78bfa;
+            border: 1px solid rgba(139,92,246,0.25);
+            border-radius: 99px;
+            padding: 1px 8px;
+            margin-left: 8px;
+        }
+        .admin-cat-values {
+            max-height: 180px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-top: 8px;
+            padding-right: 2px;
+        }
+        .admin-cat-values::-webkit-scrollbar { width: 3px; }
+        .admin-cat-values::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+        .admin-cat-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 10px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 7px;
+            border: 1px solid transparent;
+        }
+        .admin-cat-row:hover { border-color: var(--glass-border); }
+        .admin-cat-color { width:26px;height:26px;border-radius:5px;border:none;padding:1px;cursor:pointer;background:none;flex-shrink:0; }
+        .admin-cat-label { font-size:0.8rem; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .admin-cat-count { font-size:0.7rem; color:var(--text-secondary); flex-shrink:0; }
+        .admin-palette-row { display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px; }
+        .admin-palette-btn {
+            display:flex;gap:3px;padding:3px 8px;border-radius:5px;
+            border:1px solid var(--glass-border);background:rgba(255,255,255,0.03);
+            cursor:pointer;transition:all 0.2s;align-items:center;
+            font-size:0.72rem;color:var(--text-secondary);
+        }
+        .admin-palette-btn:hover { background:rgba(255,255,255,0.08); }
+        .admin-palette-dot { width:9px;height:9px;border-radius:50%;flex-shrink:0; }
+        .btn-save-cat {
+            margin-top:10px;width:100%;
+            background:linear-gradient(135deg,rgba(139,92,246,0.2),rgba(59,130,246,0.2));
+            border:1px solid rgba(139,92,246,0.3);color:#a78bfa;
+            font-size:0.8rem;font-weight:600;padding:7px;
+            border-radius:8px;cursor:pointer;transition:all 0.2s;
+            display:flex;align-items:center;justify-content:center;gap:6px;
+        }
+        .btn-save-cat:hover { background:rgba(139,92,246,0.28); }
+        .cat-loading { font-size:0.8rem;color:var(--text-secondary);padding:8px 0;text-align:center; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="dashboard.html" class="brand">
+            <img src="images/logo.png" alt="Peta Tematik Logo" style="height: 40px; width: auto; border-radius: 4px;">
+            Peta<span>Tematik</span>
+            <div class="brand-motto">Peta Tematik Kantor Pertanahan Kota Probolinggo</div>
+        </a>
+        <div class="nav-links">
+            <a href="dashboard.html">Peta Tematik</a>
+            <a href="tracker.html">Daftar Permohonan</a>
+            <a href="report.html">Input Lahan</a>
+        </div>
+    </nav>
+
+    <main class="main-content" style="display: block; height: auto;">
+        <div class="admin-container">
+            <div class="glass-panel animated">
+                <div class="admin-tabs">
+                    <button class="tab-btn active" onclick="switchTab('basemap')">Manajemen Basemap</button>
+                    <button class="tab-btn" onclick="switchTab('users')">Manajemen User</button>
+                    <button class="tab-btn" onclick="switchTab('permohonan')">Manajemen Permohonan</button>
+                </div>
+
+                <!-- Tab Basemap -->
+                <div id="basemapTab" class="tab-content active">
+                    <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px;">
+                        <i data-feather="layers" style="color: var(--accent-orange)"></i> Layer Spasial
+                    </h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 2rem;">Unggah file Shapefile (.shp / .zip) untuk layer referensi.</p>
+                    
+                    <form id="uploadForm">
+                        <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+                            <i data-feather="upload-cloud" style="width: 48px; height: 48px; color: var(--text-secondary); margin-bottom: 1rem;"></i>
+                            <h3 style="color: var(--text-primary);">Klik untuk Unggah SHP</h3>
+                            <input type="file" id="fileInput" name="basemap" hidden accept=".shp,.zip">
+                        </div>
+                    </form>
+
+                    <div class="file-list">
+                        <div id="basemapList"></div>
+                    </div>
+                </div>
+
+                <!-- Tab Users -->
+                <div id="usersTab" class="tab-content">
+                    <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px;">
+                        <i data-feather="users" style="color: var(--accent-orange)"></i> Akun Pengguna
+                    </h2>
+                    
+                    <div style="background: rgba(255,255,255,0.02); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--glass-border); margin-bottom: 2rem;">
+                        <h4 style="margin-bottom: 1rem;">Tambah User Baru</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; align-items: end;">
+                            <div class="form-group" style="margin:0;">
+                                <label style="font-size: 0.8rem;">Username</label>
+                                <input type="text" id="newUsername" class="form-control" placeholder="admin_kanta">
+                            </div>
+                            <div class="form-group" style="margin:0;">
+                                <label style="font-size: 0.8rem;">Password</label>
+                                <input type="password" id="newPassword" class="form-control" placeholder="******">
+                            </div>
+                            <div class="form-group" style="margin:0;">
+                                <label style="font-size: 0.8rem;">Role</label>
+                                <select id="newRole" class="form-control">
+                                    <option value="admin">Admin</option>
+                                    <option value="petugas">Petugas</option>
+                                    <option value="masyarakat">Masyarakat</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" onclick="addUser()" style="height: 42px;">Tambah</button>
+                        </div>
+                    </div>
+
+                    <div class="user-list" id="userList">
+                        <!-- User items appear here -->
+                    </div>
+                </div>
+
+                <!-- Tab Permohonan -->
+                <div id="permohonanTab" class="tab-content">
+                    <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px;">
+                        <i data-feather="file-text" style="color: var(--accent-orange)"></i> Manajemen Permohonan
+                    </h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 2rem;">Daftar seluruh data permohonan yang dapat dihapus jika terdapat kesalahan fatal.</p>
+                    
+                    <div class="user-list" id="permohonanList">
+                        <!-- Permohonan items appear here -->
+                        <p class="text-center">Memuat data permohonan...</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script src="js/auth.js"></script>
+    <script>
+        feather.replace();
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            if (tab === 'basemap') {
+                document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+                document.getElementById('basemapTab').classList.add('active');
+                loadBasemaps();
+            } else if (tab === 'users') {
+                document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+                document.getElementById('usersTab').classList.add('active');
+                loadUsers();
+            } else if (tab === 'permohonan') {
+                document.querySelector('.tab-btn:nth-child(3)').classList.add('active');
+                document.getElementById('permohonanTab').classList.add('active');
+                loadPermohonans();
+            }
+        }
+
+        // PERMOHONAN LOGIC
+        async function loadPermohonans() {
+            try {
+                const response = await fetch('api/reports.php');
+                const result = await response.json();
+                if (result.status === 'success') renderPermohonans(result.data);
+            } catch (e) { console.error(e); }
+        }
+
+        function renderPermohonans(data) {
+            const list = document.getElementById('permohonanList');
+            list.innerHTML = '';
+            if (data.length === 0) { list.innerHTML = '<p class="text-center">Belum ada data permohonan.</p>'; return; }
+            data.forEach(item => {
+                const status = item.status || 'pending';
+                const statusColors = {
+                    pending:  { bg: 'rgba(234,179,8,0.15)',  color: '#eab308',  border: 'rgba(234,179,8,0.3)'  },
+                    proses:   { bg: 'rgba(59,130,246,0.15)', color: '#3b82f6',  border: 'rgba(59,130,246,0.3)' },
+                    selesai:  { bg: 'rgba(34,197,94,0.15)',  color: '#22c55e',  border: 'rgba(34,197,94,0.3)'  },
+                    ditolak:  { bg: 'rgba(239,68,68,0.15)',  color: '#ef4444',  border: 'rgba(239,68,68,0.3)'  },
+                };
+                const sc = statusColors[status] || statusColors.pending;
+
+                const div = document.createElement('div');
+                div.className = 'file-item';
+                div.id = `perm-item-${item.id}`;
+                div.style.flexDirection = 'column';
+                div.style.alignItems = 'stretch';
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <div>
+                            <strong>${item.no_permohonan || '-'}</strong>
+                            <span style="margin-left:8px; font-size:0.72rem; padding:2px 8px; border-radius:99px; background:${sc.bg}; color:${sc.color}; border:1px solid ${sc.border}; font-weight:700;">${status.toUpperCase()}</span><br>
+                            <small style="color:var(--text-secondary)">${item.nama_pemohon} &mdash; ${item.kecamatan}, ${item.kelurahan}</small>
+                        </div>
+                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                            ${item.shp_file ? `
+                                <button class="cat-toggle-btn ${item.category_field ? 'active' : ''}" id="permCatToggle_${item.id}" onclick="togglePermCatPanel(${item.id})" title="Warna Kategori SHP">
+                                    <i data-feather="sliders" style="width:13px;height:13px;"></i> Warna Kategori
+                                </button>
+                                <a href="${item.shp_file}" download class="btn" style="padding:5px 10px; font-size:0.8rem; background:rgba(34,197,94,0.1); color:#22c55e; border:1px solid rgba(34,197,94,0.2);" title="Download SHP">
+                                    <i data-feather="download" style="width:13px;height:13px;"></i> Download SHP
+                                </a>
+                            ` : ''}
+                            <button class="btn" style="padding:5px 10px; font-size:0.8rem; background:rgba(59,130,246,0.1); color:#3b82f6; border:1px solid rgba(59,130,246,0.2);" onclick="savePermStatus(${item.id})">
+                                <i data-feather="save" style="width:13px;height:13px;"></i> Simpan
+                            </button>
+                            <button class="btn" style="background:rgba(239,68,68,0.1); color:#ef4444; padding:5px 10px; font-size:0.8rem;" onclick="deletePermohonan(${item.id})">
+                                <i data-feather="trash-2" style="width:13px;height:13px;"></i> Hapus
+                            </button>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; background:rgba(0,0,0,0.1); padding:10px; border-radius:6px; font-size:0.82rem;">
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <label style="color:var(--text-secondary);">Status:</label>
+                            <select id="status_${item.id}" class="form-control" style="padding:4px 8px; width:auto; font-size:0.8rem;">
+                                <option value="pending"  ${status==='pending'  ? 'selected':''}>Pending</option>
+                                <option value="proses"   ${status==='proses'   ? 'selected':''}>Proses</option>
+                                <option value="selesai"  ${status==='selesai'  ? 'selected':''}>Selesai</option>
+                                <option value="ditolak"  ${status==='ditolak'  ? 'selected':''}>Ditolak</option>
+                            </select>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:5px;">
+                            <label style="font-size:0.8rem; color:var(--text-secondary);">Warna:</label>
+                            <input type="color" id="perm_color_${item.id}" value="${item.color || '#3b82f6'}" style="width:28px; height:28px; padding:0; border:none; border-radius:4px; cursor:pointer; background:transparent;">
+                        </div>
+                        <select id="perm_fill_${item.id}" class="form-control" style="padding:4px 8px; width:auto; font-size:0.8rem;">
+                            <option value="fill"   ${(item.fill_type||'fill')==='fill'   ? 'selected':''}>Berisi (Fill)</option>
+                            <option value="hollow" ${(item.fill_type||'fill')==='hollow' ? 'selected':''}>Kosong (Hollow)</option>
+                        </select>
+                        <div style="display:flex; align-items:center; gap:5px;">
+                            <label style="font-size:0.8rem; color:var(--text-secondary);">Tebal:</label>
+                            <input type="number" id="perm_weight_${item.id}" class="form-control" value="${item.weight || 2}" min="1" max="10" style="padding:4px; width:55px; font-size:0.8rem;">
+                        </div>
+                        <select id="perm_dash_${item.id}" class="form-control" style="padding:4px 8px; width:auto; font-size:0.8rem;">
+                            <option value=""    ${!(item.dash_array) ? 'selected':''}>Garis Solid</option>
+                            <option value="5,5" ${item.dash_array==='5,5'  ? 'selected':''}>Garis Putus-putus</option>
+                            <option value="10,5" ${item.dash_array==='10,5' ? 'selected':''}>Garis Panjang Putus</option>
+                        </select>
+                        <div style="color:var(--text-secondary); margin-left:auto;">
+                            <i data-feather="calendar" style="width:12px;height:12px;vertical-align:middle;"></i>
+                            ${item.created_at ? item.created_at.substring(0,10) : '-'}
+                        </div>
+                    </div>
+                    ${item.shp_file ? `
+                    <div class="cat-admin-panel">
+                        <div class="cat-admin-title">
+                            <i data-feather="sliders" style="width:12px;height:12px;"></i> Pengaturan Warna Kategori SHP
+                        </div>
+                        <div class="cat-admin-body" id="permCatBody_${item.id}">
+                            <div class="cat-loading" id="permCatLoading_${item.id}">Klik tombol "Warna Kategori" untuk memuat atribut SHP...</div>
+                            <select id="permCatField_${item.id}" class="form-control cat-field-select" style="font-size:0.82rem;margin-bottom:10px;display:none;"></select>
+                            <div class="admin-palette-row" id="permCatPalette_${item.id}" style="display:none;"></div>
+                            <div class="admin-cat-values" id="permCatValues_${item.id}"></div>
+                            <button type="button" class="btn-save-cat" id="btnSavePermCat_${item.id}" style="display:none;" onclick="savePermCategory(${item.id})">
+                                <i data-feather="save" style="width:14px;height:14px;"></i> Simpan Konfigurasi Warna
+                            </button>
+                        </div>
+                    </div>
+                    ` : ''}
+                `;
+                // Restore saved category state if exists
+                if (item.category_field && item.category_colors) {
+                    try {
+                        const saved = typeof item.category_colors === 'string' ? JSON.parse(item.category_colors) : item.category_colors;
+                        _permCatState[item.id] = { field: item.category_field, colors: saved, filePath: item.shp_file };
+                    } catch(e) {}
+                } else if (item.shp_file) {
+                    _permCatState[item.id] = _permCatState[item.id] || { field: null, colors: {}, filePath: item.shp_file };
+                }
+                list.appendChild(div);
+            });
+            feather.replace();
+        }
+
+        async function savePermStatus(id) {
+            const sel    = document.getElementById('status_'      + id);
+            const color  = document.getElementById('perm_color_'  + id);
+            const fill   = document.getElementById('perm_fill_'   + id);
+            const weight = document.getElementById('perm_weight_' + id);
+            const dash   = document.getElementById('perm_dash_'   + id);
+            if (!sel) return;
+            try {
+                const res = await fetch('api/reports.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        action:     'update_status',
+                        id:         id,
+                        status:     sel.value,
+                        color:      color  ? color.value  : null,
+                        fill_type:  fill   ? fill.value   : null,
+                        weight:     weight ? weight.value : null,
+                        dash_array: dash   ? dash.value   : null
+                    })
+                });
+                const result = await res.json();
+                if (result.status === 'success') {
+                    showAdminToast('Permohonan berhasil diperbarui!', 'success');
+                    loadPermohonans();
+                } else showAdminToast(result.message || 'Gagal memperbarui.', 'error');
+            } catch (e) { showAdminToast('Kesalahan koneksi.', 'error'); }
+        }
+
+        async function deletePermohonan(id) {
+            if(!confirm('Hapus permohonan ini secara permanen? Tindakan ini tidak dapat dibatalkan.')) return;
+            try {
+                const res = await fetch(`api/reports.php?id=${id}`, { method: 'DELETE' });
+                const result = await res.json();
+                if(result.status === 'success') {
+                    showAdminToast('Permohonan berhasil dihapus.', 'success');
+                    loadPermohonans();
+                } else showAdminToast(result.message, 'error');
+            } catch (e) { showAdminToast('Terjadi kesalahan koneksi.', 'error'); }
+        }
+
+        // ── Permohonan Category Color State ─────────────────
+        const _permCatState = {};  // { [id]: { field, colors, filePath } }
+        const _permShpCache = {};  // { [id]: features[] }
+
+        async function togglePermCatPanel(id) {
+            const body = document.getElementById(`permCatBody_${id}`);
+            const btn  = document.getElementById(`permCatToggle_${id}`);
+            if (!body) return;
+            const isOpen = body.classList.contains('open');
+            if (isOpen) { body.classList.remove('open'); btn.classList.remove('active'); return; }
+            body.classList.add('open');
+            btn.classList.add('active');
+
+            if (_permShpCache[id]) { buildPermCatUI(id); return; }
+
+            const state = _permCatState[id];
+            const filePath = state && state.filePath ? state.filePath : null;
+            if (!filePath) { setPermLoading(id, '⚠ File SHP tidak tersedia.'); return; }
+
+            setPermLoading(id, '<i data-feather="loader"></i> Memuat atribut SHP...');
+            feather.replace();
+            try {
+                const resp = await fetch(filePath);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const buf = await resp.arrayBuffer();
+                const geojson = await shp(buf);
+                const layers = Array.isArray(geojson) ? geojson : [geojson];
+                const features = [];
+                layers.forEach(l => { if (l?.features) features.push(...l.features); });
+                if (features.length === 0) throw new Error('Tidak ada fitur.');
+                _permShpCache[id] = features;
+                buildPermCatUI(id);
+            } catch(e) {
+                setPermLoading(id, '⚠ Gagal memuat SHP: ' + e.message);
+            }
+        }
+
+        function setPermLoading(id, msg) {
+            const el = document.getElementById(`permCatLoading_${id}`);
+            if (el) { el.innerHTML = msg; el.style.display = 'block'; }
+        }
+
+        function buildPermCatUI(id) {
+            const features  = _permShpCache[id];
+            const loading   = document.getElementById(`permCatLoading_${id}`);
+            const fieldSel  = document.getElementById(`permCatField_${id}`);
+            const palette   = document.getElementById(`permCatPalette_${id}`);
+            const values    = document.getElementById(`permCatValues_${id}`);
+            const saveBtn   = document.getElementById(`btnSavePermCat_${id}`);
+            if (!loading) return;
+
+            loading.style.display = 'none';
+            fieldSel.style.display = 'block';
+            saveBtn.style.display = 'flex';
+
+            const fields = Object.keys(features[0]?.properties || {});
+            const savedField = _permCatState[id]?.field;
+            fieldSel.innerHTML = '<option value="">-- Pilih kolom atribut --</option>';
+            fields.forEach(f => {
+                const opt = document.createElement('option');
+                opt.value = f; opt.textContent = f;
+                if (f === savedField) opt.selected = true;
+                fieldSel.appendChild(opt);
+            });
+
+            const buildValues = (field, savedColors) => {
+                values.innerHTML = '';
+                palette.innerHTML = '';
+                palette.style.display = 'none';
+                if (!field) return;
+
+                const freq = {};
+                features.forEach(f => {
+                    const v = String(f.properties?.[field] ?? '__null__');
+                    freq[v] = (freq[v] || 0) + 1;
+                });
+                const uniqVals = Object.keys(freq).sort();
+                const autoColors = ADMIN_PALETTES['Vivid'];
+
+                if (!_permCatState[id]) _permCatState[id] = { field, colors: {}, filePath: null };
+                _permCatState[id].field = field;
+                uniqVals.forEach((v, i) => {
+                    if (!_permCatState[id].colors[v]) {
+                        _permCatState[id].colors[v] = savedColors?.[v] || autoColors[i % autoColors.length];
+                    }
+                });
+
+                uniqVals.forEach(val => {
+                    const color = _permCatState[id].colors[val] || '#3b82f6';
+                    const display = val === '__null__' ? '(kosong)' : val;
+                    const row = document.createElement('div');
+                    row.className = 'admin-cat-row';
+                    row.innerHTML = `
+                        <input type="color" class="admin-cat-color" data-pid="${id}" data-val="${val}" value="${color}">
+                        <span class="admin-cat-label" title="${display}">${display}</span>
+                        <span class="admin-cat-count">${freq[val]} fitur</span>
+                    `;
+                    values.appendChild(row);
+                    row.querySelector('.admin-cat-color').addEventListener('input', function() {
+                        _permCatState[id].colors[this.dataset.val] = this.value;
+                    });
+                });
+
+                palette.style.display = 'flex';
+                Object.entries(ADMIN_PALETTES).forEach(([name, colors]) => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'admin-palette-btn';
+                    btn.innerHTML = colors.slice(0,5).map(c => `<span class="admin-palette-dot" style="background:${c};"></span>`).join('') + `<span style="margin-left:4px;">${name}</span>`;
+                    btn.addEventListener('click', () => {
+                        values.querySelectorAll('.admin-cat-color').forEach((inp, idx) => {
+                            const c = colors[idx % colors.length];
+                            inp.value = c;
+                            _permCatState[id].colors[inp.dataset.val] = c;
+                        });
+                    });
+                    palette.appendChild(btn);
+                });
+            };
+
+            if (savedField) buildValues(savedField, _permCatState[id]?.colors);
+
+            fieldSel.addEventListener('change', function() {
+                if (_permCatState[id]) _permCatState[id].colors = {};
+                buildValues(this.value, null);
+                if (_permCatState[id]) _permCatState[id].field = this.value || null;
+            });
+            feather.replace();
+        }
+
+        async function savePermCategory(id) {
+            const catState = _permCatState[id];
+            if (!catState || !catState.field) { showAdminToast('Pilih field atribut terlebih dahulu.', 'error'); return; }
+            document.querySelectorAll(`.admin-cat-color[data-pid="${id}"]`).forEach(inp => {
+                catState.colors[inp.dataset.val] = inp.value;
+            });
+            try {
+                const res = await fetch('api/reports.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        action: 'update_category',
+                        id: id,
+                        category_field: catState.field,
+                        category_colors: catState.colors
+                    })
+                });
+                const result = await res.json();
+                if (result.status === 'success') {
+                    showAdminToast('Konfigurasi warna kategori tersimpan!', 'success');
+                } else showAdminToast(result.message, 'error');
+            } catch(e) { showAdminToast('Kesalahan koneksi.', 'error'); }
+        }
+
+        // BASEMAP LOGIC
+        async function loadBasemaps() {
+            try {
+                const response = await fetch('api/basemaps.php');
+                const result = await response.json();
+                if (result.status === 'success') renderBasemaps(result.data);
+            } catch (e) { console.error(e); }
+        }
+
+        function renderBasemaps(data) {
+            const list = document.getElementById('basemapList');
+            list.innerHTML = '';
+            if (data.length === 0) { list.innerHTML = '<p class="text-center">Belum ada basemap.</p>'; return; }
+            data.forEach(bm => {
+                const color = bm.color || '#3b82f6';
+                const fill_type = bm.fill_type || 'fill';
+                const weight = bm.weight || 3;
+                const dash_array = bm.dash_array || '';
+                const hasCat = bm.category_field ? true : false;
+                
+                const item = document.createElement('div');
+                item.className = 'file-item';
+                item.id = `bm-item-${bm.id}`;
+                item.style.flexDirection = 'column';
+                item.style.alignItems = 'stretch';
+                item.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <div>
+                            <strong>${bm.name}</strong>
+                            ${hasCat ? `<span class="cat-field-badge"><i data-feather="sliders" style="width:10px;height:10px;vertical-align:middle;"></i> ${bm.category_field}</span>` : ''}<br>
+                            <small style="color:var(--text-secondary)">${bm.file_path}</small>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap:wrap;">
+                            <button class="btn" style="padding: 5px 10px; font-size: 0.8rem; background: rgba(255,255,255,0.05);" onclick="editLayerName(${bm.id}, '${bm.name}')" title="Edit Nama Layer">
+                                <i data-feather="edit-2" style="width: 13px; height: 13px;"></i> Edit Nama
+                            </button>
+                            ${bm.file_path ? `
+                                <a href="${bm.file_path}" download class="btn" style="padding: 5px 10px; font-size: 0.8rem; background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2);" title="Download SHP">
+                                    <i data-feather="download" style="width: 13px; height: 13px;"></i> Download
+                                </a>
+                            ` : ''}
+                            <button class="cat-toggle-btn ${hasCat ? 'active' : ''}" id="catToggle_${bm.id}" onclick="toggleCatPanel(${bm.id})">
+                                <i data-feather="sliders" style="width:13px;height:13px;"></i> Warna Kategori
+                            </button>
+                            <button class="btn btn-primary" style="padding: 5px 10px; font-size: 0.8rem;" onclick="updateBasemap(${bm.id})">Simpan</button>
+                            <button class="btn" style="background:rgba(239, 68, 68, 0.1); color:#ef4444; padding: 5px 10px; font-size: 0.8rem;" onclick="deleteBasemap(${bm.id})">Hapus</button>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: rgba(0,0,0,0.1); padding: 10px; border-radius: 6px;">
+                        <input type="hidden" id="name_${bm.id}" value="${bm.name}">
+                        
+                        <div style="display:flex; align-items:center; gap: 5px;">
+                            <label style="font-size:0.8rem;">Warna:</label>
+                            <input type="color" id="color_${bm.id}" value="${color}" style="width: 30px; height: 30px; padding: 0; border: none; border-radius: 4px; cursor: pointer; background: transparent;">
+                        </div>
+                        
+                        <select id="fill_type_${bm.id}" class="form-control" style="padding: 5px; width: 100px; font-size: 0.8rem;">
+                            <option value="fill" ${fill_type === 'fill' ? 'selected' : ''}>Berisi (Fill)</option>
+                            <option value="hollow" ${fill_type === 'hollow' ? 'selected' : ''}>Kosong (Hollow)</option>
+                        </select>
+                        
+                        <div style="display:flex; align-items:center; gap: 5px;">
+                            <label style="font-size:0.8rem;">Tebal:</label>
+                            <input type="number" id="weight_${bm.id}" class="form-control" value="${weight}" min="1" max="10" style="padding: 5px; width: 60px;">
+                        </div>
+                        
+                        <select id="dash_array_${bm.id}" class="form-control" style="padding: 5px; width: 120px; font-size: 0.8rem;">
+                            <option value="" ${dash_array === '' ? 'selected' : ''}>Garis Solid</option>
+                            <option value="5,5" ${dash_array === '5,5' ? 'selected' : ''}>Garis Putus-putus</option>
+                            <option value="10,5" ${dash_array === '10,5' ? 'selected' : ''}>Garis Panjang Putus</option>
+                        </select>
+                    </div>
+
+                    <!-- Category Color Panel -->
+                    <div class="cat-admin-panel">
+                        <div class="cat-admin-title">
+                            <i data-feather="sliders" style="width:12px;height:12px;"></i> Pengaturan Warna Kategori
+                        </div>
+                        <div class="cat-admin-body" id="catBody_${bm.id}">
+                            <div class="cat-loading" id="catLoading_${bm.id}">Klik tombol "Warna Kategori" untuk memuat atribut SHP...</div>
+                            <select id="catField_${bm.id}" class="form-control cat-field-select" style="font-size:0.82rem;margin-bottom:10px;display:none;"></select>
+                            <div class="admin-palette-row" id="catPalette_${bm.id}" style="display:none;"></div>
+                            <div class="admin-cat-values" id="catValues_${bm.id}"></div>
+                            <button type="button" class="btn-save-cat" id="btnSaveCat_${bm.id}" style="display:none;" onclick="saveCategory(${bm.id})">
+                                <i data-feather="save" style="width:14px;height:14px;"></i> Simpan Konfigurasi Warna
+                            </button>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(item);
+
+                // Restore saved category if exists
+                if (hasCat && bm.category_colors) {
+                    try {
+                        const saved = typeof bm.category_colors === 'string' ? JSON.parse(bm.category_colors) : bm.category_colors;
+                        _bmCatState[bm.id] = { field: bm.category_field, colors: saved };
+                    } catch(e) {}
+                }
+            });
+            feather.replace();
+        }
+
+        // USERS LOGIC
+        async function loadUsers() {
+            try {
+                const response = await fetch('api/users.php');
+                const result = await response.json();
+                if (result.status === 'success') renderUsers(result.data);
+            } catch (e) { console.error(e); }
+        }
+
+        function renderUsers(data) {
+            const list = document.getElementById('userList');
+            list.innerHTML = '';
+            data.forEach(user => {
+                const item = document.createElement('div');
+                item.className = 'user-item';
+                item.innerHTML = `
+                    <div>
+                        <strong>${user.username}</strong> <span class="status-badge" style="background:rgba(59,130,246,0.1); color:#3b82f6; margin-left:10px;">${user.role}</span>
+                        <div style="font-size:0.8rem; color:var(--text-secondary)">Dibuat: ${user.created_at}</div>
+                    </div>
+                    ${user.username !== 'admin' ? `<button class="btn" style="background:rgba(239, 68, 68, 0.1); color:#ef4444;" onclick="deleteUser(${user.id})">Hapus</button>` : '<i>System Account</i>'}
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        async function addUser() {
+            const payload = {
+                username: document.getElementById('newUsername').value,
+                password: document.getElementById('newPassword').value,
+                role: document.getElementById('newRole').value
+            };
+            if(!payload.username || !payload.password) return alert('Lengkapi data!');
+
+            const res = await fetch('api/users.php', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const result = await res.json();
+            if(result.status === 'success') {
+                alert(result.message);
+                loadUsers();
+            } else alert(result.message);
+        }
+
+        async function deleteUser(id) {
+            if(!confirm('Hapus user ini?')) return;
+            const res = await fetch(`api/users.php?id=${id}`, { method: 'DELETE' });
+            const result = await res.json();
+            if(result.status === 'success') loadUsers();
+        }
+
+        async function deleteBasemap(id) {
+            if(!confirm('Hapus basemap ini beserta filenya secara permanen?')) return;
+            try {
+                const res = await fetch(`api/basemaps.php?id=${id}`, { method: 'DELETE' });
+                const result = await res.json();
+                if(result.status === 'success') {
+                    alert('Basemap berhasil dihapus!');
+                    loadBasemaps();
+                } else alert(result.message);
+            } catch (e) { alert('Terjadi kesalahan koneksi.'); }
+        }
+
+        async function editLayerName(id, currentName) {
+            const newName = prompt('Masukkan Nama Layer Baru:', currentName);
+            if (newName && newName.trim() !== '' && newName !== currentName) {
+                document.getElementById('name_' + id).value = newName.trim();
+                updateBasemap(id);
+            }
+        }
+
+        async function updateBasemap(id) {
+            const newColor = document.getElementById('color_' + id).value;
+            const newName = document.getElementById('name_' + id).value;
+            const newFillType = document.getElementById('fill_type_' + id).value;
+            const newWeight = document.getElementById('weight_' + id).value;
+            const newDashArray = document.getElementById('dash_array_' + id).value;
+            
+            const catState = _bmCatState[id];
+            
+            try {
+                const res = await fetch('api/basemaps.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ 
+                        action: 'update', 
+                        id: id, 
+                        color: newColor, 
+                        name: newName,
+                        fill_type: newFillType,
+                        weight: newWeight,
+                        dash_array: newDashArray,
+                        category_field: catState ? catState.field : null,
+                        category_colors: catState ? catState.colors : null
+                    })
+                });
+                const result = await res.json();
+                if(result.status === 'success') {
+                    showAdminToast('Layer berhasil diperbarui!', 'success');
+                    loadBasemaps();
+                } else showAdminToast(result.message, 'error');
+            } catch (e) { showAdminToast('Terjadi kesalahan koneksi.', 'error'); }
+        }
+
+        // ── Category Color State (per basemap id) ─────────
+        const _bmCatState  = {};   // { [id]: { field, colors: {val: color} } }
+        const _bmShpCache  = {};   // { [id]: features[] }
+
+        const ADMIN_PALETTES = {
+            'Vivid':      ['#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#8b5cf6','#ec4899','#14b8a6'],
+            'Pastel':     ['#fca5a5','#fdba74','#fde68a','#86efac','#93c5fd','#c4b5fd','#f9a8d4','#6ee7b7'],
+            'Earth':      ['#92400e','#78350f','#4d7c0f','#166534','#155e75','#1e3a5f','#6b21a8','#9f1239'],
+            'Cool':       ['#0ea5e9','#6366f1','#a855f7','#14b8a6','#0284c7','#4f46e5','#7c3aed','#0d9488'],
+            'Monochrome': ['#f8fafc','#cbd5e1','#94a3b8','#64748b','#475569','#334155','#1e293b','#0f172a'],
+        };
+
+        async function toggleCatPanel(id) {
+            const body = document.getElementById(`catBody_${id}`);
+            const btn  = document.getElementById(`catToggle_${id}`);
+            const isOpen = body.classList.contains('open');
+
+            if (isOpen) { body.classList.remove('open'); btn.classList.remove('active'); return; }
+
+            body.classList.add('open');
+            btn.classList.add('active');
+
+            // Already loaded?
+            if (_bmShpCache[id]) { buildAdminCatUI(id); return; }
+
+            // Find basemap file path
+            const bmRow = document.querySelector(`#bm-item-${id}`);
+            const filePath = bmRow ? bmRow.querySelector('small').textContent.trim() : null;
+            if (!filePath) { setLoading(id, 'File path tidak ditemukan.'); return; }
+
+            setLoading(id, '<i data-feather="loader"></i> Memuat atribut SHP...');
+            feather.replace();
+
+            try {
+                const resp = await fetch(filePath);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const buf = await resp.arrayBuffer();
+                const geojson = await shp(buf);
+                const layers = Array.isArray(geojson) ? geojson : [geojson];
+                const features = [];
+                layers.forEach(l => { if (l?.features) features.push(...l.features); });
+                if (features.length === 0) throw new Error('Tidak ada fitur.');
+                _bmShpCache[id] = features;
+                buildAdminCatUI(id);
+            } catch(e) {
+                setLoading(id, '⚠ Gagal memuat SHP: ' + e.message);
+            }
+        }
+
+        function setLoading(id, msg) {
+            const el = document.getElementById(`catLoading_${id}`);
+            if (el) { el.innerHTML = msg; el.style.display = 'block'; }
+        }
+
+        function buildAdminCatUI(id) {
+            const features = _bmShpCache[id];
+            const loading  = document.getElementById(`catLoading_${id}`);
+            const fieldSel = document.getElementById(`catField_${id}`);
+            const palette  = document.getElementById(`catPalette_${id}`);
+            const values   = document.getElementById(`catValues_${id}`);
+            const saveBtn  = document.getElementById(`btnSaveCat_${id}`);
+
+            loading.style.display = 'none';
+            fieldSel.style.display = 'block';
+            saveBtn.style.display = 'flex';
+
+            // Populate field select
+            const fields = Object.keys(features[0]?.properties || {});
+            const savedField = _bmCatState[id]?.field;
+            fieldSel.innerHTML = '<option value="">-- Pilih kolom atribut --</option>';
+            fields.forEach(f => {
+                const opt = document.createElement('option');
+                opt.value = f; opt.textContent = f;
+                if (f === savedField) opt.selected = true;
+                fieldSel.appendChild(opt);
+            });
+
+            const buildValues = (field, savedColors) => {
+                values.innerHTML = '';
+                palette.innerHTML = '';
+                palette.style.display = 'none';
+                if (!field) return;
+
+                const freq = {};
+                features.forEach(f => {
+                    const v = String(f.properties?.[field] ?? '__null__');
+                    freq[v] = (freq[v] || 0) + 1;
+                });
+                const uniqVals = Object.keys(freq).sort();
+                const autoColors = ADMIN_PALETTES['Vivid'];
+
+                // Init state
+                if (!_bmCatState[id]) _bmCatState[id] = { field, colors: {} };
+                _bmCatState[id].field = field;
+                uniqVals.forEach((v, i) => {
+                    if (!_bmCatState[id].colors[v]) {
+                        _bmCatState[id].colors[v] = savedColors?.[v] || autoColors[i % autoColors.length];
+                    }
+                });
+
+                // Render rows
+                uniqVals.forEach(val => {
+                    const color = _bmCatState[id].colors[val] || '#3b82f6';
+                    const display = val === '__null__' ? '(kosong)' : val;
+                    const row = document.createElement('div');
+                    row.className = 'admin-cat-row';
+                    row.innerHTML = `
+                        <input type="color" class="admin-cat-color" data-id="${id}" data-val="${val}" value="${color}">
+                        <span class="admin-cat-label" title="${display}">${display}</span>
+                        <span class="admin-cat-count">${freq[val]} fitur</span>
+                    `;
+                    values.appendChild(row);
+                    row.querySelector('.admin-cat-color').addEventListener('input', function() {
+                        _bmCatState[id].colors[this.dataset.val] = this.value;
+                    });
+                });
+
+                // Palette buttons
+                palette.style.display = 'flex';
+                Object.entries(ADMIN_PALETTES).forEach(([name, colors]) => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'admin-palette-btn';
+                    btn.innerHTML = colors.slice(0,5).map(c => `<span class="admin-palette-dot" style="background:${c};"></span>`).join('') + `<span style="margin-left:4px;">${name}</span>`;
+                    btn.addEventListener('click', () => {
+                        values.querySelectorAll('.admin-cat-color').forEach((inp, idx) => {
+                            const c = colors[idx % colors.length];
+                            inp.value = c;
+                            _bmCatState[id].colors[inp.dataset.val] = c;
+                        });
+                    });
+                    palette.appendChild(btn);
+                });
+            };
+
+            // Initial render with saved state
+            if (savedField) buildValues(savedField, _bmCatState[id]?.colors);
+
+            fieldSel.addEventListener('change', function() {
+                if (_bmCatState[id]) _bmCatState[id].colors = {};
+                buildValues(this.value, null);
+                if (_bmCatState[id]) _bmCatState[id].field = this.value || null;
+            });
+
+            feather.replace();
+        }
+
+        async function saveCategory(id) {
+            const catState = _bmCatState[id];
+            if (!catState || !catState.field) { showAdminToast('Pilih field atribut terlebih dahulu.', 'error'); return; }
+            // Re-read inputs
+            document.querySelectorAll(`.admin-cat-color[data-id="${id}"]`).forEach(inp => {
+                catState.colors[inp.dataset.val] = inp.value;
+            });
+            // Save via update API
+            const newColor = document.getElementById('color_' + id)?.value || '#22c55e';
+            const newName  = document.getElementById('name_' + id)?.value || '';
+            const newFillType = document.getElementById('fill_type_' + id)?.value || 'fill';
+            const newWeight   = document.getElementById('weight_' + id)?.value || 3;
+            const newDashArray= document.getElementById('dash_array_' + id)?.value || '';
+            try {
+                const res = await fetch('api/basemaps.php', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({
+                        action:'update', id, color:newColor, name:newName,
+                        fill_type:newFillType, weight:newWeight, dash_array:newDashArray,
+                        category_field: catState.field,
+                        category_colors: catState.colors
+                    })
+                });
+                const result = await res.json();
+                if (result.status === 'success') { showAdminToast('Konfigurasi warna kategori tersimpan!', 'success'); loadBasemaps(); }
+                else showAdminToast(result.message, 'error');
+            } catch(e) { showAdminToast('Kesalahan koneksi.', 'error'); }
+        }
+
+        function showAdminToast(msg, type='success') {
+            const existing = document.getElementById('adminToast');
+            if (existing) existing.remove();
+            const color = type === 'success' ? '#22c55e' : '#ef4444';
+            const icon  = type === 'success' ? 'check-circle' : 'alert-circle';
+            const t = document.createElement('div');
+            t.id = 'adminToast';
+            t.style.cssText = `position:fixed;bottom:2rem;right:2rem;z-index:9999;background:rgba(15,23,42,0.96);border:1px solid ${color}44;border-left:4px solid ${color};border-radius:10px;padding:1rem 1.4rem;display:flex;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,0.4);backdrop-filter:blur(12px);font-size:0.9rem;color:var(--text-primary);`;
+            t.innerHTML = `<i data-feather="${icon}" style="width:18px;height:18px;color:${color};flex-shrink:0;"></i><span>${msg}</span>`;
+            document.body.appendChild(t);
+            feather.replace();
+            setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity 0.4s'; setTimeout(() => t.remove(), 400); }, 3000);
+        }
+
+        const fileInput = document.getElementById('fileInput');
+        if(fileInput) {
+            fileInput.addEventListener('change', async function() {
+                if (this.files && this.files[0]) {
+                    const file = this.files[0];
+                    const name = prompt("Masukkan Nama Basemap (Contoh: Batas Lahan 2026):", file.name);
+                    if (!name) return;
+
+                    const formData = new FormData();
+                    formData.append('basemap', file);
+                    formData.append('name', name);
+
+                    try {
+                        const response = await fetch('api/upload_basemap.php', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        const text = await response.text();
+                        try {
+                            const result = JSON.parse(text);
+                            if (result.status === 'success') {
+                                alert('Berhasil: ' + result.message);
+                                loadBasemaps();
+                            } else {
+                                alert('Gagal: ' + result.message);
+                            }
+                        } catch(parseErr) {
+                            console.error("Server Response:", text);
+                            alert("Terjadi kesalahan sistem/server. Silakan cek console.");
+                        }
+                    } catch (e) {
+                        alert('Terjadi kesalahan koneksi jaringan.');
+                    }
+                }
+                this.value = ''; // Reset file input
+            });
+        }
+
+        loadBasemaps();
+    </script>
+</body>
+</html>
+

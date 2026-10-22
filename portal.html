@@ -1,0 +1,730 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layanan Publik - Peta Tematik</title>
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#070e1c">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="js/pwa.js"></script>
+    <style>
+        .portal-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            justify-content: center;
+        }
+        .portal-tab {
+            padding: 1rem 2rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .portal-tab.active {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.5s; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Forms Layout */
+        .report-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 2rem;
+        }
+        #mini-map {
+            width: 100%;
+            height: 450px;
+            border-radius: 12px;
+            margin-top: 10px;
+            border: 1px solid var(--glass-border);
+        }
+        
+        .search-box {
+            max-width: 500px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 1.2rem 1.5rem;
+            padding-right: 4rem;
+            font-size: 1.1rem;
+            border-radius: 12px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--glass-border);
+            color: white;
+        }
+        .search-box button {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--accent-orange);
+            border: none;
+            color: white;
+            padding: 0.8rem;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        .info-item label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+        #checkMap { 
+            height: 600px; 
+            width: 100%;
+            border-radius: 16px; 
+            margin-top: 2rem; 
+            display: none; 
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        
+        /* Adjusted width utility for portal map */
+        .full-width-map {
+            width: 100% !important;
+            aspect-ratio: 16 / 8;
+            height: auto !important;
+            position: relative;
+            margin-top: 2rem !important;
+            margin-bottom: 2rem !important;
+            z-index: 5 !important;
+            border-radius: 16px !important;
+            border: 1px solid var(--glass-border) !important;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5) !important;
+        }
+
+        #tab-cek {
+            width: 100%;
+        }
+
+        /* --- Responsive Mobile Layout Fixes --- */
+        @media (max-width: 992px) {
+            .main-content {
+                width: 95vw !important;
+                padding: 1rem 0.5rem !important;
+            }
+            .report-grid {
+                grid-template-columns: 1fr !important;
+                gap: 1.5rem !important;
+            }
+            .brand-motto {
+                display: none !important;
+            }
+        }
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                padding: 0.75rem 1rem !important;
+                gap: 0.75rem !important;
+            }
+            .brand {
+                justify-content: space-between !important;
+                width: 100% !important;
+            }
+            .nav-links {
+                display: flex !important;
+                overflow-x: auto !important;
+                white-space: nowrap !important;
+                padding-bottom: 6px !important;
+                gap: 0.5rem !important;
+                align-items: center !important;
+            }
+            .form-row[style*="display: flex"],
+            .form-row {
+                flex-direction: column !important;
+                gap: 0.75rem !important;
+            }
+            .form-row > * {
+                width: 100% !important;
+            }
+            .full-width-map,
+            #checkMap,
+            #miniMap {
+                height: 350px !important;
+                aspect-ratio: auto !important;
+            }
+        }
+
+        /* --- Landscape Phone Layout Fixes --- */
+        @media (max-height: 500px) {
+            .navbar {
+                flex-direction: row !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                padding: 0.5rem 1rem !important;
+                gap: 0 !important;
+            }
+            .brand {
+                width: auto !important;
+            }
+            .brand-motto {
+                display: none !important;
+            }
+            .nav-links {
+                padding-bottom: 0 !important;
+                margin: 0 !important;
+            }
+            .main-content {
+                width: 95vw !important;
+                max-width: 100% !important;
+                padding: 1rem 0.5rem !important;
+                margin-top: 0 !important;
+            }
+            .portal-tabs {
+                margin-bottom: 1rem !important;
+            }
+            .portal-tab {
+                padding: 0.6rem 1.2rem !important;
+                font-size: 0.85rem !important;
+            }
+            .glass-panel {
+                padding: 1.5rem 1rem !important;
+            }
+            .report-grid {
+                grid-template-columns: 1fr !important;
+                gap: 1.5rem !important;
+            }
+            .form-row[style*="display: flex"],
+            .form-row {
+                flex-direction: column !important;
+                gap: 0.75rem !important;
+            }
+            .form-row > * {
+                width: 100% !important;
+            }
+        }
+    </style>
+</head>
+<body style="min-height: 100vh;">
+
+    <nav class="navbar">
+        <a href="index.html" class="brand">
+            <img src="images/logo.png" alt="Peta Tematik Logo" style="height: 40px; border-radius: 4px;">
+            Peta<span>Tematik</span>
+            <div class="brand-motto" style="display: inline-block;">Peta Tematik Kantor Pertanahan Kota Probolinggo</div>
+        </a>
+        <div class="nav-links" style="display: flex; align-items: center; gap: 1rem;">
+
+            <button id="themeToggle" class="btn" style="background: rgba(255,255,255,0.1); color: inherit; padding: 0.5rem 1rem; border-radius: 8px;">
+                <i data-feather="sun" id="themeIcon"></i>
+            </button>
+        </div>
+    </nav>
+
+    <main class="main-content" style="display: block; width: 70vw; margin: 0 auto; height: auto; overflow: visible !important; min-height: calc(100vh - 100px);">
+
+        <div class="portal-tabs">
+            <div class="portal-tab" onclick="switchTab('input')">
+                <i data-feather="edit-3"></i> Input
+            </div>
+            <div class="portal-tab active" onclick="switchTab('cek')">
+                <i data-feather="search"></i> Lacak
+            </div>
+        </div>
+
+        <!-- TAB 1: INPUT LAHAN -->
+        <div id="tab-input" class="tab-content glass-panel">
+            <h2 style="margin-bottom: 1.5rem;">Formulir Pendaftaran Lahan</h2>
+            <form id="reportForm" class="report-grid">
+                <div>
+                    <div class="form-row" style="display: flex; gap: 1rem; margin-bottom: 0.8rem;">
+                        <input type="text" id="no_permohonan" class="form-control" readonly placeholder="Otomatis Digenerate" style="background: rgba(255,255,255,0.02);">
+                        <input type="text" id="nik" class="form-control" maxlength="16" pattern="\d{16}" placeholder="NIK Pemohon (16 Digit)" required>
+                    </div>
+
+                    <div class="form-row" style="display: flex; gap: 1rem; margin-bottom: 0.8rem;">
+                        <input type="text" id="nama_pemohon" class="form-control" placeholder="Nama Pemohon Sesuai KTP" required>
+                        <input type="text" id="nama_kuasa" class="form-control" placeholder="Nama Kuasa (Jika Ada)">
+                    </div>
+
+                    <div class="form-row" style="display: flex; gap: 1rem; margin-bottom: 0.8rem;">
+                        <input type="text" id="no_telp" class="form-control" placeholder="No. Telp / HP Pemohon" required>
+                    </div>
+
+                    <div style="margin-bottom: 0.8rem;">
+                        <textarea id="alamat" class="form-control" rows="2" placeholder="Alamat Domisili Lengkap" required></textarea>
+                    </div>
+
+                    <div class="form-row" style="display: flex; gap: 1rem; margin-bottom: 0.8rem;">
+                        <select id="jenis_hak" class="form-control" required>
+                            <option value="">-- Pilih Hak --</option>
+                            <option value="Milik">Milik (SHM)</option>
+                            <option value="Guna Bangunan">Guna Bangunan (SHGB)</option>
+                            <option value="Pakai">Pakai</option>
+                        </select>
+                        <input type="text" id="nomor_hak" class="form-control" placeholder="Nomor Sertipikat" required>
+                    </div>
+
+                    <div class="form-row" style="display: flex; gap: 1rem; margin-bottom: 0.8rem;">
+                        <input type="text" id="luas_sertipikat" class="form-control" placeholder="Luas Sertipikat (mÂ²)" required>
+                        <input type="text" id="keadaan_tanah" class="form-control" placeholder="Keadaan Tanah Saat Ini" required>
+                    </div>
+
+                    <div class="form-row" style="display: flex; gap: 1rem; margin-bottom: 0.8rem;">
+                        <select id="kecamatan" class="form-control" required>
+                            <option value="">-- Pilih Kecamatan --</option>
+                            <option value="Kademangan">Kademangan</option>
+                            <option value="Kanigaran">Kanigaran</option>
+                            <option value="Kedopok">Kedopok</option>
+                            <option value="Mayangan">Mayangan</option>
+                            <option value="Wonoasih">Wonoasih</option>
+                        </select>
+                        <select id="kelurahan" class="form-control" required disabled>
+                            <option value="">-- Kelurahan --</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <textarea id="keperluan" class="form-control" rows="2" placeholder="Keperluan Pendaftaran..." required></textarea>
+                    </div>
+
+                    <button type="submit" id="btnSubmitForm" class="btn btn-primary" style="width: 100%;">Daftarkan Lahan</button>
+                    <div id="formMsg" style="margin-top: 10px; color: #22c55e; display: none; text-align: center;">Permohonan berhasil disimpan!</div>
+                </div>
+
+                <div>
+                    <label>Titik Koordinat Lokasi Lahan</label>
+                    <div id="mini-map"></div>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <input type="text" id="latitude" class="form-control" placeholder="Latitude" readonly required>
+                        <input type="text" id="longitude" class="form-control" placeholder="Longitude" readonly required>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- TAB 2: CEK PERMOHONAN -->
+        <div id="tab-cek" class="tab-content active">
+            <div class="glass-panel" style="text-align: center; padding: 4rem 1rem;">
+                <h2 style="margin-bottom: 1rem;">Lacak Permohonan Anda</h2>
+                <form id="searchForm" class="search-box">
+                    <input type="text" id="cek_no" placeholder="Contoh: 001/2026" required>
+                    <button type="submit"><i data-feather="search"></i></button>
+                </form>
+            </div>
+
+            <div id="resultPanel" class="glass-panel" style="display: none; margin-top: 2rem; padding: 2.5rem;">
+                <!-- Timeline Status -->
+                <div class="tracking-timeline" style="display: flex; justify-content: space-between; margin-bottom: 3rem; position: relative; padding: 0 2rem;">
+                    <div style="position: absolute; top: 15px; left: 10%; right: 10%; height: 2px; background: rgba(255,255,255,0.1); z-index: 0;"></div>
+                    <div id="line-progress" style="position: absolute; top: 15px; left: 10%; width: 0%; height: 2px; background: var(--status-resolved); z-index: 1; transition: width 0.5s ease;"></div>
+                    
+                    <div class="step" style="z-index: 2; text-align: center; width: 80px;">
+                        <div id="step1-dot" style="width: 32px; height: 32px; border-radius: 50%; background: #3b82f6; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; border: 4px solid var(--primary-bg);"><i data-feather="edit-3" style="width: 14px; height: 14px;"></i></div>
+                        <div style="font-size: 0.7rem; font-weight: 600; color: var(--text-primary);">Daftar</div>
+                    </div>
+                    <div class="step" style="z-index: 2; text-align: center; width: 80px;">
+                        <div id="step2-dot" style="width: 32px; height: 32px; border-radius: 50%; background: #1e293b; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; border: 4px solid var(--primary-bg);"><i data-feather="check-circle" style="width: 14px; height: 14px;"></i></div>
+                        <div style="font-size: 0.7rem; font-weight: 600; color: var(--text-secondary);">Verifikasi</div>
+                    </div>
+                    <div class="step" style="z-index: 2; text-align: center; width: 80px;">
+                        <div id="step3-dot" style="width: 32px; height: 32px; border-radius: 50%; background: #1e293b; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; border: 4px solid var(--primary-bg);"><i data-feather="flag" style="width: 14px; height: 14px;"></i></div>
+                        <div style="font-size: 0.7rem; font-weight: 600; color: var(--text-secondary);">Selesai</div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1.5rem;">
+                    <div>
+                        <h2 id="res_judul" style="margin: 0; color: var(--text-primary);">-</h2>
+                        <div style="display: flex; gap: 1rem; margin-top: 5px;">
+                            <span id="res_no_disp" style="background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; color: var(--text-secondary);">No: -</span>
+                            <span id="res_date_disp" style="background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; color: var(--text-secondary);">Tgl: -</span>
+                        </div>
+                    </div>
+                    <div id="res_status_badge" style="padding: 0.5rem 1.2rem; border-radius: 30px; font-weight: 700; font-size: 0.85rem; letter-spacing: 0.05em; text-transform: uppercase;">-</div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem;">
+                    <!-- Kolom 1: Pemohon -->
+                    <div>
+                        <h4 style="margin-bottom: 1.2rem; display: flex; align-items: center; gap: 8px; color: var(--accent-orange);"><i data-feather="user" style="width: 18px;"></i> Identitas Pemohon</h4>
+                        <div class="detail-group" style="display: flex; flex-direction: column; gap: 1rem;">
+                            <div class="info-item"><label>NIK Pemohon</label><div id="res_nik" style="color: var(--text-primary);">-</div></div>
+                            <div class="info-item"><label>Nama Kuasa</label><div id="res_kuasa" style="color: var(--text-primary);">-</div></div>
+                            <div class="info-item"><label>No. WhatsApp</label><div id="res_phone" style="color: var(--text-primary);">-</div></div>
+                            <div class="info-item"><label>Alamat Domisili</label><div id="res_alamat" style="color: var(--text-primary); font-size: 0.9rem; line-height: 1.4;">-</div></div>
+                        </div>
+                    </div>
+                    <!-- Kolom 2: Tanah -->
+                    <div>
+                        <h4 style="margin-bottom: 1.2rem; display: flex; align-items: center; gap: 8px; color: var(--accent-orange);"><i data-feather="map-pin" style="width: 18px;"></i> Data Objek Tanah</h4>
+                        <div class="detail-group" style="display: flex; flex-direction: column; gap: 1rem;">
+                            <div class="info-item"><label>Jenis & No. Hak</label><div id="res_hak" style="color: var(--text-primary);">-</div></div>
+                            <div class="info-item"><label>Luas Sertipikat</label><div id="res_luas" style="color: var(--text-primary);">-</div></div>
+                            <div class="info-item"><label>Lokasi (Kec/Kel)</label><div id="res_lokasi" style="color: var(--text-primary);">-</div></div>
+                            <div class="info-item"><label>Keadaan Tanah</label><div id="res_keadaan" style="color: var(--text-primary);">-</div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid var(--glass-border);">
+                    <label style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 5px; display: block;">Keperluan Pendaftaran</label>
+                    <div id="res_keperluan" style="font-size: 1rem; color: var(--text-primary); line-height: 1.5;">-</div>
+                </div>
+
+                <div id="res_map_btn" style="display: none; margin-top: 2.5rem; text-align: center;">
+                    <button class="btn btn-primary" onclick="showCekMap()" style="padding: 1rem 2.5rem; border-radius: 12px; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; margin: 0 auto;">
+                        <i data-feather="map" style="width: 20px;"></i> Lihat Lokasi Lahan
+                    </button>
+                    <p style="margin-top: 10px; font-size: 0.85rem; color: var(--status-resolved);">Permohonan verifikasi telah selesai dilakukan.</p>
+                </div>
+            </div>
+            <div id="checkMap"></div>
+            
+            <div id="cekError" style="display: none; text-align: center; color: #ef4444; margin-top: 1rem;">Nomor tidak ditemukan!</div>
+        </div>
+
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/shpjs/dist/shp.js"></script>
+    <script>
+        feather.replace();
+
+        // Theme Toggle Logic
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        
+        // Cek localStorage
+        if (localStorage.getItem('portal_theme') === 'light') {
+            document.body.classList.add('light-mode');
+            themeIcon.setAttribute('data-feather', 'moon');
+        } else {
+            themeIcon.setAttribute('data-feather', 'sun');
+        }
+        feather.replace(); // re-render icons if changed
+
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+            if (document.body.classList.contains('light-mode')) {
+                localStorage.setItem('portal_theme', 'light');
+                themeIcon.setAttribute('data-feather', 'moon');
+            } else {
+                localStorage.setItem('portal_theme', 'dark');
+                themeIcon.setAttribute('data-feather', 'sun');
+            }
+            feather.replace();
+        });
+
+        // 1. Tab Switching Function
+        function switchTab(tabId) {
+            document.querySelectorAll('.portal-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            if (tabId === 'input') {
+                document.querySelectorAll('.portal-tab')[0].classList.add('active');
+                document.getElementById('tab-input').classList.add('active');
+                setTimeout(() => mapInput.invalidateSize(), 100);
+            } else {
+                document.querySelectorAll('.portal-tab')[1].classList.add('active');
+                document.getElementById('tab-cek').classList.add('active');
+            }
+        }
+
+        // 2. Data Kelurahan Setup
+        const dataKelurahan = {
+            "Kademangan": ["Kademangan", "Ketapang", "Pilang", "Pohsangit Kidul", "Triwung Kidul", "Triwung Lor"],
+            "Kanigaran": ["Curahgrinting", "Kanigaran", "Kebonsari Kulon", "Kebonsari Wetan", "Sukoharjo", "Tisnonegaran"],
+            "Kedopok": ["Jrebeng Kulon", "Jrebeng Lor", "Jrebeng Wetan", "Kareng Lor", "Kedopok", "Sumber Wetan"],
+            "Mayangan": ["Jati", "Mangunharjo", "Mayangan", "Sukabumi", "Wiroborang"],
+            "Wonoasih": ["Jrebeng Kidul", "Kedung Asem", "Kedung Galeng", "Pakistaji", "Sumber Taman", "Wonoasih"]
+        };
+        const selKec = document.getElementById('kecamatan');
+        const selKel = document.getElementById('kelurahan');
+        selKec.addEventListener('change', function() {
+            const kec = this.value;
+            selKel.innerHTML = '<option value="">-- Kelurahan --</option>';
+            if (kec && dataKelurahan[kec]) {
+                dataKelurahan[kec].forEach(k => {
+                    selKel.innerHTML += `<option value="${k}">${k}</option>`;
+                });
+                selKel.disabled = false;
+            } else selKel.disabled = true;
+        });
+
+        // 3. Map for Input
+        const mapInput = L.map('mini-map').setView([-7.7543, 113.2159], 13);
+        L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
+            maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3']
+        }).addTo(mapInput);
+        let markerInput;
+        mapInput.on('click', function(e) {
+            const { lat, lng } = e.latlng;
+            if (markerInput) markerInput.setLatLng(e.latlng);
+            else markerInput = L.marker(e.latlng).addTo(mapInput);
+            document.getElementById('latitude').value = lat.toFixed(8);
+            document.getElementById('longitude').value = lng.toFixed(8);
+        });
+
+        // Generate ID
+        async function getNextNo() {
+            try {
+                const res = await fetch('api/reports.php?action=get_next_no');
+                const data = await res.json();
+                document.getElementById('no_permohonan').value = `${data.next_no}/${new Date().getFullYear()}`;
+            } catch (e) {
+                document.getElementById('no_permohonan').value = `AUTO`;
+            }
+        }
+        getNextNo();
+
+        // 4. Submit Form Logic
+        document.getElementById('reportForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmitForm');
+            btn.disabled = true;
+            btn.innerHTML = 'Menyimpan...';
+
+            const payload = {
+                no_permohonan: document.getElementById('no_permohonan').value || 'AUTO',
+                nik: document.getElementById('nik').value,
+                nama_pemohon: document.getElementById('nama_pemohon').value,
+                nama_kuasa: document.getElementById('nama_kuasa').value,
+                no_telp: document.getElementById('no_telp').value,
+                alamat: document.getElementById('alamat').value,
+                jenis_hak: document.getElementById('jenis_hak').value,
+                nomor_hak: document.getElementById('nomor_hak').value,
+                luas_sertipikat: document.getElementById('luas_sertipikat').value,
+                keadaan_tanah: document.getElementById('keadaan_tanah').value,
+                kecamatan: document.getElementById('kecamatan').value,
+                kelurahan: document.getElementById('kelurahan').value,
+                keperluan: document.getElementById('keperluan').value,
+                latitude: document.getElementById('latitude').value,
+                longitude: document.getElementById('longitude').value
+            };
+
+            if(!payload.latitude || !payload.longitude) {
+                alert('Tentukan titik koordinat pada peta!');
+                btn.disabled = false; btn.innerHTML = 'Daftarkan Lahan'; return;
+            }
+
+            try {
+                const res = await fetch('api/reports.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+                if(result.status === 'success') {
+                    const msg = document.getElementById('formMsg');
+                    msg.innerHTML = `Sukses! Nomor Anda: <b>${payload.no_permohonan}</b>`;
+                    msg.style.display = 'block';
+                    e.target.reset();
+                    if (markerInput) mapInput.removeLayer(markerInput);
+                    getNextNo();
+                } else alert('Gagal: ' + result.message);
+            } catch(err) {
+                alert('Error koneksi.');
+            }
+            btn.disabled = false;
+            btn.innerHTML = 'Daftarkan Lahan';
+        });
+
+        // 5. Check Permohonan Logic
+        let currentCekData = null;
+        let mapCek, markerCek, basemapLayers = [];
+        
+        // Preload shp layers
+        async function loadBasemaps() {
+            try {
+                const res = await fetch('api/basemaps.php');
+                const result = await res.json();
+                if(result.status === 'success') {
+                    window._spatialLayerData = result.data; // Store for showCekMap
+                    for(const bm of result.data) {
+                        try {
+                            const bin = await (await fetch(bm.file_path)).arrayBuffer();
+                            const geojson = await shp(bin);
+                            
+                            const layerColor = bm.color || '#22c55e';
+                            const layerWeight = bm.weight || 3;
+                            const fillOpacity = bm.fill_type === 'hollow' ? 0 : 0.25;
+                            const dashArray = bm.dash_array || '';
+
+                            const layer = L.geoJSON(geojson, { 
+                                style: { 
+                                    color: layerColor, 
+                                    fillColor: layerColor,
+                                    weight: layerWeight, 
+                                    fillOpacity: fillOpacity,
+                                    dashArray: dashArray
+                                }
+                            });
+                            basemapLayers.push(layer);
+                        } catch(e) { console.error("Error loading SHP:", e); }
+                    }
+                }
+            } catch(e) {}
+        }
+        loadBasemaps();
+
+        document.getElementById('searchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const no = document.getElementById('cek_no').value.trim();
+            if(!no) return;
+            
+            document.getElementById('resultPanel').style.display = 'none';
+            document.getElementById('cekError').style.display = 'none';
+            document.getElementById('checkMap').style.display = 'none';
+
+            try {
+                const res = await fetch(`api/reports.php?action=check_status&no=${encodeURIComponent(no)}`);
+                const result = await res.json();
+                if (result.status === 'success') {
+                    currentCekData = result.data;
+                    document.getElementById('res_judul').innerHTML = currentCekData.nama_pemohon;
+                    document.getElementById('res_no_disp').innerText = `No: ${no}`;
+                    document.getElementById('res_date_disp').innerText = `Tgl: ${new Date(currentCekData.created_at).toLocaleDateString('id-ID')}`;
+                    
+                    document.getElementById('res_nik').innerText = currentCekData.nik;
+                    document.getElementById('res_kuasa').innerText = currentCekData.nama_kuasa || '-';
+                    document.getElementById('res_phone').innerText = currentCekData.no_telp || '-';
+                    document.getElementById('res_alamat').innerText = currentCekData.alamat || '-';
+                    
+                    document.getElementById('res_hak').innerText = `${currentCekData.jenis_hak} No.${currentCekData.nomor_hak}`;
+                    document.getElementById('res_luas').innerText = (currentCekData.luas_sertipikat || '-') + ' mÂ²';
+                    document.getElementById('res_lokasi').innerText = `${currentCekData.kecamatan}, ${currentCekData.kelurahan}`;
+                    document.getElementById('res_keadaan').innerText = currentCekData.keadaan_tanah || '-';
+                    document.getElementById('res_keperluan').innerText = currentCekData.keperluan || '-';
+
+                    // Update Status Badge & Timeline
+                    const badge = document.getElementById('res_status_badge');
+                    const progress = document.getElementById('line-progress');
+                    const s1 = document.getElementById('step1-dot');
+                    const s2 = document.getElementById('step2-dot');
+                    const s3 = document.getElementById('step3-dot');
+                    
+                    // Reset dots
+                    s1.style.background = '#1e293b'; s2.style.background = '#1e293b'; s3.style.background = '#1e293b';
+
+                    if (currentCekData.status === 'pending') {
+                        badge.innerText = 'PENDAFTARAN';
+                        badge.style.background = 'rgba(59, 130, 246, 0.15)';
+                        badge.style.color = '#3b82f6';
+                        progress.style.width = '0%';
+                        s1.style.background = '#3b82f6';
+                    } else if (currentCekData.status === 'verifikasi') {
+                        badge.innerText = 'PROSES VERIFIKASI';
+                        badge.style.background = 'rgba(234, 179, 8, 0.15)';
+                        badge.style.color = '#eab308';
+                        progress.style.width = '40%';
+                        s1.style.background = '#22c55e';
+                        s2.style.background = '#eab308';
+                    } else if (currentCekData.status === 'selesai') {
+                        badge.innerText = 'SELESAI';
+                        badge.style.background = 'rgba(34, 197, 94, 0.15)';
+                        badge.style.color = '#22c55e';
+                        progress.style.width = '80%';
+                        s1.style.background = '#22c55e';
+                        s2.style.background = '#22c55e';
+                        s3.style.background = '#22c55e';
+                    }
+                    
+                    document.getElementById('res_map_btn').style.display = currentCekData.status === 'selesai' ? 'block' : 'none';
+                    document.getElementById('resultPanel').style.display = 'block';
+                    feather.replace();
+                } else document.getElementById('cekError').style.display = 'block';
+            } catch(err) {
+                alert('Terjadi kesalahan jaringan.');
+            }
+        });
+
+        function showCekMap() {
+            if(!currentCekData) return;
+            const container = document.getElementById('checkMap');
+            container.style.display = 'block';
+            container.classList.add('full-width-map'); // Apply full width style
+
+            if(!mapCek) {
+                mapCek = L.map('checkMap').setView([currentCekData.latitude, currentCekData.longitude], 17);
+                
+                // Define Basemaps
+                const googleSatellite = L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
+                    maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'],
+                    attribution: 'Google Satellite'
+                });
+                
+                const googleRoadmap = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+                    maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'],
+                    attribution: 'Google Roadmap'
+                });
+
+                const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; OpenStreetMap contributors'
+                });
+
+                const cartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                    attribution: '&copy; CARTO',
+                    maxZoom: 20
+                });
+
+                // Default layer
+                googleSatellite.addTo(mapCek);
+
+                const baseLayers = {
+                    "Google Satellite (Hybrid)": googleSatellite,
+                    "Google Roadmap": googleRoadmap,
+                    "OpenStreetMap": osm,
+                    "Dark Mode": cartoDark
+                };
+
+                const overlays = {};
+                // Add preloaded spatial layers
+                if (window._spatialLayerData) {
+                    window._spatialLayerData.forEach((item, index) => {
+                        if (basemapLayers[index]) {
+                            overlays[item.name] = basemapLayers[index];
+                            basemapLayers[index].addTo(mapCek);
+                        }
+                    });
+                }
+
+                L.control.layers(baseLayers, overlays, { position: 'topright' }).addTo(mapCek);
+                L.control.scale().addTo(mapCek);
+            } else {
+                mapCek.setView([currentCekData.latitude, currentCekData.longitude], 17);
+            }
+            
+            if(markerCek) mapCek.removeLayer(markerCek);
+            markerCek = L.marker([currentCekData.latitude, currentCekData.longitude]).addTo(mapCek)
+                .bindPopup(`<b>Lokasi Permohonan</b><br>${currentCekData.no_permohonan}`)
+                .openPopup();
+                
+            setTimeout(() => mapCek.invalidateSize(), 300);
+            container.scrollIntoView({behavior: 'smooth'});
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peta Tematik</title>
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS for Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .layer-radio, .layer-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 6px;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+        .layer-radio:hover, .layer-checkbox:hover {
+            background: rgba(255,255,255,0.07);
+            border-color: var(--glass-border);
+        }
+        .layer-radio input, .layer-checkbox input {
+            cursor: pointer;
+            accent-color: var(--accent-blue);
+        }
+        #spatialLayerList::-webkit-scrollbar { width: 4px; }
+        #spatialLayerList::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+    </style>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#070e1c">
+    <!-- Feather Icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="js/pwa.js"></script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="dashboard.html" class="brand">
+            <img src="images/logo.png" alt="Peta Tematik Logo" style="height: 40px; width: auto; border-radius: 4px;">
+            Peta<span>Tematik</span>
+            <div class="brand-motto">Peta Tematik Kantor Pertanahan Kota Probolinggo</div>
+        </a>
+        <div class="nav-links">
+            <a href="dashboard.html" class="active">Dashboard</a>
+            <a href="tracker.html">Daftar</a>
+            <a href="report.html">Input</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <!-- Sidebar Panel -->
+        <aside class="glass-panel sidebar animated" id="sidebarPanel">
+            <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-bottom: 1rem;" id="sidebarToggle" title="Sembunyikan Panel">
+                <h2 style="margin: 0;"><i data-feather="activity"></i> Progress Peta Tematik</h2>
+                <i data-feather="arrow-left-circle" id="sidebarToggleIcon" style="color: var(--text-secondary); width: 20px; height: 20px;"></i>
+            </div>
+            
+            <div id="sidebarContent">
+                <h3>Data Terbaru</h3>
+            <div style="margin-bottom: 1rem;">
+                <input type="text" id="dashboardSearch" class="form-control" placeholder="Cari Nama/Kecamatan..." style="width: 100%; background: rgba(255,255,255,0.05);">
+            </div>
+            <div class="report-list" id="reportList">
+                <div style="text-align: center; color: #94a3b8; margin-top: 2rem;">
+                    Memuat data permohonan...
+                </div>
+            </div>
+            
+            <!-- Sidebar Pagination -->
+            <div id="sidebarPagination" style="display: none; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--glass-border);">
+                <button id="sidePrevBtn" class="btn" style="padding: 4px 8px; font-size: 0.75rem; background: rgba(255,255,255,0.05);" disabled>
+                    <i data-feather="chevron-left" style="width: 14px; height: 14px; vertical-align: middle;"></i>
+                </button>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);" id="sidePaginationInfo">
+                    1-5
+                </div>
+                <button id="sideNextBtn" class="btn" style="padding: 4px 8px; font-size: 0.75rem; background: rgba(255,255,255,0.05);" disabled>
+                    <i data-feather="chevron-right" style="width: 14px; height: 14px; vertical-align: middle;"></i>
+                </button>
+            </div>
+            </div>
+        </aside>
+
+        <!-- Map Panel -->
+        <section class="glass-panel map-container animated" style="animation-delay: 0.2s; position: relative;">
+            <button id="floatingSidebarToggle" class="btn btn-primary" style="position: absolute; top: 15px; left: 15px; z-index: 1000; padding: 8px; border-radius: 8px; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.2);" title="Tampilkan Panel">
+                <i data-feather="menu" style="width: 20px; height: 20px; vertical-align: middle;"></i>
+            </button>
+            <div id="map"></div>
+            
+            <div class="map-disclaimer">
+                <i data-feather="info" style="width: 14px; height: 14px; flex-shrink: 0; color: var(--accent-orange); margin-top: 1px;"></i>
+                <span><strong>Disclaimer:</strong> Peta ini hanya bersifat sebagai informasi awal. Kantor Pertanahan tidak memberikan jaminan atas ketepatan batas atau luas tanah yang tertera tanpa adanya validasi fisik di lapangan oleh petugas berwenang. Penggunaan data di luar ketentuan yang berlaku bukan merupakan tanggung jawab Kantor Pertanahan.</span>
+            </div>
+            
+            <div class="map-overlay" id="mapOverlay">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; cursor: pointer;" id="overlayToggle">
+                    <strong style="color: var(--text-secondary);"><i data-feather="layers" style="width: 14px; height: 14px; vertical-align: middle;"></i> Peta & Layer</strong>
+                    <i data-feather="chevron-down" id="overlayIcon" style="width: 16px; height: 16px; color: var(--text-secondary);"></i>
+                </div>
+                <div id="overlayContent">
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 10px;"><i data-feather="monitor" style="width: 14px; height: 14px; vertical-align: middle;"></i> Pilih Peta Dasar (Basemap):</label>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label class="layer-radio"><input type="radio" name="basemap" value="dark" checked> <span>Peta Dark Mode</span></label>
+                        <label class="layer-radio"><input type="radio" name="basemap" value="satelit"> <span>Citra Satelit</span></label>
+                        <label class="layer-radio"><input type="radio" name="basemap" value="osm"> <span>Peta Jalan (OSM)</span></label>
+                        <label class="layer-radio"><input type="radio" name="basemap" value="light"> <span>Peta Terang</span></label>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 10px;"><i data-feather="layers" style="width: 14px; height: 14px; vertical-align: middle;"></i> Layer Spasial (Overlay):</label>
+                    <div id="spatialLayerList" style="display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; padding-right: 5px;">
+                        <!-- Custom SHP layers will appear here -->
+                    </div>
+                </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Proj4js for Reprojection -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.js"></script>
+    <script src="https://unpkg.com/shpjs/dist/shp.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        feather.replace();
+        document.getElementById('overlayToggle').addEventListener('click', function() {
+            var content = document.getElementById('overlayContent');
+            var icon = document.getElementById('overlayIcon');
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                icon.setAttribute('data-feather', 'chevron-down');
+                feather.replace();
+            } else {
+                content.style.display = 'none';
+                icon.setAttribute('data-feather', 'chevron-left');
+                feather.replace();
+            }
+        });
+
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.querySelector('.main-content').classList.add('sidebar-collapsed');
+            document.getElementById('floatingSidebarToggle').style.display = 'block';
+            setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 300); // trigger resize map
+        });
+
+        document.getElementById('floatingSidebarToggle').addEventListener('click', function() {
+            document.querySelector('.main-content').classList.remove('sidebar-collapsed');
+            document.getElementById('floatingSidebarToggle').style.display = 'none';
+            setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 300); // trigger resize map
+        });
+    </script>
+</body>
+</html>

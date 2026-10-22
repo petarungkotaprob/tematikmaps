@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Permohonan - Peta Tematik</title>
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#070e1c">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="js/pwa.js"></script>
+    <style>
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        th {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+        tr:hover {
+            background: rgba(255,255,255,0.02);
+        }
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+        .search-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            gap: 1rem;
+        }
+
+        /* Delete confirm modal */
+        .delete-modal-body {
+            text-align: center;
+            padding: 0.5rem 0 1.5rem;
+        }
+        .delete-icon-wrap {
+            width: 70px; height: 70px;
+            border-radius: 50%;
+            background: rgba(239,68,68,0.12);
+            border: 2px solid rgba(239,68,68,0.3);
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1.2rem;
+        }
+        .delete-modal-info {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 1rem 1.2rem;
+            margin: 1.2rem 0;
+            text-align: left;
+            font-size: 0.85rem;
+        }
+        .delete-modal-info span { color: var(--text-secondary); }
+        .delete-modal-info b { color: var(--text-primary); }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="dashboard.html" class="brand">
+            <img src="images/logo.png" alt="Peta Tematik Logo" style="height: 40px; width: auto; border-radius: 4px;">
+            Peta<span>Tematik</span>
+            <div class="brand-motto">Peta Tematik Kantor Pertanahan Kota Probolinggo</div>
+        </a>
+        <div class="nav-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="tracker.html" class="active">Daftar</a>
+            <a href="report.html">Input</a>
+        </div>
+    </nav>
+
+    <main class="main-content" style="display: block; height: auto;">
+        
+        <div class="glass-panel animated">
+            <div class="search-container">
+                <h2 style="margin: 0;">Daftar Permohonan</h2>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn" style="background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2);" onclick="exportData()">
+                        <i data-feather="download" style="width: 14px; height: 14px;"></i> Export CSV
+                    </button>
+                    <button class="btn" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2);" onclick="document.getElementById('importFile').click()">
+                        <i data-feather="upload" style="width: 14px; height: 14px;"></i> Import
+                    </button>
+                    <input type="file" id="importFile" hidden accept=".csv" onchange="importData(this)">
+                    <input type="text" id="tableSearch" class="form-control" placeholder="Cari Nama/NIK..." style="width: 200px; background: rgba(255,255,255,0.02);">
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="permohonanTable">
+                    <thead>
+                        <tr>
+                            <th>No. Permohonan</th>
+                            <th>Tgl Input</th>
+                            <th>NIK / Pemohon</th>
+                            <th>Kecamatan / Kelurahan</th>
+                            <th>Hak / Sertipikat</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="permohonanBody">
+                        <!-- Data will be loaded via JS -->
+                        <tr>
+                            <td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 3rem;">
+                                Memuat data permohonan...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Controls -->
+            <div id="pagination" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--glass-border);">
+                <div style="font-size: 0.85rem; color: var(--text-secondary);" id="paginationInfo">
+                    Menampilkan 1-5 dari 0 data
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button id="prevBtn" class="btn" style="padding: 5px 15px; background: rgba(255,255,255,0.05);" disabled>
+                        <i data-feather="chevron-left" style="width: 16px; height: 16px; vertical-align: middle;"></i> Sebelum
+                    </button>
+                    <button id="nextBtn" class="btn" style="padding: 5px 15px; background: rgba(255,255,255,0.05);" disabled>
+                        Berikut <i data-feather="chevron-right" style="width: 16px; height: 16px; vertical-align: middle;"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Delete Confirm Modal -->
+    <div id="deleteModal" class="modal" style="display:none; position: fixed; z-index: 1100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); justify-content: center; align-items: center;">
+        <div class="glass-panel animated" style="width: 90%; max-width: 420px; padding: 2rem; border: 1px solid rgba(239,68,68,0.3);">
+            <div class="delete-modal-body">
+                <div class="delete-icon-wrap">
+                    <i data-feather="trash-2" style="width:32px; height:32px; color:#ef4444;"></i>
+                </div>
+                <h3 style="margin-bottom: 0.4rem; color: #ef4444;">Hapus Data Permohonan?</h3>
+                <p style="color: var(--text-secondary); font-size: 0.88rem;">Tindakan ini tidak dapat dibatalkan. Data akan dihapus permanen dari sistem.</p>
+
+                <div class="delete-modal-info">
+                    <div style="margin-bottom: 6px;"><span>No. Permohonan: </span><b id="delNoPerm">-</b></div>
+                    <div><span>Nama Pemohon: </span><b id="delNama">-</b></div>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn" style="flex:1; background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3);" id="btnConfirmDelete" onclick="executeDelete()">
+                        <i data-feather="trash-2" style="width:14px;height:14px;margin-right:5px;vertical-align:middle;"></i> Ya, Hapus
+                    </button>
+                    <button class="btn" style="flex:1; background:rgba(255,255,255,0.05);" onclick="closeDeleteModal()">Batal</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        feather.replace();
+
+        let allData = [];
+        let filteredData = [];
+        let currentPage = 1;
+        const itemsPerPage = 5;
+
+        async function loadData() {
+            try {
+                const response = await fetch('api/reports.php');
+                if (!response.ok) throw new Error('Network response was not ok');
+                const result = await response.json();
+                
+                if (result.status === 'success' && result.data) {
+                    allData = result.data;
+                    filteredData = [...allData];
+                    currentPage = 1;
+                    renderTable();
+                } else {
+                    throw new Error('Empty or Error');
+                }
+            } catch (err) {
+                console.warn("Menggunakan data demo karena gagal terhubung ke database:", err);
+                // Demo Data Fallback
+                allData = [
+                    { id: 1, no_permohonan: '001/2026', nik: '3513000000000001', nama_pemohon: 'H. Ahmad', kecamatan: 'Kanigaran', kelurahan: 'Kanigaran', jenis_hak: 'Milik', nomor_hak: '123' },
+                    { id: 2, no_permohonan: '002/2026', nik: '3513000000000002', nama_pemohon: 'Siti Maryam', kecamatan: 'Mayangan', kelurahan: 'Mayangan', jenis_hak: 'Milik', nomor_hak: '456' },
+                    { id: 3, no_permohonan: '003/2026', nik: '3513000000000003', nama_pemohon: 'Budi Santoso', kecamatan: 'Kademangan', kelurahan: 'Kademangan', jenis_hak: 'Milik', nomor_hak: '789' },
+                    { id: 4, no_permohonan: '004/2026', nik: '3513000000000004', nama_pemohon: 'Joko Widodo', kecamatan: 'Wonoasih', kelurahan: 'Wonoasih', jenis_hak: 'Milik', nomor_hak: '101' },
+                    { id: 5, no_permohonan: '005/2026', nik: '3513000000000005', nama_pemohon: 'Rina Wijaya', kecamatan: 'Kedopok', kelurahan: 'Kedopok', jenis_hak: 'Milik', nomor_hak: '202' },
+                    { id: 6, no_permohonan: '006/2026', nik: '3513000000000006', nama_pemohon: 'Agus Salim', kecamatan: 'Kanigaran', kelurahan: 'Tisnonegaran', jenis_hak: 'Milik', nomor_hak: '303' }
+                ];
+                filteredData = [...allData];
+                currentPage = 1;
+                renderTable();
+            }
+        }
+
+        function renderTable() {
+            const body = document.getElementById('permohonanBody');
+            body.innerHTML = '';
+
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const paginatedData = filteredData.slice(start, end);
+
+            if (paginatedData.length === 0) {
+                body.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem;">Belum ada data permohonan.</td></tr>';
+                updatePaginationInfo(0, 0, 0);
+                return;
+            }
+
+            paginatedData.forEach(item => {
+                const hidden = getHiddenIds().includes(String(item.id));
+                const tr = document.createElement('tr');
+                tr.id = `row-${item.id}`;
+                tr.style.opacity = hidden ? '0.45' : '1';
+                tr.innerHTML = `
+                    <td><b>${item.no_permohonan}</b></td>
+                    <td style="font-size: 0.8rem; color: var(--text-secondary);">${item.created_at ? item.created_at.substring(0,10) : '-'}</td>
+                    <td>
+                        <div style="font-weight: 600;">${item.nama_pemohon}</div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">${item.nik}</div>
+                    </td>
+                    <td>
+                        <div>${item.kecamatan}</div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">${item.kelurahan}</div>
+                    </td>
+                    <td>
+                        <div>${item.jenis_hak}</div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">No: ${item.nomor_hak}</div>
+                    </td>
+                    
+                    <td>
+                        <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                            <button class="btn" style="padding: 5px 10px; font-size: 0.8rem; background: rgba(59, 130, 246, 0.1); color: #3b82f6;" onclick="viewDetail('${item.latitude}','${item.longitude}','${item.nama_pemohon}')" title="Lihat di Peta">
+                                <i data-feather="eye" style="width: 14px; height: 14px;"></i>
+                            </button>
+                            <button id="hide-btn-${item.id}" class="btn" style="padding: 5px 10px; font-size: 0.8rem; ${hidden ? "background: rgba(156,163,175,0.15); color: #9ca3af; border: 1px solid rgba(156,163,175,0.2);" : "background: rgba(234,179,8,0.1); color: #eab308; border: 1px solid rgba(234,179,8,0.2);"}" onclick="toggleHideItem('${item.id}')" title="${hidden ? 'Tampilkan di Peta' : 'Sembunyikan dari Peta'}">
+                                <i data-feather="${hidden ? 'eye-off' : 'eye-off'}" style="width: 14px; height: 14px;"></i>
+                                ${hidden ? 'Tampilkan' : 'Sembunyikan'}
+                            </button>
+                            ${item.shp_file ? `
+                                <a href="${item.shp_file}" download class="btn" style="padding: 5px 10px; font-size: 0.8rem; background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2);" title="Download SHP">
+                                    <i data-feather="download" style="width: 14px; height: 14px;"></i>
+                                </a>
+                            ` : ''}
+                            ${(window.currentUser && (window.currentUser.role === 'admin' || window.currentUser.role === 'petugas')) ? `
+                                
+                            ` : ''}
+                            ${(window.currentUser && window.currentUser.role === 'admin') ? `
+                                <button class="btn" style="padding: 5px 10px; font-size: 0.8rem; background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2);" onclick="confirmDelete('${item.id}', '${item.no_permohonan}', '${item.nama_pemohon}')" title="Hapus Data">
+                                    <i data-feather="trash-2" style="width: 14px; height: 14px;"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+
+            updatePaginationInfo(start + 1, Math.min(end, filteredData.length), filteredData.length);
+            feather.replace();
+        }
+
+        function updatePaginationInfo(start, end, total) {
+            const info = document.getElementById('paginationInfo');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+
+            if (total === 0) {
+                info.innerText = 'Menampilkan 0 data';
+                prevBtn.disabled = true;
+                nextBtn.disabled = true;
+                return;
+            }
+
+            info.innerText = `Menampilkan ${start}-${end} dari ${total} data`;
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = end >= total;
+        }
+
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTable();
+            }
+        });
+
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentPage * itemsPerPage < filteredData.length) {
+                currentPage++;
+                renderTable();
+            }
+        });
+
+
+        const tableSearch = document.getElementById('tableSearch');
+        tableSearch.addEventListener('input', function() {
+            const val = this.value.toLowerCase();
+            filteredData = allData.filter(item => {
+                const text = `${item.no_permohonan} ${item.nama_pemohon} ${item.nik} ${item.kecamatan} ${item.kelurahan}`.toLowerCase();
+                return text.includes(val);
+            });
+            currentPage = 1;
+            renderTable();
+        });
+
+        loadData();
+
+        // ─── HIDE/SHOW LAYER LOGIC ────────────────────────────
+        const HIDDEN_KEY = 'hiddenPermohonanIds';
+
+        function getHiddenIds() {
+            try { return JSON.parse(localStorage.getItem(HIDDEN_KEY) || '[]'); } catch(e) { return []; }
+        }
+
+        function toggleHideItem(id) {
+            const ids = getHiddenIds();
+            const idx = ids.indexOf(String(id));
+            if (idx === -1) { ids.push(String(id)); } else { ids.splice(idx, 1); }
+            localStorage.setItem(HIDDEN_KEY, JSON.stringify(ids));
+            renderTable();
+        }
+
+        function viewDetail(lat, lng, nama) {
+            const latF = parseFloat(lat), lngF = parseFloat(lng);
+            if (!isNaN(latF) && !isNaN(lngF)) {
+                // Simpan koordinat di sessionStorage agar dashboard bisa fly-to
+                sessionStorage.setItem('focusLat', latF);
+                sessionStorage.setItem('focusLng', lngF);
+                sessionStorage.setItem('focusNama', nama || '');
+                window.location.href = 'dashboard.html';
+            } else {
+                alert('Koordinat tidak tersedia untuk data ini.');
+            }
+        }
+
+        // ─── DELETE LOGIC ──────────────────────────────
+        let _deleteTargetId = null;
+
+        function confirmDelete(id, noPerm, nama) {
+            _deleteTargetId = id;
+            document.getElementById('delNoPerm').textContent = noPerm;
+            document.getElementById('delNama').textContent = nama;
+            document.getElementById('deleteModal').style.display = 'flex';
+            if(typeof feather !== 'undefined') feather.replace();
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+            _deleteTargetId = null;
+        }
+
+        async function executeDelete() {
+            if (!_deleteTargetId) return;
+
+            const btn = document.getElementById('btnConfirmDelete');
+            btn.disabled = true;
+            btn.innerHTML = '<i data-feather="loader" style="width:14px;height:14px;margin-right:5px;vertical-align:middle;"></i> Menghapus...';
+            if(typeof feather !== 'undefined') feather.replace();
+
+            try {
+                const response = await fetch(`api/reports.php?id=${_deleteTargetId}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    closeDeleteModal();
+                    // Remove from local arrays
+                    allData = allData.filter(d => d.id != _deleteTargetId);
+                    filteredData = filteredData.filter(d => d.id != _deleteTargetId);
+                    // Adjust page if needed
+                    const maxPage = Math.ceil(filteredData.length / itemsPerPage) || 1;
+                    if (currentPage > maxPage) currentPage = maxPage;
+                    renderTable();
+                    showToast('Data berhasil dihapus.', 'success');
+                } else {
+                    throw new Error(result.message || 'Gagal menghapus data.');
+                }
+            } catch (err) {
+                showToast('Error: ' + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-feather="trash-2" style="width:14px;height:14px;margin-right:5px;vertical-align:middle;"></i> Ya, Hapus';
+                if(typeof feather !== 'undefined') feather.replace();
+            }
+        }
+
+        // ─── TOAST NOTIFICATION ───────────────────────
+        function showToast(msg, type = 'success') {
+            const existing = document.getElementById('toastNotif');
+            if (existing) existing.remove();
+
+            const color = type === 'success' ? '#22c55e' : '#ef4444';
+            const icon  = type === 'success' ? 'check-circle' : 'alert-circle';
+            const toast = document.createElement('div');
+            toast.id = 'toastNotif';
+            toast.style.cssText = `
+                position: fixed; bottom: 2rem; right: 2rem; z-index: 9999;
+                background: rgba(15,23,42,0.96); border: 1px solid ${color}44;
+                border-left: 4px solid ${color}; border-radius: 10px;
+                padding: 1rem 1.4rem; display: flex; align-items: center; gap: 10px;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.4); backdrop-filter: blur(12px);
+                font-size: 0.9rem; color: var(--text-primary);
+                animation: slideInToast 0.3s ease;
+            `;
+            toast.innerHTML = `<i data-feather="${icon}" style="width:18px;height:18px;color:${color};flex-shrink:0;"></i><span>${msg}</span>`;
+            document.body.appendChild(toast);
+            if(typeof feather !== 'undefined') feather.replace();
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.4s'; setTimeout(() => toast.remove(), 400); }, 3000);
+        }
+
+        function exportData() {
+            if (allData.length === 0) {
+                alert('Tidak ada data untuk di-export.');
+                return;
+            }
+            
+            const headers = ['No Permohonan', 'Tgl Input', 'NIK', 'Nama Pemohon', 'No Telp', 'Alamat', 'Jenis Hak', 'Nomor Hak', 'Luas Sertipikat', 'Keadaan Tanah', 'Kecamatan', 'Kelurahan', 'Keperluan', 'Latitude', 'Longitude'];
+            
+            let csvContent = "\uFEFF" + headers.join(',') + "\n";
+            
+            allData.forEach(row => {
+                const rowData = [
+                    row.no_permohonan,
+                    row.created_at,
+                    row.nik,
+                    `"${row.nama_pemohon}"`,
+                    `"${row.no_telp || ''}"`,
+                    `"${(row.alamat || '').replace(/"/g, '""')}"`,
+                    row.jenis_hak,
+                    row.nomor_hak,
+                    row.luas_sertipikat || '',
+                    row.keadaan_tanah || '',
+                    row.kecamatan,
+                    row.kelurahan,
+                    `"${(row.keperluan || '').replace(/"/g, '""')}"`,
+                    row.latitude,
+                    row.longitude
+                ];
+                csvContent += rowData.join(',') + "\n";
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "data_permohonan_peta_tematik.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        async function importData(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            if (!confirm('Apakah Anda yakin ingin mengimport data? API Import akan dipanggil.')) {
+                input.value = '';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('csv_file', file);
+
+            try {
+                const response = await fetch('api/import.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    alert(result.message);
+                    loadData();
+                } else {
+                    alert('Gagal: ' + result.message);
+                }
+            } catch (err) {
+                alert('Kesalahan jaringan: ' + err.message);
+            }
+            input.value = '';
+        }
+    </script>
+</body>
+</html>

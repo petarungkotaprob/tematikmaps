@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Lahan - Peta Tematik</title>
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.js"></script>
+    <script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#070e1c">
+    <!-- Feather Icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="js/pwa.js"></script>
+    <style>
+        .report-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 2rem;
+        }
+        #mini-map {
+            width: 100%;
+            height: 420px;
+            border-radius: 12px;
+            margin-top: 10px;
+            border: 1px solid var(--glass-border);
+        }
+        .form-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .form-row .form-group {
+            flex: 1;
+        }
+        
+        /* Custom select styling for better glassmorphism */
+        select.form-control option {
+            background-color: #0f172a;
+            color: white;
+        }
+
+        /* === SHP Upload Zone === */
+        .shp-upload-zone {
+            border: 2px dashed rgba(59,130,246,0.35);
+            border-radius: 12px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(59,130,246,0.04);
+            position: relative;
+        }
+        .shp-upload-zone:hover, .shp-upload-zone.drag-over {
+            border-color: var(--accent-blue);
+            background: rgba(59,130,246,0.10);
+            transform: scale(1.01);
+        }
+        .shp-upload-zone .shp-icon {
+            width: 40px; height: 40px;
+            color: var(--accent-blue);
+            margin-bottom: 0.6rem;
+        }
+        .shp-upload-zone p { margin: 0; font-size: 0.85rem; color: var(--text-secondary); }
+        .shp-upload-zone strong { color: var(--accent-blue); }
+        .shp-info-bar {
+            display: none;
+            margin-top: 10px;
+            background: rgba(34,197,94,0.08);
+            border: 1px solid rgba(34,197,94,0.25);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 0.82rem;
+            color: #22c55e;
+            align-items: center;
+            gap: 10px;
+        }
+        .shp-info-bar.error {
+            background: rgba(239,68,68,0.08);
+            border-color: rgba(239,68,68,0.25);
+            color: #ef4444;
+        }
+        .shp-info-bar svg { flex-shrink: 0; }
+        .shp-progress {
+            display: none;
+            height: 4px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 99px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        .shp-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-blue), #8b5cf6);
+            border-radius: 99px;
+            transition: width 0.4s ease;
+            animation: shpPulse 1.5s infinite;
+        }
+        @keyframes shpPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .shp-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 99px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            background: rgba(59,130,246,0.15);
+            color: var(--accent-blue);
+            border: 1px solid rgba(59,130,246,0.25);
+            margin-left: 4px;
+        }
+        .btn-shp-clear {
+            background: rgba(239,68,68,0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239,68,68,0.2);
+            border-radius: 6px;
+            padding: 3px 10px;
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-left: auto;
+        }
+        .btn-shp-clear:hover { background: rgba(239,68,68,0.2); }
+
+        /* === Category Color Panel === */
+        .cat-panel {
+            display: none;
+            margin-top: 12px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 14px;
+            animation: fadeInUp 0.3s ease;
+        }
+        @keyframes fadeInUp {
+            from { opacity:0; transform:translateY(6px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+        .cat-panel-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .cat-field-select {
+            width: 100%;
+            font-size: 0.83rem;
+            margin-bottom: 12px;
+        }
+        .cat-palette-row {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        .palette-btn {
+            display: flex;
+            gap: 3px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.04);
+            cursor: pointer;
+            transition: all 0.2s;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+        .palette-btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+        .palette-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+        .cat-values-list {
+            max-height: 200px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding-right: 2px;
+        }
+        .cat-values-list::-webkit-scrollbar { width: 4px; }
+        .cat-values-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+        .cat-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 8px;
+            border: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+        .cat-row:hover { border-color: var(--glass-border); }
+        .cat-color-input {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: none;
+            padding: 1px;
+            cursor: pointer;
+            background: none;
+            flex-shrink: 0;
+        }
+        .cat-label { font-size: 0.82rem; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .cat-count { font-size: 0.72rem; color: var(--text-secondary); flex-shrink: 0; }
+        .btn-apply-cat {
+            width: 100%;
+            margin-top: 10px;
+            background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(139,92,246,0.2));
+            border: 1px solid rgba(59,130,246,0.3);
+            color: var(--accent-blue);
+            font-weight: 600;
+            font-size: 0.83rem;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-apply-cat:hover { background: rgba(59,130,246,0.25); }
+
+        /* Leaflet Legend */
+        .map-legend {
+            background: rgba(10,15,30,0.92);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 0.78rem;
+            backdrop-filter: blur(12px);
+            max-height: 180px;
+            overflow-y: auto;
+            min-width: 140px;
+        }
+        .map-legend::-webkit-scrollbar { width: 3px; }
+        .map-legend::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius:3px; }
+        .legend-title {
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .legend-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+            color: var(--text-primary);
+        }
+        .legend-swatch {
+            width: 14px; height: 14px;
+            border-radius: 3px;
+            flex-shrink: 0;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        /* --- Responsive & Mobile Layout Fixes --- */
+        @media (max-width: 992px) {
+            .main-content {
+                width: 95vw !important;
+                max-width: 100% !important;
+                padding: 1rem 0.5rem !important;
+            }
+            .report-grid {
+                grid-template-columns: 1fr !important;
+                gap: 1.5rem !important;
+            }
+            .brand-motto {
+                display: none !important;
+            }
+        }
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                padding: 0.75rem 1rem !important;
+                gap: 0.75rem !important;
+            }
+            .brand {
+                justify-content: space-between !important;
+                width: 100% !important;
+            }
+            .nav-links {
+                display: flex !important;
+                overflow-x: auto !important;
+                white-space: nowrap !important;
+                padding-bottom: 6px !important;
+                gap: 0.5rem !important;
+                align-items: center !important;
+            }
+            .form-row[style*="display: flex"],
+            .form-row {
+                flex-direction: column !important;
+                gap: 0.75rem !important;
+            }
+            .form-row > * {
+                width: 100% !important;
+            }
+        }
+
+        /* --- Landscape Phone Layout Fixes --- */
+        @media (max-height: 500px) {
+            .navbar {
+                flex-direction: row !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                padding: 0.5rem 1rem !important;
+                gap: 0 !important;
+            }
+            .brand {
+                width: auto !important;
+            }
+            .brand-motto {
+                display: none !important;
+            }
+            .nav-links {
+                padding-bottom: 0 !important;
+                margin: 0 !important;
+            }
+            .main-content {
+                width: 95vw !important;
+                max-width: 100% !important;
+                padding: 1rem 0.5rem !important;
+                margin-top: 0 !important;
+            }
+            .glass-panel {
+                padding: 1.5rem 1rem !important;
+            }
+            .report-grid {
+                grid-template-columns: 1fr !important;
+                gap: 1.5rem !important;
+            }
+            .form-row[style*="display: flex"],
+            .form-row {
+                flex-direction: column !important;
+                gap: 0.75rem !important;
+            }
+            .form-row > * {
+                width: 100% !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="dashboard.html" class="brand">
+            <img src="images/logo.png" alt="Peta Tematik Logo" style="height: 40px; width: auto; border-radius: 4px;">
+            Peta<span>Tematik</span>
+            <div class="brand-motto">Peta Tematik Kantor Pertanahan Kota Probolinggo</div>
+        </a>
+        <div class="nav-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="tracker.html">Daftar</a>
+            <a href="report.html" class="active">Input</a>
+        </div>
+    </nav>
+
+    <main class="main-content" style="display: block; max-width: 1300px; margin: 0 auto; height: auto;">
+        
+        <div class="glass-panel animated">
+            <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px;">
+                <i data-feather="edit-3" style="color: var(--accent-blue)"></i> Formulir Pendataan Lahan Baku Sawah
+            </h2>
+
+            <form id="reportForm" class="report-grid" autocomplete="off">
+                <div>
+                    <!-- No & NIK -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>No. Permohonan</label>
+                            <input type="text" id="no_permohonan" class="form-control" readonly placeholder="Otomatis" style="background: rgba(255,255,255,0.02); cursor: not-allowed;">
+                        </div>
+                        <div class="form-group">
+                            <label>NIK (16 Digit)</label>
+                            <input type="text" id="nik" class="form-control" maxlength="16" pattern="\d{16}" placeholder="Masukkan NIK Pemohon">
+                        </div>
+                    </div>
+
+                    <!-- Nama Pemohon & Kuasa -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nama Pemohon</label>
+                            <input type="text" id="nama_pemohon" class="form-control" placeholder="Nama Lengkap" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Nama Kuasa (Optional)</label>
+                            <input type="text" id="nama_kuasa" class="form-control" placeholder="Kosongkan jika tidak ada">
+                        </div>
+                    </div>
+
+                    <!-- No Telp & Alamat -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>No. Telp / HP Pemohon</label>
+                            <input type="text" id="no_telp" class="form-control" placeholder="Cth: 081234567890">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Alamat Lengkap</label>
+                        <textarea id="alamat" class="form-control" rows="2" placeholder="Alamat domisili pemohon"></textarea>
+                    </div>
+
+                    <!-- Sertifikat Info -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Jenis Hak</label>
+                            <select id="jenis_hak" class="form-control">
+                                <option value="">-- Pilih Jenis Hak --</option>
+                                <option value="Milik">Milik (SHM)</option>
+                                <option value="Guna Bangunan">Guna Bangunan (SHGB)</option>
+                                <option value="Guna Usaha">Guna Usaha (SHGU)</option>
+                                <option value="Pakai">Pakai</option>
+                                <option value="Pengelolaan">Pengelolaan</option>
+                                <option value="Waqaf">Waqaf</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Nomor Hak</label>
+                            <input type="text" id="nomor_hak" class="form-control" placeholder="Nomor Sertipikat">
+                        </div>
+                    </div>
+
+                    <!-- Luas & Keadaan Tanah -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Luas Sertipikat (m²)</label>
+                            <input type="text" id="luas_sertipikat" class="form-control" placeholder="Cth: 1500">
+                        </div>
+                        <div class="form-group">
+                            <label>Keadaan Tanah</label>
+                            <input type="text" id="keadaan_tanah" class="form-control" placeholder="Cth: Sawah Irigasi, Tanah Kosong, dll.">
+                        </div>
+                    </div>
+
+                    <!-- Wilayah -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Kecamatan</label>
+                            <select id="kecamatan" class="form-control" required>
+                                <option value="">-- Pilih Kecamatan --</option>
+                                <option value="Kademangan">Kademangan</option>
+                                <option value="Kanigaran">Kanigaran</option>
+                                <option value="Kedopok">Kedopok</option>
+                                <option value="Mayangan">Mayangan</option>
+                                <option value="Wonoasih">Wonoasih</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Kelurahan</label>
+                            <select id="kelurahan" class="form-control" required disabled>
+                                <option value="">-- Pilih Kelurahan --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Keperluan</label>
+                        <textarea id="keperluan" class="form-control" rows="2" placeholder="Tujuan pendataan/permohonan..."></textarea>
+                    </div>
+                </div>
+
+                <div>
+                    <!-- === SHP UPLOAD SECTION === -->
+                    <div class="form-group" style="margin-bottom: 1.2rem;">
+                        <label style="display:flex; align-items:center; gap:8px;">
+                            <i data-feather="layers" style="width:15px;height:15px;color:var(--accent-blue);"></i>
+                            Upload Shapefile <span class="shp-badge">Opsional</span>
+                        </label>
+                        <p style="font-size:0.82rem; color:var(--text-secondary); margin-bottom:10px; margin-top:4px;">
+                            Upload file <strong>.zip</strong> berisi shapefile (.shp, .dbf, .prj). Koordinat akan otomatis terisi dari centroid.
+                        </p>
+
+                        <div class="shp-upload-zone" id="shpDropZone" onclick="document.getElementById('shpFileInput').click()">
+                            <input type="file" id="shpFileInput" accept=".zip" hidden>
+                            <i data-feather="upload-cloud" class="shp-icon"></i>
+                            <p><strong>Klik atau seret file .zip ke sini</strong></p>
+                            <p style="margin-top:4px; font-size:0.78rem;">Shapefile harus dikemas dalam satu file .zip</p>
+                        </div>
+
+                        <div class="shp-progress" id="shpProgress">
+                            <div class="shp-progress-bar" id="shpProgressBar"></div>
+                        </div>
+
+                        <div class="shp-info-bar" id="shpInfoBar">
+                            <i data-feather="check-circle" style="width:16px;height:16px;"></i>
+                            <span id="shpInfoText">Shapefile berhasil dimuat.</span>
+                            <button class="btn-shp-clear" id="btnClearShp" type="button">Hapus</button>
+                        </div>
+
+                        <!-- === CATEGORY COLOR PANEL === -->
+                        <div class="cat-panel" id="catPanel">
+                            <div class="cat-panel-title">
+                                <i data-feather="sliders" style="width:13px;height:13px;"></i>
+                                Pengaturan Warna Kategori
+                            </div>
+
+                            <label style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:4px; display:block;">Pilih Field Atribut:</label>
+                            <select id="catFieldSelect" class="form-control cat-field-select">
+                                <option value="">-- Pilih kolom --</option>
+                            </select>
+
+                            <div id="catPaletteRow" class="cat-palette-row" style="display:none;">
+                                <!-- Palette buttons injected by JS -->
+                            </div>
+
+                            <div id="catValuesList" class="cat-values-list">
+                                <!-- Category rows injected by JS -->
+                            </div>
+
+                            <button type="button" class="btn-apply-cat" id="btnApplyCat" style="display:none;">
+                                <i data-feather="check" style="width:14px;height:14px;"></i>
+                                Terapkan Warna ke Peta
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- === MAP SECTION === -->
+                    <div class="form-group">
+                        <label>Titik / Area Koordinat Lahan</label>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 10px;">
+                            Klik peta untuk pin lokasi, atau upload shapefile di atas.
+                        </p>
+                        
+                        <div id="mini-map"></div>
+                        
+                        <div style="margin-top: 15px; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; border: 1px solid var(--glass-border);">
+                            <label style="font-size: 0.85rem; margin-bottom: 10px; display: block;">Sistem Koordinat</label>
+                            <select id="coordSystem" class="form-control" style="margin-bottom: 15px; font-size: 0.85rem;">
+                                <option value="geo">Geografis (WGS 84)</option>
+                                <option value="utm">UTM - 49S</option>
+                                <option value="tm3">TM3 - 49.2 (BPN)</option>
+                            </select>
+
+                            <div id="geoInputs" style="display: flex; gap: 10px;">
+                                <div style="flex: 1;">
+                                    <label style="font-size: 0.75rem;">Latitude</label>
+                                    <input type="text" id="latitude" class="form-control" placeholder="Latitude" required style="font-size: 0.85rem;">
+                                </div>
+                                <div style="flex: 1;">
+                                    <label style="font-size: 0.75rem;">Longitude</label>
+                                    <input type="text" id="longitude" class="form-control" placeholder="Longitude" required style="font-size: 0.85rem;">
+                                </div>
+                            </div>
+
+                            <div id="gridInputs" style="display: none; gap: 10px;">
+                                <div style="flex: 1;">
+                                    <label style="font-size: 0.75rem;">Easting (X)</label>
+                                    <input type="text" id="coordX" class="form-control" placeholder="X" style="font-size: 0.85rem;">
+                                </div>
+                                <div style="flex: 1;">
+                                    <label style="font-size: 0.75rem;">Northing (Y)</label>
+                                    <input type="text" id="coordY" class="form-control" placeholder="Y" style="font-size: 0.85rem;">
+                                </div>
+                            </div>
+                            
+                            <button type="button" id="btnSyncCoord" class="btn" style="width: 100%; margin-top: 10px; padding: 5px; font-size: 0.8rem; background: rgba(59, 130, 246, 0.1); color: var(--accent-blue);">
+                                <i data-feather="refresh-cw" style="width: 12px; height: 12px; vertical-align: middle; margin-right: 5px;"></i> Sinkronkan Koordinat
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                        <i data-feather="save" style="width: 16px; height: 16px; margin-right: 5px;"></i> Simpan Data Permohonan
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </main>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal" style="display:none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); justify-content: center; align-items: center;">
+        <div class="glass-panel animated" style="width: 90%; max-width: 500px; padding: 2.5rem; text-align: center; border: 1px solid var(--status-resolved);">
+            <div style="background: rgba(34, 197, 94, 0.1); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto;">
+                <i data-feather="check-circle" style="width: 45px; height: 45px; color: var(--status-resolved);"></i>
+            </div>
+            
+            <h2 style="margin-bottom: 0.5rem; color: var(--status-resolved);">Berhasil Disimpan!</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 2rem;">Data permohonan Anda telah tercatat dalam sistem Peta Tematik.</p>
+
+            <div style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 1.5rem; text-align: left; margin-bottom: 2rem; border: 1px solid var(--glass-border);">
+                <div id="summaryItems">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.5rem;">
+                        <span style="color: var(--text-secondary); font-size: 0.85rem;">No. Permohonan</span>
+                        <b id="sum_no">-</b>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.5rem;">
+                        <span style="color: var(--text-secondary); font-size: 0.85rem;">Nama Pemohon</span>
+                        <b id="sum_nama">-</b>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.5rem;">
+                        <span style="color: var(--text-secondary); font-size: 0.85rem;">No. Telp / HP</span>
+                        <b id="sum_telp">-</b>
+                    </div>
+
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-primary" style="flex: 1;" onclick="window.location.href='tracker.html'">Ke Daftar Permohonan</button>
+                <button class="btn" style="flex: 1; background: rgba(255,255,255,0.05);" onclick="window.location.reload()">Input Data Lagi</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        feather.replace();
+
+        // Data Kelurahan
+        const dataKelurahan = {
+            "Kademangan": ["Kademangan", "Ketapang", "Pilang", "Pohsangit Kidul", "Triwung Kidul", "Triwung Lor"],
+            "Kanigaran": ["Curahgrinting", "Kanigaran", "Kebonsari Kulon", "Kebonsari Wetan", "Sukoharjo", "Tisnonegaran"],
+            "Kedopok": ["Jrebeng Kulon", "Jrebeng Lor", "Jrebeng Wetan", "Kareng Lor", "Kedopok", "Sumber Wetan"],
+            "Mayangan": ["Jati", "Mangunharjo", "Mayangan", "Sukabumi", "Wiroborang"],
+            "Wonoasih": ["Jrebeng Kidul", "Kedung Asem", "Kedung Galeng", "Pakistaji", "Sumber Taman", "Wonoasih"]
+        };
+
+        const selectKec = document.getElementById('kecamatan');
+        const selectKel = document.getElementById('kelurahan');
+
+        selectKec.addEventListener('change', function() {
+            const kec = this.value;
+            selectKel.innerHTML = '<option value="">-- Pilih Kelurahan --</option>';
+            
+            if (kec && dataKelurahan[kec]) {
+                dataKelurahan[kec].forEach(kel => {
+                    const opt = document.createElement('option');
+                    opt.value = kel;
+                    opt.textContent = kel;
+                    selectKel.appendChild(opt);
+                });
+                selectKel.disabled = false;
+            } else {
+                selectKel.disabled = true;
+            }
+        });
+
+        // Auto Generate No Permohonan: [Nomor]/[Tahun]
+        // In a real app, this should fetch from DB, but we'll mock it here or handle in backend.
+        // For now, let's just show an example or "Fetching..."
+        async function generateNoPermohonan() {
+            const year = new Date().getFullYear();
+            // We'll call an API to get the next count
+            try {
+                const response = await fetch('api/reports.php?action=get_next_no');
+                const data = await response.json();
+                document.getElementById('no_permohonan').value = `${data.next_no}/${year}`;
+            } catch (e) {
+                document.getElementById('no_permohonan').value = `AUTO/${year}`;
+            }
+        }
+        
+        generateNoPermohonan();
+
+        // Mini Map Logic
+        const miniMap = L.map('mini-map').setView([-7.7543, 113.2159], 13);
+        L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            subdomains:['mt0','mt1','mt2','mt3']
+        }).addTo(miniMap);
+
+        let marker;
+        miniMap.on('click', function(e) {
+            const { lat, lng } = e.latlng;
+            updateMarker(lat, lng);
+            syncGridFromGeo(lat, lng);
+        });
+
+        function updateMarker(lat, lng) {
+            if (marker) {
+                marker.setLatLng([lat, lng]);
+            } else {
+                marker = L.marker([lat, lng]).addTo(miniMap);
+            }
+            document.getElementById('latitude').value = lat.toFixed(8);
+            document.getElementById('longitude').value = lng.toFixed(8);
+        }
+
+        // Coordinate conversion logic
+        const PROJ_WGS84 = "EPSG:4326";
+        const PROJ_UTM49S = "+proj=utm +zone=49 +south +datum=WGS84 +units=m +no_defs";
+        const PROJ_TM3_492 = "+proj=tmerc +lat_0=0 +lon_0=112.5 +k=0.9999 +x_0=200000 +y_0=1500000 +ellps=GRS80 +units=m +no_defs";
+
+        const coordSystem = document.getElementById('coordSystem');
+        const geoInputs = document.getElementById('geoInputs');
+        const gridInputs = document.getElementById('gridInputs');
+        const inputX = document.getElementById('coordX');
+        const inputY = document.getElementById('coordY');
+        const inputLat = document.getElementById('latitude');
+        const inputLng = document.getElementById('longitude');
+
+        coordSystem.addEventListener('change', function() {
+            if (this.value === 'geo') {
+                geoInputs.style.display = 'flex';
+                gridInputs.style.display = 'none';
+            } else {
+                geoInputs.style.display = 'none';
+                gridInputs.style.display = 'flex';
+                syncGridFromGeo(parseFloat(inputLat.value), parseFloat(inputLng.value));
+            }
+        });
+
+        function syncGridFromGeo(lat, lng) {
+            if (isNaN(lat) || isNaN(lng)) return;
+            const system = coordSystem.value;
+            let destProj = null;
+            if (system === 'utm') destProj = PROJ_UTM49S;
+            if (system === 'tm3') destProj = PROJ_TM3_492;
+
+            if (destProj) {
+                const result = proj4(PROJ_WGS84, destProj, [lng, lat]);
+                inputX.value = result[0].toFixed(3);
+                inputY.value = result[1].toFixed(3);
+            }
+        }
+
+        function syncGeoFromGrid() {
+            const system = coordSystem.value;
+            const x = parseFloat(inputX.value);
+            const y = parseFloat(inputY.value);
+            if (isNaN(x) || isNaN(y)) return;
+
+            let srcProj = null;
+            if (system === 'utm') srcProj = PROJ_UTM49S;
+            if (system === 'tm3') srcProj = PROJ_TM3_492;
+
+            if (srcProj) {
+                const result = proj4(srcProj, PROJ_WGS84, [x, y]);
+                const lng = result[0];
+                const lat = result[1];
+                updateMarker(lat, lng);
+                miniMap.flyTo([lat, lng], 16);
+            }
+        }
+
+        document.getElementById('btnSyncCoord').addEventListener('click', () => {
+            if (coordSystem.value === 'geo') {
+                const lat = parseFloat(inputLat.value);
+                const lng = parseFloat(inputLng.value);
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    updateMarker(lat, lng);
+                    miniMap.flyTo([lat, lng], 16);
+                }
+            } else {
+                syncGeoFromGrid();
+            }
+        });
+
+        // Add manual change listeners
+        inputLat.addEventListener('change', () => { if(coordSystem.value === 'geo') syncGridFromGeo(parseFloat(inputLat.value), parseFloat(inputLng.value)); });
+        inputLng.addEventListener('change', () => { if(coordSystem.value === 'geo') syncGridFromGeo(parseFloat(inputLat.value), parseFloat(inputLng.value)); });
+
+        // =============================================
+        // === SHAPEFILE UPLOAD & CATEGORY COLOR LOGIC
+        // =============================================
+        let shpGeoJsonLayer = null;
+        let shpCombinedData = null;   // store parsed GeoJSON
+        let categoryColorMap = {};    // { fieldValue: '#hexcolor' }
+        let activeCatField  = null;
+        let shpLegendControl = null;
+        let defaultShpColor = '#3b82f6';
+
+        // ── Palette presets ──────────────────────────
+        const COLOR_PALETTES = {
+            'Vivid':    ['#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#8b5cf6','#ec4899','#14b8a6'],
+            'Pastel':   ['#fca5a5','#fdba74','#fde68a','#86efac','#93c5fd','#c4b5fd','#f9a8d4','#6ee7b7'],
+            'Earth':    ['#92400e','#78350f','#4d7c0f','#166534','#155e75','#1e3a5f','#6b21a8','#9f1239'],
+            'Cool':     ['#0ea5e9','#6366f1','#a855f7','#14b8a6','#0284c7','#4f46e5','#7c3aed','#0d9488'],
+            'Monochrome':['#f8fafc','#cbd5e1','#94a3b8','#64748b','#475569','#334155','#1e293b','#0f172a'],
+        };
+
+        // ── DOM refs ──────────────────────────────────
+        const shpDropZone    = document.getElementById('shpDropZone');
+        const shpFileInput   = document.getElementById('shpFileInput');
+        const shpProgress    = document.getElementById('shpProgress');
+        const shpProgressBar = document.getElementById('shpProgressBar');
+        const shpInfoBar     = document.getElementById('shpInfoBar');
+        const shpInfoText    = document.getElementById('shpInfoText');
+        const btnClearShp    = document.getElementById('btnClearShp');
+        const catPanel       = document.getElementById('catPanel');
+        const catFieldSelect = document.getElementById('catFieldSelect');
+        const catValuesList  = document.getElementById('catValuesList');
+        const catPaletteRow  = document.getElementById('catPaletteRow');
+        const btnApplyCat    = document.getElementById('btnApplyCat');
+
+        // ── Drag & Drop ───────────────────────────────
+        shpDropZone.addEventListener('dragover', e => { e.preventDefault(); shpDropZone.classList.add('drag-over'); });
+        shpDropZone.addEventListener('dragleave', () => shpDropZone.classList.remove('drag-over'));
+        shpDropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            shpDropZone.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                try {
+                    const dt = new DataTransfer();
+                    dt.items.add(file);
+                    shpFileInput.files = dt.files;
+                } catch(err) {}
+                processShpFile(file);
+            }
+        });
+        shpFileInput.addEventListener('change', function() {
+            if (this.files[0]) processShpFile(this.files[0]);
+        });
+        btnClearShp.addEventListener('click', () => {
+            shpFileInput.value = '';
+            clearShp();
+        });
+
+        // ── Clear ─────────────────────────────────────
+        function clearShp() {
+            if (shpGeoJsonLayer) { miniMap.removeLayer(shpGeoJsonLayer); shpGeoJsonLayer = null; }
+            if (shpLegendControl) { miniMap.removeControl(shpLegendControl); shpLegendControl = null; }
+            shpCombinedData = null; categoryColorMap = {}; activeCatField = null; defaultShpColor = '#3b82f6';
+            shpInfoBar.style.display = 'none';
+            shpInfoBar.classList.remove('error');
+            shpProgress.style.display = 'none';
+            shpProgressBar.style.width = '0%';
+            shpDropZone.style.display = 'flex';
+            catPanel.style.display = 'none';
+            catFieldSelect.innerHTML = '<option value="">-- Pilih kolom --</option>';
+            catValuesList.innerHTML = '';
+            catPaletteRow.style.display = 'none';
+            btnApplyCat.style.display = 'none';
+        }
+
+        // ── Progress helpers ──────────────────────────
+        function showShpProgress() {
+            shpProgress.style.display = 'block';
+            shpProgressBar.style.width = '30%';
+            setTimeout(() => { shpProgressBar.style.width = '70%'; }, 300);
+        }
+        function showShpSuccess(msg) {
+            shpProgressBar.style.width = '100%';
+            setTimeout(() => {
+                shpProgress.style.display = 'none';
+                shpProgressBar.style.width = '0%';
+                shpInfoBar.classList.remove('error');
+                shpInfoBar.style.display = 'flex';
+                shpInfoText.textContent = msg;
+                if(typeof feather !== 'undefined') feather.replace();
+            }, 400);
+        }
+        function showShpError(msg) {
+            shpProgress.style.display = 'none';
+            shpProgressBar.style.width = '0%';
+            shpInfoBar.classList.add('error');
+            shpInfoBar.style.display = 'flex';
+            shpInfoText.textContent = msg;
+            if(typeof feather !== 'undefined') feather.replace();
+        }
+
+        // ── Centroid ──────────────────────────────────
+        function calcCentroid(geojson) {
+            let sumLat = 0, sumLng = 0, count = 0;
+            function walk(coords) {
+                if (typeof coords[0] === 'number') { sumLng += coords[0]; sumLat += coords[1]; count++; }
+                else coords.forEach(walk);
+            }
+            (geojson.features || []).forEach(f => { if (f.geometry?.coordinates) walk(f.geometry.coordinates); });
+            return count > 0 ? { lat: sumLat/count, lng: sumLng/count } : null;
+        }
+
+        // ── Auto-generate distinct colors ────────────
+        function generateColors(n) {
+            const base = COLOR_PALETTES['Vivid'];
+            const out = [];
+            for (let i = 0; i < n; i++) out.push(base[i % base.length]);
+            return out;
+        }
+
+        // ── Render layer with current categoryColorMap ─
+        function renderShpLayer() {
+            if (!shpCombinedData) return;
+            if (shpGeoJsonLayer) miniMap.removeLayer(shpGeoJsonLayer);
+
+            const useCategory = activeCatField && Object.keys(categoryColorMap).length > 0;
+
+            shpGeoJsonLayer = L.geoJSON(shpCombinedData, {
+                style: feature => {
+                    let color = defaultShpColor;
+                    if (useCategory) {
+                        const val = String(feature.properties?.[activeCatField] ?? '__null__');
+                        color = categoryColorMap[val] || '#94a3b8';
+                    }
+                    return { color, weight: 1.5, opacity: 0.95, fillColor: color, fillOpacity: 0.35 };
+                },
+                pointToLayer: (feature, latlng) => {
+                    let color = defaultShpColor;
+                    if (useCategory) {
+                        const val = String(feature.properties?.[activeCatField] ?? '__null__');
+                        color = categoryColorMap[val] || '#94a3b8';
+                    }
+                    return L.circleMarker(latlng, { radius: 7, fillColor: color, color: '#fff', weight: 1.5, opacity: 1, fillOpacity: 0.9 });
+                },
+                onEachFeature: (feature, layer) => {
+                    if (feature.properties) {
+                        const rows = Object.entries(feature.properties)
+                            .map(([k,v]) => `<tr><td style="color:#94a3b8;padding:2px 6px;font-size:0.75rem;">${k}</td><td style="padding:2px 6px;font-size:0.75rem;">${v ?? '-'}</td></tr>`)
+                            .join('');
+                        layer.bindPopup(`<table style="border-collapse:collapse;min-width:160px;">${rows}</table>`, { maxHeight: 200 });
+                    }
+                }
+            }).addTo(miniMap);
+
+            try { miniMap.fitBounds(shpGeoJsonLayer.getBounds(), { padding: [20,20] }); } catch(e) {}
+
+            if (useCategory) buildLegend();
+            else if (shpLegendControl) { miniMap.removeControl(shpLegendControl); shpLegendControl = null; }
+        }
+
+        // ── Build legend on map ───────────────────────
+        function buildLegend() {
+            if (shpLegendControl) miniMap.removeControl(shpLegendControl);
+            shpLegendControl = L.control({ position: 'bottomleft' });
+            shpLegendControl.onAdd = () => {
+                const div = L.DomUtil.create('div', 'map-legend');
+                div.innerHTML = `<div class="legend-title">${activeCatField}</div>` +
+                    Object.entries(categoryColorMap).map(([val, color]) =>
+                        `<div class="legend-row"><span class="legend-swatch" style="background:${color};"></span><span>${val === '__null__' ? '(kosong)' : val}</span></div>`
+                    ).join('');
+                return div;
+            };
+            shpLegendControl.addTo(miniMap);
+        }
+
+        // ── Build category UI panel ───────────────────
+        function buildCategoryPanel(features) {
+            const props = features[0]?.properties || {};
+            const fields = Object.keys(props);
+
+            // Populate field select
+            catFieldSelect.innerHTML = '<option value="">-- Pilih kolom atribut --</option>';
+            fields.forEach(f => {
+                const opt = document.createElement('option');
+                opt.value = f; opt.textContent = f;
+                catFieldSelect.appendChild(opt);
+            });
+
+            catPanel.style.display = 'block';
+            if(typeof feather !== 'undefined') feather.replace();
+
+            catFieldSelect.addEventListener('change', function() {
+                activeCatField = this.value || null;
+                catValuesList.innerHTML = '';
+                catPaletteRow.style.display = 'none';
+                btnApplyCat.style.display = 'none';
+                categoryColorMap = {};
+                if (!activeCatField) return;
+
+                // Collect unique values
+                const freq = {};
+                features.forEach(f => {
+                    const v = String(f.properties?.[activeCatField] ?? '__null__');
+                    freq[v] = (freq[v] || 0) + 1;
+                });
+                const uniqVals = Object.keys(freq).sort();
+                const autoColors = generateColors(uniqVals.length);
+
+                // Init colorMap
+                uniqVals.forEach((v,i) => { categoryColorMap[v] = autoColors[i]; });
+
+                // Render value rows
+                catValuesList.innerHTML = '';
+                uniqVals.forEach((val, i) => {
+                    const row = document.createElement('div');
+                    row.className = 'cat-row';
+                    row.dataset.val = val;
+                    const display = val === '__null__' ? '(kosong)' : val;
+                    row.innerHTML = `
+                        <input type="color" class="cat-color-input" data-val="${val}" value="${autoColors[i]}" title="Ubah warna">
+                        <span class="cat-label" title="${display}">${display}</span>
+                        <span class="cat-count">${freq[val]} fitur</span>
+                    `;
+                    catValuesList.appendChild(row);
+                    // Listen color change
+                    row.querySelector('.cat-color-input').addEventListener('input', function() {
+                        categoryColorMap[this.dataset.val] = this.value;
+                    });
+                });
+
+                // Build palette buttons
+                catPaletteRow.innerHTML = '';
+                Object.entries(COLOR_PALETTES).forEach(([name, colors]) => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'palette-btn';
+                    btn.title = name;
+                    const dots = colors.slice(0, 5).map(c => `<span class="palette-dot" style="background:${c};"></span>`).join('');
+                    btn.innerHTML = dots + `<span style="margin-left:4px;">${name}</span>`;
+                    btn.addEventListener('click', () => {
+                        // Apply palette to all values
+                        const inputs = catValuesList.querySelectorAll('.cat-color-input');
+                        inputs.forEach((inp, idx) => {
+                            const c = colors[idx % colors.length];
+                            inp.value = c;
+                            categoryColorMap[inp.dataset.val] = c;
+                        });
+                    });
+                    catPaletteRow.appendChild(btn);
+                });
+                catPaletteRow.style.display = 'flex';
+                btnApplyCat.style.display = 'flex';
+            });
+        }
+
+        // ── Apply button ──────────────────────────────
+        btnApplyCat.addEventListener('click', () => {
+            // Re-read all color inputs in case user changed them
+            catValuesList.querySelectorAll('.cat-color-input').forEach(inp => {
+                categoryColorMap[inp.dataset.val] = inp.value;
+            });
+            renderShpLayer();
+        });
+
+        // ── Process SHP file ──────────────────────────
+        async function processShpFile(file) {
+            if (!file.name.toLowerCase().endsWith('.zip')) {
+                showShpError('File harus berformat .zip (arsip shapefile).');
+                return;
+            }
+            if (file.size > 50 * 1024 * 1024) {
+                showShpError('Ukuran file terlalu besar. Maksimum 50 MB.');
+                return;
+            }
+
+            clearShp();
+            showShpProgress();
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                shpProgressBar.style.width = '55%';
+
+                const geojson = await shp(arrayBuffer);
+                shpProgressBar.style.width = '85%';
+
+                const layers = Array.isArray(geojson) ? geojson : [geojson];
+                const combinedFeatures = [];
+                layers.forEach(layer => { if (layer?.features) combinedFeatures.push(...layer.features); });
+
+                if (combinedFeatures.length === 0) throw new Error('Tidak ada fitur geometri yang ditemukan.');
+
+                shpCombinedData = { type: 'FeatureCollection', features: combinedFeatures };
+                
+                // Randomize color for this input
+                defaultShpColor = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+
+                // Initial render (default random)
+                renderShpLayer();
+
+                // Auto-fill centroid
+                const centroid = calcCentroid(shpCombinedData);
+                if (centroid) { updateMarker(centroid.lat, centroid.lng); syncGridFromGeo(centroid.lat, centroid.lng); }
+
+                const gType = combinedFeatures[0]?.geometry?.type || 'Unknown';
+                const typeLabel = { Point:'Titik', MultiPoint:'Multi-Titik', Polygon:'Polygon', MultiPolygon:'Multi-Polygon', LineString:'Garis', MultiLineString:'Multi-Garis' }[gType] || gType;
+
+                showShpSuccess(`✓ ${combinedFeatures.length} fitur (${typeLabel}) dimuat — atur warna kategori di bawah`);
+
+                // Build category panel
+                buildCategoryPanel(combinedFeatures);
+
+            } catch (err) {
+                console.error('SHP Error:', err);
+                showShpError('Gagal membaca shapefile: ' + (err.message || 'Pastikan ZIP berisi .shp & .dbf.'));
+            }
+        }
+    </script>
+</body>
+</html>
+
