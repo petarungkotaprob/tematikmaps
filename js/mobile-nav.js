@@ -8,7 +8,6 @@
   const MOBILE_QUERY = '(max-width: 768px), (max-width: 900px) and (max-height: 500px)';
   const mediaQuery = window.matchMedia ? window.matchMedia(MOBILE_QUERY) : null;
   const page = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase();
-  const params = new URLSearchParams(window.location.search);
 
   let activeSheet = null;
   let lastFocused = null;
@@ -37,11 +36,10 @@
 
   function buildItems() {
     const user = currentUser();
-    const portalTab = params.get('tab');
 
     if (user) {
       const isAdmin = user.role === 'admin';
-      return [
+      const items = [
         {
           href: 'dashboard.html',
           icon: 'map',
@@ -60,42 +58,35 @@
           label: 'Input',
           center: true,
           active: page === 'report.html'
-        },
-        isAdmin
-          ? {
-              href: 'admin.html',
-              icon: 'shield',
-              label: 'Admin',
-              active: page === 'admin.html'
-            }
-          : {
-              href: 'portal.html?tab=cek',
-              icon: 'crosshair',
-              label: 'Lacak',
-              active: page === 'portal.html' && portalTab !== 'input'
-            },
-        {
-          href: 'settings.html',
-          icon: 'user',
-          label: 'Akun',
-          active: page === 'settings.html'
         }
       ];
+
+      if (isAdmin) {
+        items.push({
+          href: 'admin.html',
+          icon: 'shield',
+          label: 'Admin',
+          active: page === 'admin.html'
+        });
+      }
+
+      items.push({
+        href: 'settings.html',
+        icon: 'user',
+        label: 'Akun',
+        active: page === 'settings.html'
+      });
+
+      return items;
     }
 
     return [
       {
-        href: 'portal.html?tab=cek',
-        icon: 'crosshair',
-        label: 'Lacak',
-        active: page === 'portal.html' && portalTab !== 'input'
-      },
-      {
-        href: 'portal.html?tab=input',
+        href: 'portal.html',
         icon: 'plus',
         label: 'Input',
         center: true,
-        active: page === 'portal.html' && portalTab === 'input'
+        active: page === 'portal.html'
       },
       {
         href: 'login.html',
@@ -114,7 +105,9 @@
     dock.className = 'mobile-dock';
     dock.setAttribute('aria-label', 'Navigasi utama');
 
-    const items = buildItems().map(function (item) {
+    const list = buildItems();
+
+    const items = list.map(function (item) {
       const classes = ['dock-item'];
       if (item.center) classes.push('dock-item-center');
       if (item.active) classes.push('active');
@@ -128,7 +121,7 @@
         mark + '<span class="dock-label">' + item.label + '</span></a>';
     }).join('');
 
-    dock.innerHTML = '<div class="mobile-dock-inner">' + items + '</div>';
+    dock.innerHTML = '<div class="mobile-dock-inner dock-count-' + list.length + '">' + items + '</div>';
     document.body.appendChild(dock);
     refreshIcons();
   }
@@ -159,6 +152,12 @@
     });
   }
 
+  const NON_MODAL_SHEETS = ['mapOverlay', 'mapInfoSheet'];
+
+  function isNonModal(sheet) {
+    return !!sheet && NON_MODAL_SHEETS.indexOf(sheet.id) !== -1;
+  }
+
   function openSheet(target) {
     if (!isMobile()) return;
 
@@ -167,20 +166,33 @@
 
     closeSheets(true);
 
+    const nonModal = isNonModal(sheet);
+
     activeSheet = sheet;
     lastFocused = document.activeElement;
     sheet.classList.add('mobile-sheet', 'active');
     sheet.setAttribute('role', 'dialog');
-    sheet.setAttribute('aria-modal', 'true');
+    if (nonModal) {
+      sheet.removeAttribute('aria-modal');
+      sheet.classList.add('sheet-non-modal', 'sheet-scrollable');
+    } else {
+      sheet.setAttribute('aria-modal', 'true');
+      sheet.classList.remove('sheet-non-modal', 'sheet-scrollable');
+    }
     sheet.removeAttribute('aria-hidden');
 
-    ensureBackdrop().classList.add('active');
-    document.body.classList.add('sheet-open');
+    if (nonModal) {
+      ensureBackdrop().classList.remove('active');
+      document.body.classList.remove('sheet-open');
+    } else {
+      ensureBackdrop().classList.add('active');
+      document.body.classList.add('sheet-open');
+    }
   }
 
   function closeSheets(immediate) {
     document.querySelectorAll('.mobile-sheet.active').forEach(function (sheet) {
-      sheet.classList.remove('active');
+      sheet.classList.remove('active', 'sheet-non-modal', 'sheet-scrollable');
       sheet.style.transform = '';
       sheet.style.transition = '';
       if (isMobile()) sheet.setAttribute('aria-hidden', 'true');
@@ -206,6 +218,13 @@
       trigger.addEventListener('click', function (event) {
         event.preventDefault();
         const id = trigger.getAttribute('data-sheet-open');
+        const sheet = document.getElementById(id);
+
+        if (sheet && sheet.classList.contains('active')) {
+          closeSheets();
+          return;
+        }
+
         openSheet(id);
 
         const focusSelector = trigger.getAttribute('data-sheet-focus');
@@ -349,6 +368,14 @@
     }
   }
 
+  function bindMapDismiss() {
+    document.addEventListener('click', function (event) {
+      if (!activeSheet || !isNonModal(activeSheet)) return;
+      if (event.target.closest('.mobile-sheet')) return;
+      if (event.target.closest('.leaflet-container')) closeSheets();
+    }, true);
+  }
+
   function init() {
     renderDock();
     ensureBackdrop();
@@ -356,6 +383,7 @@
     bindGlobalClose();
     bindKeyboard();
     bindSheetGestures();
+    bindMapDismiss();
     watchTheme();
     setSheetAria();
   }
