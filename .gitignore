@@ -1,0 +1,21 @@
+# Local environment
+.env
+.env.*
+!.env.example
+
+# Local database dump
+database_tematik.sql
+
+# Archives
+tematikmap.zip
+
+# User uploads
+uploads/basemaps/*
+uploads/shp/*
+!uploads/basemaps/.gitkeep
+!uploads/shp/.gitkeep
+
+# Editor, OS, logs
+.vscode/
+Thumbs.db
+*.log
