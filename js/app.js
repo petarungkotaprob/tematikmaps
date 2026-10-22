@@ -13,9 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
         map = L.map('map', { zoomControl: false }).setView([-7.7543, 113.2159], 13);
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        const cartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap contributors &copy; CARTO', maxZoom: 20
-        });
         const osmStandard = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap', maxZoom: 19
         });
@@ -23,16 +20,11 @@ document.addEventListener('DOMContentLoaded', () => {
             maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'],
             attribution: 'Google Imagery'
         });
-        const cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap contributors &copy; CARTO', maxZoom: 20
-        });
 
-        cartoDark.addTo(map);
+        googleSatelite.addTo(map);
         const layers = {
-            "dark": cartoDark,
             "satelit": googleSatelite,
-            "osm": osmStandard,
-            "light": cartoLight
+            "osm": osmStandard
         };
 
         const customLayers = {}; // To store custom SHP layers
@@ -44,8 +36,9 @@ document.addEventListener('DOMContentLoaded', () => {
             radio.addEventListener('change', function() {
                 if (this.checked) {
                     const val = this.value;
+                    const nextLayer = layers[val] || layers.satelit;
                     Object.values(layers).forEach(l => map.removeLayer(l));
-                    if (layers[val]) layers[val].addTo(map);
+                    if (nextLayer) nextLayer.addTo(map);
                 }
             });
         });

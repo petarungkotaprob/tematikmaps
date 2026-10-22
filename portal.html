@@ -685,19 +685,13 @@
                     attribution: '&copy; OpenStreetMap contributors'
                 });
 
-                const cartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                    attribution: '&copy; CARTO',
-                    maxZoom: 20
-                });
-
                 // Default layer
                 googleSatellite.addTo(mapCek);
 
                 const baseLayers = {
                     "Google Satellite (Hybrid)": googleSatellite,
                     "Google Roadmap": googleRoadmap,
-                    "OpenStreetMap": osm,
-                    "Dark Mode": cartoDark
+                    "OpenStreetMap": osm
                 };
 
                 const overlays = {};
