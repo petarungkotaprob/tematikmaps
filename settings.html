@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Pengaturan - Peta Tematik</title>
     <link rel="icon" type="image/png" href="images/favicon.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -24,8 +24,9 @@
             padding-bottom: 1rem;
         }
     </style>
+    <link rel="stylesheet" href="css/mobile.css">
 </head>
-<body>
+<body class="settings-page">
 
     <nav class="navbar">
         <a href="dashboard.html" class="brand">
@@ -76,14 +77,52 @@
                     <div id="settingsMsg" style="font-size: 0.85rem; margin-top: 1rem; text-align: center; display: none;"></div>
                 </form>
 
+                <div class="settings-actions">
+                    <button type="button" class="btn" id="btnMobileTheme" style="background: rgba(234, 179, 8, 0.12); color: #eab308; border: 1px solid rgba(234, 179, 8, 0.25);">
+                        <i data-feather="sun" style="width: 16px; height: 16px; margin-right: 5px; vertical-align: middle;"></i> Mode Terang
+                    </button>
+                    <button type="button" class="btn" id="btnMobileLogout" style="background: rgba(239, 68, 68, 0.12); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.25);">
+                        <i data-feather="log-out" style="width: 16px; height: 16px; margin-right: 5px; vertical-align: middle;"></i> Keluar
+                    </button>
+                </div>
+
             </div>
         </div>
 
     </main>
 
     <script src="js/auth.js"></script>
+    <script src="js/mobile-nav.js"></script>
     <script>
         feather.replace();
+
+        const btnMobileTheme = document.getElementById('btnMobileTheme');
+        const btnMobileLogout = document.getElementById('btnMobileLogout');
+
+        function renderMobileThemeButton() {
+            if (!btnMobileTheme) return;
+            const light = document.body.classList.contains('light-mode');
+            btnMobileTheme.innerHTML = '<i data-feather="' + (light ? 'moon' : 'sun') + '" style="width: 16px; height: 16px; margin-right: 5px; vertical-align: middle;"></i> ' + (light ? 'Mode Gelap' : 'Mode Terang');
+            if (typeof feather !== 'undefined') feather.replace();
+        }
+
+        document.addEventListener('DOMContentLoaded', renderMobileThemeButton);
+
+        if (btnMobileTheme) {
+            btnMobileTheme.addEventListener('click', function () {
+                const nextLight = !document.body.classList.contains('light-mode');
+                document.body.classList.toggle('light-mode', nextLight);
+                localStorage.setItem('silisa_theme', nextLight ? 'light' : 'dark');
+                renderMobileThemeButton();
+            });
+        }
+
+        if (btnMobileLogout) {
+            btnMobileLogout.addEventListener('click', function () {
+                localStorage.removeItem('silisa_user');
+                window.location.href = 'login.html';
+            });
+        }
 
         // Ambil ID dari LocalStorage (Auth.js sudah memastikan radar_user exist di protected page)
         const activeSession = JSON.parse(localStorage.getItem('silisa_user'));

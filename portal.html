@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Layanan Publik - Peta Tematik</title>
     <link rel="icon" type="image/png" href="images/favicon.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -225,8 +225,9 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="css/mobile.css">
 </head>
-<body style="min-height: 100vh;">
+<body class="portal-page" style="min-height: 100vh;">
 
     <nav class="navbar">
         <a href="index.html" class="brand">
@@ -409,6 +410,7 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/shpjs/dist/shp.js"></script>
+    <script src="js/mobile-nav.js"></script>
     <script>
         feather.replace();
 
@@ -450,6 +452,12 @@
                 document.querySelectorAll('.portal-tab')[1].classList.add('active');
                 document.getElementById('tab-cek').classList.add('active');
             }
+
+            try {
+                const nextUrl = new URL(window.location.href);
+                nextUrl.searchParams.set('tab', tabId);
+                window.history.replaceState(null, '', nextUrl);
+            } catch (e) {}
         }
 
         // 2. Data Kelurahan Setup
@@ -498,6 +506,12 @@
             }
         }
         getNextNo();
+
+        // Initial tab from URL (used by the mobile dock)
+        const initialTab = new URLSearchParams(window.location.search).get('tab');
+        if (initialTab === 'input' || initialTab === 'cek') {
+            switchTab(initialTab);
+        }
 
         // 4. Submit Form Logic
         document.getElementById('reportForm').addEventListener('submit', async (e) => {

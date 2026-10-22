@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Admin Panel - Peta Tematik</title>
     <link rel="icon" type="image/png" href="images/favicon.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -163,8 +163,9 @@
         .btn-save-cat:hover { background:rgba(139,92,246,0.28); }
         .cat-loading { font-size:0.8rem;color:var(--text-secondary);padding:8px 0;text-align:center; }
     </style>
+    <link rel="stylesheet" href="css/mobile.css">
 </head>
-<body>
+<body class="admin-page">
 
     <nav class="navbar">
         <a href="dashboard.html" class="brand">
@@ -260,6 +261,7 @@
     </main>
 
     <script src="js/auth.js"></script>
+    <script src="js/mobile-nav.js"></script>
     <script>
         feather.replace();
 

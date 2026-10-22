@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Daftar Permohonan - Peta Tematik</title>
     <link rel="icon" type="image/png" href="images/favicon.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -77,8 +77,9 @@
         .delete-modal-info span { color: var(--text-secondary); }
         .delete-modal-info b { color: var(--text-primary); }
     </style>
+    <link rel="stylesheet" href="css/mobile.css">
 </head>
-<body>
+<body class="tracker-page">
 
     <nav class="navbar">
         <a href="dashboard.html" class="brand">
@@ -125,7 +126,7 @@
                     <tbody id="permohonanBody">
                         <!-- Data will be loaded via JS -->
                         <tr>
-                            <td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 3rem;">
+                            <td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 3rem;">
                                 Memuat data permohonan...
                             </td>
                         </tr>
@@ -177,6 +178,7 @@
     </div>
 
     <script src="js/auth.js"></script>
+    <script src="js/mobile-nav.js"></script>
     <script>
         feather.replace();
 
@@ -225,7 +227,7 @@
             const paginatedData = filteredData.slice(start, end);
 
             if (paginatedData.length === 0) {
-                body.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem;">Belum ada data permohonan.</td></tr>';
+                body.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">Belum ada data permohonan.</td></tr>';
                 updatePaginationInfo(0, 0, 0);
                 return;
             }
@@ -236,22 +238,22 @@
                 tr.id = `row-${item.id}`;
                 tr.style.opacity = hidden ? '0.45' : '1';
                 tr.innerHTML = `
-                    <td><b>${item.no_permohonan}</b></td>
-                    <td style="font-size: 0.8rem; color: var(--text-secondary);">${item.created_at ? item.created_at.substring(0,10) : '-'}</td>
-                    <td>
+                    <td data-label="No. Permohonan"><b>${item.no_permohonan}</b></td>
+                    <td data-label="Tgl Input" style="font-size: 0.8rem; color: var(--text-secondary);">${item.created_at ? item.created_at.substring(0,10) : '-'}</td>
+                    <td data-label="NIK / Pemohon">
                         <div style="font-weight: 600;">${item.nama_pemohon}</div>
                         <div style="font-size: 0.8rem; color: var(--text-secondary);">${item.nik}</div>
                     </td>
-                    <td>
+                    <td data-label="Kecamatan / Kelurahan">
                         <div>${item.kecamatan}</div>
                         <div style="font-size: 0.8rem; color: var(--text-secondary);">${item.kelurahan}</div>
                     </td>
-                    <td>
+                    <td data-label="Hak / Sertipikat">
                         <div>${item.jenis_hak}</div>
                         <div style="font-size: 0.8rem; color: var(--text-secondary);">No: ${item.nomor_hak}</div>
                     </td>
                     
-                    <td>
+                    <td data-label="Aksi">
                         <div style="display: flex; gap: 5px; flex-wrap: wrap;">
                             <button class="btn" style="padding: 5px 10px; font-size: 0.8rem; background: rgba(59, 130, 246, 0.1); color: #3b82f6;" onclick="viewDetail('${item.latitude}','${item.longitude}','${item.nama_pemohon}')" title="Lihat di Peta">
                                 <i data-feather="eye" style="width: 14px; height: 14px;"></i>
