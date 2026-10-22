@@ -1,16 +1,20 @@
-const CACHE_NAME = 'silisa-v2';
+const CACHE_NAME = 'silisa-v4';
 const ASSETS = [
-    '/',
-    '/index.html',
-    '/portal.html',
-    '/dashboard.html',
-    '/report.html',
-    '/tracker.html',
-    '/analytics.html',
-    '/login.html',
-    '/css/style.css',
-    '/images/logo.png',
-    '/images/favicon.png'
+    './',
+    './index.html',
+    './portal.html',
+    './dashboard.html',
+    './report.html',
+    './tracker.html',
+    './login.html',
+    './admin.html',
+    './settings.html',
+    './css/style.css',
+    './css/mobile.css',
+    './js/mobile-nav.js',
+    './manifest.json',
+    './images/logo.png',
+    './images/favicon.png'
 ];
 
 // Install Event

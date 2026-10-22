@@ -3,6 +3,8 @@
     "short_name": "SILISA",
     "description": "Sistem Informasi Geografis untuk Pemantauan dan Layanan Lahan Baku Sawah",
     "start_url": "index.html",
+    "scope": "./",
+    "orientation": "any",
     "display": "standalone",
     "background_color": "#070e1c",
     "theme_color": "#070e1c",
