@@ -220,8 +220,7 @@ body {
   top: 20px;
   right: 20px;
   z-index: 400; /* Leaflet controls are ~1000 */
-  background: rgba(11, 17, 32, 0.85);
-  backdrop-filter: blur(8px);
+  background: rgba(11, 17, 32, 0.96);
   padding: 1rem;
   border-radius: 12px;
   border: 1px solid var(--glass-border);
@@ -718,15 +717,13 @@ body {
     bottom: 25px;
     left: 12px;
     z-index: 500;
-    background: rgba(15, 23, 42, 0.85); /* Restored original semi-transparent background */
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: rgba(15, 23, 42, 0.96);
     border: 1px solid var(--glass-border);
     padding: 6px 10px;
     border-radius: 6px;
     font-size: 0.6rem;
     line-height: 1.2;
-    color: var(--text-secondary); /* Restored original text color */
+    color: var(--text-secondary);
     max-width: 300px;
     display: flex;
     gap: 6px;
