@@ -503,6 +503,25 @@
         setTimeout(function() {
             if (window.silisaMap) window.silisaMap.invalidateSize();
         }, 400);
+
+        // 7. Desktop: ensure sidebar panel is always visible (override any mobile sheet state)
+        function ensureDesktopSidebar() {
+            const mq = window.matchMedia('(min-width: 769px)');
+            const sidePanel = document.getElementById('sidebarPanel');
+            if (!sidePanel) return;
+
+            if (mq.matches) {
+                // Desktop: clear any mobile sheet transform, ensure visible
+                sidePanel.style.transform = '';
+                sidePanel.style.visibility = '';
+                sidePanel.style.transition = '';
+                sidePanel.classList.remove('sheet-non-modal', 'sheet-scrollable');
+                // Don't remove 'active' on desktop — CSS position handles visibility
+            }
+        }
+
+        ensureDesktopSidebar();
+        window.addEventListener('resize', ensureDesktopSidebar);
     </script>
 </body>
 </html>

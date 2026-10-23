@@ -216,11 +216,17 @@
   }
 
   function closeSheets(immediate) {
+    // On desktop, never touch the sidebar panel — it's a fixed left panel, not a sheet
+    const isMob = isMobile();
+
     document.querySelectorAll('.mobile-sheet.active').forEach(function (sheet) {
+      // Skip sidebar panel on desktop — it's managed by CSS, not JS
+      if (!isMob && sheet.id === 'sidebarPanel') return;
+
       sheet.classList.remove('active', 'sheet-non-modal', 'sheet-scrollable');
       sheet.style.transform = '';
       sheet.style.transition = '';
-      if (isMobile()) sheet.setAttribute('aria-hidden', 'true');
+      if (isMob) sheet.setAttribute('aria-hidden', 'true');
     });
 
     const backdrop = document.getElementById('sheetBackdrop');

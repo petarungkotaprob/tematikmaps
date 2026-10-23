@@ -1,165 +1,88 @@
 /* ============================================================
-   MOBILE EXPERIENCE LAYER — Google Maps Style
-   Full-screen map, bottom sheets, floating search bar,
-   FAB buttons, and a Material bottom dock navigation.
-   Desktop layout is untouched (all rules are scoped to mobile).
+   MOBILE.CSS — Google Maps Mobile Experience
+   All rules scoped to max-width: 768px or map-page mobile.
+   Zero conflict with desktop styles.
    ============================================================ */
 
-/* ---------- Root tokens ---------- */
+/* ============================================================
+   ROOT TOKENS (mobile-specific)
+   ============================================================ */
 :root {
-  --dock-height: 64px;
-  --safe-top:    env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --sheet-radius: 20px;
+  --dock-height:   64px;
+  --safe-top:      env(safe-area-inset-top, 0px);
+  --safe-bottom:   env(safe-area-inset-bottom, 0px);
+  --sheet-radius:  20px;
 }
 
-/* ---------- Initially hide mobile-only elements ---------- */
+/* ============================================================
+   HIDE MOBILE-ONLY ELEMENTS ON DESKTOP (defaults)
+   All elements listed here start as hidden.
+   Mobile media query shows them.
+   ============================================================ */
 .mobile-dock,
 .sheet-backdrop,
-.map-search-trigger,
 .map-fab-stack,
 .sheet-close,
-.sheet-handle {
-  display: none;
-}
-
+.sheet-handle,
 #mapInfoSheet,
 .settings-actions,
-.password-toggle,
 .mobile-submit-fab {
   display: none;
 }
 
-/* ============================================================
-   MOBILE BREAKPOINT
-   ============================================================ */
-@media (max-width: 768px), (max-width: 900px) and (max-height: 500px) {
+/* password toggle hidden by default, login page shows it */
+.password-toggle {
+  display: none;
+}
 
-  /* ---------- Base shell ---------- */
+/* ============================================================
+   HIDE DESKTOP-ONLY MAP ELEMENTS ON MOBILE
+   These are only shown via desktop media query in style.css
+   or we explicitly hide them below in mobile breakpoint.
+   ============================================================ */
+
+/* ============================================================
+   MOBILE BREAKPOINT — max-width: 768px
+   ============================================================ */
+@media (max-width: 768px) {
+
+  /* ==========================================================
+     BASE SHELL
+     ========================================================== */
   html {
     -webkit-text-size-adjust: 100%;
   }
 
   body {
     min-height: 100dvh;
-    padding-bottom: calc(var(--dock-height) + var(--safe-bottom) + 16px);
     background: #f8f9fa;
   }
 
-  body:not(.map-page) .navbar {
-    background: #ffffff;
-    border-bottom: 1px solid #dadce0;
-    box-shadow: 0 1px 4px rgba(0,0,0,.1);
-    height: 56px;
-    padding: calc(0.4rem + var(--safe-top)) 14px 0.4rem;
-    flex-wrap: nowrap;
+  /* Non-map pages: make room for bottom dock */
+  body:not(.map-page):not(.login-page) {
+    padding-bottom: calc(var(--dock-height) + var(--safe-bottom) + 20px);
   }
 
-  body.light-mode:not(.map-page) .navbar {
-    background: #ffffff;
-    box-shadow: 0 1px 4px rgba(0,0,0,.1);
-  }
-
+  /* Map page and login: no bottom padding (map fills screen) */
   body.map-page,
   body.login-page {
     padding-bottom: 0;
-    background: #202124;
   }
 
-  .main-content {
-    display: block !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    height: auto !important;
-    min-height: calc(100dvh - 120px) !important;
-    margin: 0 !important;
-    padding: 12px 12px calc(88px + var(--safe-bottom)) 12px !important;
-  }
-
-  .glass-panel {
-    padding: 16px !important;
-    border-radius: 16px !important;
-    background: #ffffff !important;
-    border: 1px solid #dadce0 !important;
-    box-shadow: 0 1px 4px rgba(0,0,0,.1) !important;
-    margin-bottom: 12px;
-  }
-
-  body:not(.map-page) .glass-panel {
-    margin-bottom: 12px;
-  }
-
-  .settings-container {
-    margin-top: 12px !important;
-    padding-bottom: 12px !important;
-  }
-
-  .settings-actions {
-    display: flex !important;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 16px;
-  }
-
-  .settings-actions .btn {
-    width: 100%;
-    justify-content: center;
-  }
-
-  h2 {
-    font-size: 1.18rem;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    line-height: 1.3;
-    color: #202124;
-  }
-
-  h3 {
-    font-size: 0.96rem;
-    font-weight: 600;
-    color: #202124;
-  }
-
-  .form-group label {
-    display: block;
-    font-size: 0.82rem;
-    font-weight: 500;
-    color: #5f6368;
-    margin-bottom: 6px;
-  }
-
-  .btn {
-    min-height: 44px;
-    border-radius: 22px;
-    font-weight: 500;
-    font-size: 0.9rem;
-  }
-
-  .form-control {
-    min-height: 46px;
-    font-size: 16px !important;
+  /* ==========================================================
+     NAVBAR — compact for non-map pages
+     ========================================================== */
+  body:not(.map-page) .navbar {
     background: #ffffff;
-    border: 1px solid #dadce0;
-    color: #202124;
-    border-radius: 8px;
-  }
-
-  .form-control:focus {
-    border-color: #1a73e8;
-    box-shadow: 0 0 0 2px rgba(26,115,232,.2);
-  }
-
-  textarea.form-control {
-    min-height: 84px;
-  }
-
-  /* ---------- Compact navbar (dock replaces page links) ---------- */
-  .navbar {
-    flex-direction: row !important;
-    align-items: center !important;
-    padding: calc(0.4rem + var(--safe-top)) 14px 0.4rem !important;
-    gap: 6px !important;
-    height: auto !important;
+    border-bottom: 1px solid #dadce0;
+    box-shadow: 0 1px 4px rgba(0,0,0,.10);
+    height: auto;
+    min-height: 54px;
+    padding: calc(0.4rem + var(--safe-top)) 14px 0.4rem;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
   }
 
   .brand {
@@ -170,13 +93,8 @@
     flex-shrink: 0;
   }
 
-  .brand img {
-    height: 30px !important;
-  }
-
-  .brand-motto {
-    display: none !important;
-  }
+  .brand img { height: 30px !important; }
+  .brand-motto { display: none !important; }
 
   .nav-links {
     display: flex !important;
@@ -184,15 +102,15 @@
     gap: 4px !important;
     margin-left: auto !important;
     padding: 0 !important;
-    overflow: visible !important;
-    white-space: normal !important;
   }
 
+  /* Hide text nav links on mobile — dock handles navigation */
   .nav-links > a,
   .nav-links > div {
     display: none !important;
   }
 
+  /* Only icon buttons visible in nav (theme toggle, etc.) */
   .nav-links > button {
     display: inline-flex !important;
     align-items: center;
@@ -205,9 +123,71 @@
     font-size: 0.82rem;
   }
 
-  /* ============================================================
+  /* ==========================================================
+     MAIN CONTENT — non-map pages
+     ========================================================== */
+  body:not(.map-page) .main-content {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: calc(100dvh - 54px) !important;
+    margin: 0 !important;
+    padding: 12px 12px calc(72px + var(--safe-bottom)) 12px !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Panels */
+  .glass-panel {
+    padding: 16px !important;
+    border-radius: 16px !important;
+    background: #ffffff !important;
+    border: 1px solid #dadce0 !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,.10) !important;
+    margin-bottom: 12px;
+  }
+
+  /* ==========================================================
+     FORM CONTROLS
+     ========================================================== */
+  .btn {
+    min-height: 44px;
+    border-radius: 22px;
+    font-weight: 500;
+    font-size: 0.9rem;
+  }
+
+  .form-control {
+    min-height: 46px;
+    font-size: 16px !important; /* prevent iOS zoom */
+    background: #ffffff;
+    border: 1px solid #dadce0;
+    color: #202124;
+    border-radius: 8px;
+  }
+
+  .form-control:focus {
+    border-color: #1a73e8;
+    box-shadow: 0 0 0 2px rgba(26,115,232,.2);
+  }
+
+  textarea.form-control { min-height: 84px; }
+
+  /* Settings actions */
+  .settings-actions {
+    display: flex !important;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .settings-actions .btn { width: 100%; justify-content: center; }
+
+  /* ==========================================================
      BOTTOM DOCK NAVIGATION — Google Maps style
-     ============================================================ */
+     Fixed at bottom. 64px tall. Pill shape.
+     Z=9500 (above everything except drawers)
+     ========================================================== */
   .mobile-dock {
     display: block;
     position: fixed;
@@ -215,7 +195,7 @@
     right: 0;
     bottom: 0;
     z-index: 9500;
-    padding: 0 12px calc(8px + var(--safe-bottom));
+    padding: 0 12px calc(6px + var(--safe-bottom));
     pointer-events: none;
     transition: transform 0.25s ease, opacity 0.25s ease;
   }
@@ -233,20 +213,7 @@
     box-shadow: 0 4px 16px rgba(0,0,0,.18);
   }
 
-  .dock-count-2 {
-    justify-content: center;
-    gap: 3rem;
-  }
-
-  .dock-count-2 .dock-item {
-    flex: 0 0 88px;
-  }
-
-  .dock-count-4 .dock-item,
-  .dock-count-5 .dock-item {
-    flex: 1 1 0;
-  }
-
+  /* Dock item base */
   .dock-item {
     position: relative;
     flex: 1;
@@ -268,11 +235,7 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  .dock-item svg {
-    width: 22px;
-    height: 22px;
-    stroke-width: 2;
-  }
+  .dock-item svg { width: 22px; height: 22px; stroke-width: 2; }
 
   .dock-label {
     line-height: 1;
@@ -282,14 +245,9 @@
     max-width: 100%;
   }
 
-  /* Active dock state — Google blue indicator */
-  .dock-item.active {
-    color: #1a73e8;
-  }
-
-  .dock-item.active .dock-label {
-    font-weight: 600;
-  }
+  /* Active dock state */
+  .dock-item.active { color: #1a73e8; }
+  .dock-item.active .dock-label { font-weight: 600; }
 
   .dock-item.active::after {
     content: "";
@@ -297,11 +255,11 @@
     bottom: 0;
     width: 20px;
     height: 3px;
-    border-radius: var(--radius-pill, 999px);
+    border-radius: 999px;
     background: #1a73e8;
   }
 
-  /* Center action button (FAB in dock) */
+  /* Center FAB in dock */
   .dock-item-center {
     flex: 1.2;
     justify-content: flex-end;
@@ -321,11 +279,7 @@
     box-shadow: 0 4px 14px rgba(26,115,232,.5);
   }
 
-  .dock-center-btn svg {
-    width: 24px;
-    height: 24px;
-    stroke-width: 2.4;
-  }
+  .dock-center-btn svg { width: 24px; height: 24px; stroke-width: 2.4; }
 
   .dock-item-center .dock-label {
     margin-top: 2px;
@@ -333,9 +287,14 @@
     font-weight: 600;
   }
 
-  body.login-page .mobile-dock {
-    display: none !important;
+  /* Count-based layout */
+  .dock-count-4 .dock-item,
+  .dock-count-5 .dock-item {
+    flex: 1 1 0;
   }
+
+  /* Hide dock on login, hide when sheet open */
+  body.login-page .mobile-dock { display: none !important; }
 
   body.keyboard-open .mobile-dock,
   body.sheet-open .mobile-dock {
@@ -344,15 +303,20 @@
     pointer-events: none;
   }
 
-  /* ============================================================
+  /* ==========================================================
      BOTTOM SHEET SYSTEM
-     ============================================================ */
+     Sheets slide up from bottom. Positioned above dock.
+     Z=9300 (below dock z=9500, below drawer z=1000*)
+     *Drawer uses z=1001 in style.css which is for full-page draw
+     Actually sheet z=9300 > drawer z=1001 so sheet wins.
+     We set drawer to z=9600 to appear above sheets.
+     ========================================================== */
   .sheet-backdrop {
     display: block;
     position: fixed;
     inset: 0;
-    z-index: 8500;
-    background: rgba(32,33,36,.48);
+    z-index: 9200;
+    background: rgba(32,33,36,.45);
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
     opacity: 0;
@@ -367,12 +331,16 @@
 
   .mobile-sheet {
     position: fixed !important;
-    inset: auto 0 auto 0 !important;
+    left: 8px !important;
+    right: 8px !important;
     bottom: calc(var(--dock-height) + var(--safe-bottom) + 8px) !important;
+    /* Override any top/inset from desktop styles */
+    top: auto !important;
+    inset-block-start: auto !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: calc(100dvh - (var(--dock-height) + var(--safe-bottom) + 100px)) !important;
     z-index: 9300 !important;
-    width: calc(100% - 16px) !important;
-    max-height: calc(100dvh - (var(--dock-height) + var(--safe-bottom) + 110px)) !important;
-    margin: 0 auto !important;
     padding: 12px 16px 16px !important;
     border: 1px solid #dadce0 !important;
     border-radius: 20px !important;
@@ -383,17 +351,18 @@
     overflow-y: auto;
     overscroll-behavior: contain;
     visibility: hidden;
-    transform: translateY(120%);
+    /* Override desktop transform:none */
+    transform: translateY(120%) !important;
     transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1), visibility 0.32s;
     color: #202124;
   }
 
   .mobile-sheet.active {
     visibility: visible;
-    transform: translateY(0);
+    transform: translateY(0) !important;
   }
 
-  /* Drag handle pill */
+  /* Drag pill */
   .mobile-sheet::before {
     content: "";
     display: block;
@@ -405,22 +374,10 @@
     flex-shrink: 0;
   }
 
-  body.sheet-open {
-    overflow: hidden;
-  }
+  body.sheet-open { overflow: hidden; }
 
   body.keyboard-open .mobile-sheet.active {
     max-height: 62dvh !important;
-  }
-
-  /* Non-modal sheet (layer picker, etc.) */
-  .mobile-sheet.sheet-non-modal {
-    background: #ffffff !important;
-    box-shadow: 0 -2px 12px rgba(0,0,0,.12) !important;
-  }
-
-  .mobile-sheet.sheet-non-modal.sheet-scrollable {
-    max-height: 60dvh !important;
   }
 
   /* Sheet handle row */
@@ -455,96 +412,58 @@
     flex-shrink: 0;
   }
 
-  .sheet-close:hover {
-    background: #f1f3f4;
-  }
+  .sheet-close:hover { background: #f1f3f4; }
+  .sheet-close svg { width: 16px; height: 16px; }
 
-  .sheet-close svg {
-    width: 16px;
-    height: 16px;
-  }
+  /* Sheet contents */
+  .mobile-sheet .report-item { background: #f8f9fa; border: 1px solid #dadce0; color: #202124; }
+  .mobile-sheet .report-item:hover { background: #e8f0fe; border-color: #a8c7fa; }
+  .mobile-sheet .report-title { color: #202124; }
+  .mobile-sheet h3, .mobile-sheet strong, .mobile-sheet p, .mobile-sheet label { color: #202124; }
+  .mobile-sheet .form-control { background: #f8f9fa; border: 1px solid #dadce0; color: #202124; }
+  .mobile-sheet .layer-radio, .mobile-sheet .layer-checkbox { background: #f8f9fa; border: 1px solid #dadce0; color: #202124; }
+  .mobile-sheet .layer-radio:hover, .mobile-sheet .layer-checkbox:hover { background: #e8f0fe; border-color: #a8c7fa; }
 
-  /* Sheet items text color */
-  .mobile-sheet .report-item {
-    background: #f8f9fa;
-    border: 1px solid #dadce0;
-    color: #202124;
-  }
-
-  .mobile-sheet .report-item:hover {
-    background: #e8f0fe;
-    border-color: #a8c7fa;
-  }
-
-  .mobile-sheet .report-title {
-    color: #202124;
-  }
-
-  .mobile-sheet h3,
-  .mobile-sheet strong,
-  .mobile-sheet p,
-  .mobile-sheet label {
-    color: #202124;
-  }
-
-  .mobile-sheet .form-control {
-    background: #f8f9fa;
-    border: 1px solid #dadce0;
-    color: #202124;
-  }
-
-  .mobile-sheet .layer-radio,
-  .mobile-sheet .layer-checkbox {
-    background: #f8f9fa;
-    border: 1px solid #dadce0;
-    color: #202124;
-  }
-
-  .mobile-sheet .layer-radio:hover,
-  .mobile-sheet .layer-checkbox:hover {
-    background: #e8f0fe;
-    border-color: #a8c7fa;
-  }
-
-  /* ============================================================
+  /* ==========================================================
      MAP PAGE — Full-screen Google Maps layout
-     ============================================================ */
+     Map fills 100% of screen.
+     Search bar floats at top.
+     FAB stack at right.
+     Dock at bottom.
+     ========================================================== */
   body.map-page {
     height: 100dvh;
     overflow: hidden !important;
     background: #e8eaed;
   }
 
-  body.map-page .navbar {
-    display: none !important;
-  }
+  /* No navbar on map page */
+  body.map-page .navbar { display: none !important; }
 
+  /* Map fills entire screen */
   body.map-page .main-content {
     position: fixed !important;
     inset: 0 !important;
     top: 0 !important;
     left: 0 !important;
     width: 100vw !important;
-    height: 100% !important;
     height: 100dvh !important;
     padding: 0 !important;
     margin: 0 !important;
     overflow: hidden !important;
     z-index: 1 !important;
+    display: block !important;
   }
 
   body.map-page .map-container,
   body.map-page #mapContainer {
     position: fixed !important;
     inset: 0 !important;
-    top: 0 !important;
-    left: 0 !important;
     width: 100vw !important;
-    height: 100% !important;
     height: 100dvh !important;
     padding: 0 !important;
     margin: 0 !important;
-    border: 0 !important;
+    border: none !important;
     border-radius: 0 !important;
     box-shadow: none !important;
     background: #e8eaed !important;
@@ -555,42 +474,68 @@
   body.map-page #map {
     position: absolute !important;
     inset: 0 !important;
-    top: 0 !important;
-    left: 0 !important;
     width: 100% !important;
     height: 100% !important;
     border-radius: 0 !important;
     z-index: 1 !important;
   }
 
-  body.map-page .map-disclaimer,
-  body.map-page #floatingSidebarToggle {
-    display: none !important;
-  }
+  /* Hide desktop-only elements on mobile map page */
+  body.map-page .map-disclaimer { display: none !important; }
+  body.map-page #floatingSidebarToggle { display: none !important; }
+  body.map-page .gm-layers-widget { display: none !important; }
+  body.map-page .gm-desktop-tools { display: none !important; }
 
-  body.map-page .mobile-sheet {
-    animation: none !important;
+  /* CRITICAL: Override desktop sidebar styles */
+  /* The sidebar on mobile is a bottom sheet — NOT a fixed left panel */
+  body.map-page #sidebarPanel,
+  body.map-page .gm-side-panel {
+    /* Reset ALL desktop positioning */
+    position: fixed !important;
+    top: auto !important;
+    left: 8px !important;
+    right: 8px !important;
+    bottom: calc(var(--dock-height) + var(--safe-bottom) + 8px) !important;
+    width: auto !important;
+    max-width: none !important;
+    height: auto !important;
+    max-height: calc(100dvh - (var(--dock-height) + var(--safe-bottom) + 100px)) !important;
+    inset-block-start: auto !important;
+    inset-block-end: calc(var(--dock-height) + var(--safe-bottom) + 8px) !important;
+    inset-inline-start: 8px !important;
+    inset-inline-end: 8px !important;
+
+    z-index: 9300 !important;
+    padding: 12px 16px 16px !important;
+    border: 1px solid #dadce0 !important;
+    border-radius: 20px !important;
+    background: #ffffff !important;
+    box-shadow: 0 -4px 24px rgba(0,0,0,.15) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    visibility: hidden;
+    transform: translateY(120%) !important;
+    transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1), visibility 0.32s;
     color: #202124;
   }
 
-  body.map-page #sidebarPanel,
+  body.map-page #sidebarPanel.active,
+  body.map-page .gm-side-panel.active {
+    visibility: visible;
+    transform: translateY(0) !important;
+  }
+
+  /* Show drag handle on mobile */
+  body.map-page #sidebarPanel .sheet-handle {
+    display: flex !important;
+  }
+
+  /* Mobile sheets for map page */
   body.map-page #mapOverlay,
   body.map-page #mapInfoSheet {
     z-index: 9300 !important;
-  }
-
-  body.map-page #sidebarPanel > div:first-child {
-    cursor: default !important;
-    margin-bottom: 8px !important;
-  }
-
-  body.map-page #sidebarPanel .report-list {
-    overflow: visible;
-    flex: 0 0 auto;
-  }
-
-  body.map-page #overlayToggle {
-    display: none !important;
   }
 
   body.map-page #overlayContent {
@@ -599,26 +544,6 @@
 
   body.map-page #mapOverlay {
     padding: 12px 16px 16px !important;
-  }
-
-  body.map-page #mapOverlay h3 {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #202124;
-    margin-bottom: 6px;
-  }
-
-  body.map-page #mapOverlay #overlayContent > div {
-    margin-bottom: 12px !important;
-  }
-
-  body.map-page #mapOverlay #overlayContent > div:last-child {
-    margin-bottom: 0 !important;
-  }
-
-  body.map-page #mapOverlay #spatialLayerList {
-    max-height: 160px;
-    gap: 6px !important;
   }
 
   body.map-page .layer-radio,
@@ -630,20 +555,18 @@
     color: #202124;
   }
 
-  body.map-page .layer-radio:hover,
-  body.map-page .layer-checkbox:hover {
-    background: #e8f0fe;
-    border-color: #a8c7fa;
-  }
+  body.map-page #spatialLayerList { max-height: 160px; }
 
-  /* ============================================================
-     FLOATING SEARCH BAR — Google Maps signature element
-     ============================================================ */
+  /* ==========================================================
+     FLOATING SEARCH BAR — Mobile
+     Pill shape. Full width at top. Z=2000 (above sheets)
+     ========================================================== */
   body.map-page .gm-search-container {
     position: fixed !important;
     top: calc(8px + var(--safe-top)) !important;
     left: 8px !important;
     right: 8px !important;
+    bottom: auto !important;
     width: auto !important;
     max-width: none !important;
     z-index: 2000 !important;
@@ -657,14 +580,16 @@
     pointer-events: auto !important;
     height: 48px !important;
     border-radius: 24px !important;
-    padding: 0 6px !important;
+    padding: 0 8px !important;
     background: #ffffff !important;
     box-shadow: 0 2px 10px rgba(0,0,0,0.22) !important;
+    border: none !important;
   }
 
   body.map-page .gm-filter-chips {
     pointer-events: auto !important;
-    padding: 2px 2px !important;
+    padding: 0 2px !important;
+    height: auto !important;
   }
 
   body.map-page .gm-chip {
@@ -672,15 +597,10 @@
     font-size: 0.78rem !important;
   }
 
-  body.map-page .gm-layers-widget,
-  body.map-page .gm-desktop-tools,
-  body.map-page .map-search-trigger {
-    display: none !important;
-  }
-
-  /* ============================================================
-     FAB BUTTONS — Right side
-     ============================================================ */
+  /* ==========================================================
+     FAB BUTTONS — Right side of map
+     Z=1500 (above map, below sheets)
+     ========================================================== */
   .map-fab-stack {
     display: flex !important;
     flex-direction: column !important;
@@ -697,7 +617,7 @@
     border: none;
     border-radius: 50%;
     background: #ffffff;
-    box-shadow: 0 2px 8px rgba(0,0,0,.25), 0 1px 3px rgba(0,0,0,.15);
+    box-shadow: 0 2px 8px rgba(0,0,0,.25), 0 1px 3px rgba(0,0,0,.12);
     color: #5f6368;
     display: flex;
     align-items: center;
@@ -706,15 +626,8 @@
     transition: box-shadow 0.15s;
   }
 
-  .map-fab:hover {
-    box-shadow: 0 4px 14px rgba(0,0,0,.3);
-    color: #202124;
-  }
-
-  .map-fab svg {
-    width: 20px;
-    height: 20px;
-  }
+  .map-fab:hover { box-shadow: 0 4px 14px rgba(0,0,0,.3); color: #202124; }
+  .map-fab svg { width: 20px; height: 20px; }
 
   .map-fab.accent {
     background: #1a73e8;
@@ -722,19 +635,19 @@
     box-shadow: 0 4px 12px rgba(26,115,232,.5);
   }
 
-  .map-fab.accent:hover {
-    background: #1765cc;
-    box-shadow: 0 6px 18px rgba(26,115,232,.6);
-  }
+  .map-fab.accent:hover { background: #1765cc; box-shadow: 0 6px 18px rgba(26,115,232,.6); }
 
-  /* Leaflet controls on map page */
+  /* ==========================================================
+     LEAFLET CONTROLS — Mobile map page
+     ========================================================== */
   body.map-page .leaflet-top.leaflet-right {
     top: calc(72px + var(--safe-top));
     right: 8px;
   }
 
   body.map-page .leaflet-bottom.leaflet-right {
-    bottom: calc(var(--dock-height) + var(--safe-bottom) + 14px);
+    bottom: calc(var(--dock-height) + var(--safe-bottom) + 16px);
+    right: 8px;
   }
 
   body.map-page .leaflet-control-zoom {
@@ -742,6 +655,7 @@
     box-shadow: 0 2px 8px rgba(0,0,0,.22) !important;
     border-radius: 12px !important;
     overflow: hidden;
+    margin: 0 !important;
   }
 
   body.map-page .leaflet-control-zoom a {
@@ -759,32 +673,15 @@
     color: #202124 !important;
   }
 
-  /* Map info body */
-  .map-info-body {
-    font-size: 0.85rem;
-    line-height: 1.55;
-    color: #5f6368;
-  }
-
-  .map-info-body strong {
-    color: #202124;
-  }
-
-  .map-info-body p + p {
-    margin-top: 10px;
-  }
-
-  /* ============================================================
+  /* ==========================================================
      PORTAL PAGE
-     ============================================================ */
+     ========================================================== */
   body.portal-page .main-content {
     width: 100% !important;
     padding: 12px !important;
   }
 
-  body.portal-page .report-grid {
-    display: block !important;
-  }
+  body.portal-page .report-grid { display: block !important; }
 
   body.portal-page .form-row {
     display: grid !important;
@@ -793,34 +690,19 @@
     margin-bottom: 8px !important;
   }
 
-  body.portal-page .form-row > :only-child {
-    grid-column: 1 / -1;
-  }
+  body.portal-page .form-row > :only-child { grid-column: 1 / -1; }
+  body.portal-page .form-row > * { width: 100% !important; }
+  body.portal-page #mini-map { height: 260px !important; border-radius: 12px !important; }
 
-  body.portal-page .form-row > * {
-    width: 100% !important;
-  }
-
-  body.portal-page #mini-map {
-    height: 260px !important;
-    border-radius: 12px !important;
-  }
-
-  /* ============================================================
+  /* ==========================================================
      REPORT PAGE
-     ============================================================ */
-  body.report-page .main-content {
-    padding: 12px !important;
-  }
+     ========================================================== */
+  body.report-page .main-content { padding: 12px !important; }
 
   body.report-page .report-grid {
     display: flex !important;
     flex-direction: column;
     gap: 12px;
-  }
-
-  body.report-page .report-grid > div {
-    display: contents;
   }
 
   body.report-page .form-row {
@@ -830,34 +712,17 @@
     margin-bottom: 8px !important;
   }
 
-  body.report-page .form-row .form-group:only-child {
-    grid-column: 1 / -1;
-  }
-
-  body.report-page .form-group {
-    margin-bottom: 10px;
-  }
-
-  body.report-page #mini-map {
-    height: 280px !important;
-    border-radius: 14px !important;
-  }
-
-  body.report-page .shp-upload-zone {
-    padding: 16px 12px;
-  }
-
-  body.report-page .cat-values-list {
-    max-height: 220px;
-  }
+  body.report-page .form-row .form-group:only-child { grid-column: 1 / -1; }
+  body.report-page .form-group { margin-bottom: 10px; }
+  body.report-page #mini-map { height: 280px !important; border-radius: 14px !important; }
+  body.report-page .shp-upload-zone { padding: 16px 12px; }
+  body.report-page .cat-values-list { max-height: 220px; }
 
   body.report-page {
     padding-bottom: calc(var(--dock-height) + var(--safe-bottom) + 120px);
   }
 
-  body.report-page .form-actions {
-    display: none !important;
-  }
+  body.report-page .form-actions { display: none !important; }
 
   /* Mobile submit FAB */
   .mobile-submit-fab {
@@ -882,20 +747,9 @@
     cursor: pointer;
   }
 
-  .mobile-submit-fab:hover {
-    background: #1765cc;
-    box-shadow: 0 6px 20px rgba(26,115,232,.6);
-  }
-
-  .mobile-submit-fab svg {
-    width: 18px;
-    height: 18px;
-  }
-
-  .mobile-submit-fab:disabled {
-    opacity: 0.7;
-    cursor: progress;
-  }
+  .mobile-submit-fab:hover { background: #1765cc; }
+  .mobile-submit-fab svg { width: 18px; height: 18px; }
+  .mobile-submit-fab:disabled { opacity: 0.7; cursor: progress; }
 
   body.report-page #successModal > .glass-panel {
     width: calc(100% - 24px) !important;
@@ -905,39 +759,16 @@
     background: #ffffff !important;
   }
 
-  /* ============================================================
-     TRACKER PAGE — Card list
-     ============================================================ */
-  body.tracker-page .main-content {
-    padding: 12px !important;
-  }
+  /* ==========================================================
+     TRACKER PAGE
+     ========================================================== */
+  body.tracker-page .main-content { padding: 12px !important; }
 
   body.tracker-page .search-container {
     flex-direction: column !important;
     align-items: stretch !important;
     gap: 10px !important;
     margin-bottom: 14px !important;
-  }
-
-  body.tracker-page .search-container h2 {
-    font-size: 1.18rem !important;
-  }
-
-  body.tracker-page .search-container > div {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px !important;
-    width: 100%;
-  }
-
-  body.tracker-page #tableSearch {
-    grid-column: 1 / -1;
-    width: 100% !important;
-  }
-
-  body.tracker-page .table-container {
-    overflow: visible !important;
-    margin-top: 6px;
   }
 
   body.tracker-page table,
@@ -948,9 +779,7 @@
     width: 100%;
   }
 
-  body.tracker-page thead {
-    display: none;
-  }
+  body.tracker-page thead { display: none; }
 
   body.tracker-page tr {
     display: grid;
@@ -964,10 +793,7 @@
     box-shadow: 0 1px 3px rgba(0,0,0,.08);
   }
 
-  body.tracker-page tr:hover {
-    background: #f8f9fa;
-    box-shadow: 0 2px 6px rgba(0,0,0,.1);
-  }
+  body.tracker-page tr:hover { background: #f8f9fa; }
 
   body.tracker-page td {
     display: block;
@@ -981,19 +807,8 @@
     color: #202124;
   }
 
-  body.tracker-page td::before {
-    display: none;
-  }
-
-  body.tracker-page td[data-label="No. Permohonan"] {
-    grid-column: 1;
-    align-self: center;
-  }
-
-  body.tracker-page td[data-label="No. Permohonan"] b {
-    font-size: 0.86rem;
-    color: #202124;
-  }
+  body.tracker-page td[data-label="No. Permohonan"] { grid-column: 1; align-self: center; }
+  body.tracker-page td[data-label="No. Permohonan"] b { font-size: 0.86rem; color: #202124; }
 
   body.tracker-page td[data-label="Tgl Input"] {
     grid-column: 2;
@@ -1003,47 +818,6 @@
     font-size: 0.64rem !important;
     color: #5f6368;
   }
-
-  body.tracker-page td[data-label="NIK / Pemohon"],
-  body.tracker-page td[data-label="Kecamatan / Kelurahan"],
-  body.tracker-page td[data-label="Hak / Sertipikat"] {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0 4px;
-    color: #5f6368;
-  }
-
-  body.tracker-page td[data-label="NIK / Pemohon"] {
-    margin-top: 2px;
-  }
-
-  body.tracker-page td[data-label="NIK / Pemohon"] > div,
-  body.tracker-page td[data-label="Kecamatan / Kelurahan"] > div,
-  body.tracker-page td[data-label="Hak / Sertipikat"] > div {
-    display: inline;
-    font-size: 0.7rem !important;
-  }
-
-  body.tracker-page td[data-label="NIK / Pemohon"] > div:first-child {
-    font-size: 0.8rem !important;
-    font-weight: 600;
-    color: #202124;
-  }
-
-  body.tracker-page td[data-label="Kecamatan / Kelurahan"]::before,
-  body.tracker-page td[data-label="Hak / Sertipikat"]::before {
-    display: inline;
-    font-size: 0.6rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: #9aa0a6;
-    margin-right: 4px;
-  }
-
-  body.tracker-page td[data-label="Kecamatan / Kelurahan"]::before { content: "Lokasi"; }
-  body.tracker-page td[data-label="Hak / Sertipikat"]::before      { content: "Hak"; }
 
   body.tracker-page td[data-label="Aksi"] {
     margin-top: 6px;
@@ -1065,55 +839,28 @@
     font-size: 0.72rem !important;
   }
 
-  body.tracker-page td[colspan] {
-    display: block;
-    text-align: center;
-  }
-
-  body.tracker-page #pagination {
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  body.tracker-page #pagination > div:last-child {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr;
-    width: 100%;
-    gap: 6px !important;
-  }
-
-  body.tracker-page #pagination .btn {
-    width: 100%;
-  }
-
   body.tracker-page #toastNotif {
     left: 12px !important;
     right: 12px !important;
     bottom: calc(var(--dock-height) + var(--safe-bottom) + 14px) !important;
   }
 
-  /* ============================================================
+  /* ==========================================================
      ADMIN PAGE
-     ============================================================ */
-  body.admin-page .main-content {
-    padding: 12px !important;
-  }
+     ========================================================== */
+  body.admin-page .main-content { padding: 12px !important; }
 
   body.admin-page .admin-container {
     max-width: 100% !important;
     margin: 0 !important;
+    padding: 0 !important;
   }
 
   body.admin-page .admin-tabs {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 16px;
-    padding-bottom: 8px;
     overflow-x: auto;
     white-space: nowrap;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    border-bottom: 1px solid #dadce0;
   }
 
   body.admin-page .admin-tabs::-webkit-scrollbar { display: none; }
@@ -1123,22 +870,9 @@
     padding: 8px 14px !important;
     font-size: 0.82rem !important;
     border-radius: 20px;
-    background: #f8f9fa;
-    border: 1px solid #dadce0;
-    color: #5f6368;
   }
 
-  body.admin-page .tab-btn.active {
-    background: #e8f0fe;
-    color: #1a73e8;
-    border-color: #a8c7fa;
-    font-weight: 600;
-  }
-
-  body.admin-page .upload-zone {
-    margin-bottom: 16px;
-    padding: 24px 16px;
-  }
+  body.admin-page .upload-zone { margin-bottom: 16px; padding: 24px 16px; }
 
   body.admin-page .file-item,
   body.admin-page .user-item {
@@ -1147,64 +881,20 @@
     gap: 10px;
   }
 
-  body.admin-page .file-item > div:first-child,
-  body.admin-page .user-item > div:first-child {
-    min-width: 0;
-  }
-
-  body.admin-page .file-item > div:first-child small {
-    display: block;
-    word-break: break-all;
-    color: #5f6368;
-  }
-
-  body.admin-page .file-item > div:first-child {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 8px;
-  }
-
-  body.admin-page .file-item > div:first-child > div:last-child {
-    width: 100%;
-  }
-
-  body.admin-page .file-item > div:last-child,
-  body.admin-page .user-item > button {
-    width: 100%;
-  }
-
-  body.admin-page .file-item .btn,
-  body.admin-page .user-item .btn {
-    flex: 1 1 auto;
-    border-radius: 20px;
-  }
-
-  body.admin-page #usersTab > div[style*="display: grid"] {
+  body.admin-page .admin-user-grid {
     grid-template-columns: 1fr !important;
   }
 
-  body.admin-page #usersTab button {
-    width: 100%;
-  }
+  body.admin-page .admin-user-grid button { width: 100%; }
 
-  body.admin-page .admin-cat-values {
-    max-height: 220px;
-  }
-
-  /* ============================================================
+  /* ==========================================================
      SETTINGS PAGE
-     ============================================================ */
-  body.settings-page .main-content {
-    padding: 12px !important;
-  }
+     ========================================================== */
+  body.settings-page .main-content { padding: 12px !important; }
 
   body.settings-page .settings-container {
     max-width: 100% !important;
     margin: 0 !important;
-  }
-
-  body.settings-page .header-title {
-    margin-bottom: 16px;
   }
 
   body.settings-page .settings-actions {
@@ -1216,14 +906,11 @@
     border-top: 1px solid #dadce0;
   }
 
-  body.settings-page .settings-actions .btn {
-    width: 100%;
-    border-radius: 22px;
-  }
+  body.settings-page .settings-actions .btn { width: 100%; border-radius: 22px; }
 
-  /* ============================================================
-     LOGIN PAGE — Google Sign-in style
-     ============================================================ */
+  /* ==========================================================
+     LOGIN PAGE
+     ========================================================== */
   body.login-page.login-centered {
     height: auto;
     min-height: 100dvh;
@@ -1238,34 +925,17 @@
     border-radius: 20px;
     background: #ffffff;
     border: 1px solid #dadce0;
-    box-shadow: 0 4px 16px rgba(0,0,0,.1);
-  }
-
-  body.login-page .login-card .brand {
-    font-size: 1.6rem;
-  }
-
-  body.login-page .login-card .brand img {
-    height: 52px !important;
-  }
-
-  body.login-page .password-wrap {
-    position: relative;
-  }
-
-  body.login-page .password-wrap .form-control {
-    padding-right: 50px;
-    background: #f8f9fa;
+    box-shadow: 0 4px 16px rgba(0,0,0,.10);
   }
 
   body.login-page .password-toggle {
+    display: flex;
     position: absolute;
     right: 6px;
     top: 50%;
     transform: translateY(-50%);
     width: 40px;
     height: 40px;
-    display: flex;
     align-items: center;
     justify-content: center;
     border: none;
@@ -1275,67 +945,43 @@
     cursor: pointer;
   }
 
-  /* ============================================================
-     SMALL PHONES
-     ============================================================ */
+  body.login-page .password-wrap .form-control { padding-right: 50px; }
+
+  /* ==========================================================
+     SMALL PHONES — 380px and below
+     ========================================================== */
   @media (max-width: 380px) {
     body.report-page .form-row,
     body.portal-page .form-row {
       grid-template-columns: 1fr !important;
     }
 
-    .dock-item {
-      font-size: 0.56rem;
-    }
-
-    .dock-center-btn {
-      width: 46px;
-      height: 46px;
-    }
+    .dock-item { font-size: 0.56rem; }
+    .dock-center-btn { width: 46px; height: 46px; }
   }
-}
+
+} /* end @media (max-width: 768px) */
 
 /* ============================================================
    LANDSCAPE PHONES
    ============================================================ */
 @media (max-width: 900px) and (orientation: landscape) and (max-height: 500px) {
-  :root {
-    --dock-height: 52px;
-  }
+  :root { --dock-height: 52px; }
 
-  body {
-    padding-bottom: calc(var(--dock-height) + var(--safe-bottom) + 10px);
-  }
-
-  .navbar {
-    padding-top: calc(0.35rem + var(--safe-top)) !important;
-  }
+  body { padding-bottom: calc(var(--dock-height) + var(--safe-bottom) + 10px); }
 
   .mobile-sheet {
     max-height: 92dvh !important;
   }
 
-  .dock-item {
-    min-height: 42px;
-  }
-
-  .dock-center-btn {
-    width: 46px;
-    height: 46px;
-  }
-
-  body.map-page .map-search-trigger {
-    top: calc(8px + var(--safe-top));
-    height: 44px;
-  }
+  .dock-item { min-height: 42px; }
+  .dock-center-btn { width: 46px; height: 46px; }
 
   body.map-page .map-fab-stack {
-    bottom: calc(var(--dock-height) + var(--safe-bottom) + 36px);
+    bottom: calc(var(--dock-height) + var(--safe-bottom) + 28px);
   }
 
-  body.report-page #mini-map {
-    height: 180px !important;
-  }
+  body.report-page #mini-map { height: 180px !important; }
 }
 
 /* ============================================================
