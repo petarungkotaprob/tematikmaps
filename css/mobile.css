@@ -520,30 +520,47 @@
   }
 
   body.map-page .main-content {
-    position: relative;
-    height: 100dvh !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-  }
-
-  body.map-page .map-container {
     position: fixed !important;
     inset: 0 !important;
-    animation: none !important;
-    transform: none !important;
-    width: 100% !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100% !important;
     height: 100dvh !important;
     padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    z-index: 1 !important;
+  }
+
+  body.map-page .map-container,
+  body.map-page #mapContainer {
+    position: fixed !important;
+    inset: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100% !important;
+    height: 100dvh !important;
+    padding: 0 !important;
+    margin: 0 !important;
     border: 0 !important;
     border-radius: 0 !important;
     box-shadow: none !important;
     background: #e8eaed !important;
+    overflow: hidden !important;
+    z-index: 1 !important;
   }
 
   body.map-page #map {
+    position: absolute !important;
+    inset: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
     width: 100% !important;
     height: 100% !important;
     border-radius: 0 !important;
+    z-index: 1 !important;
   }
 
   body.map-page .map-disclaimer,
@@ -623,14 +640,14 @@
      FLOATING SEARCH BAR — Google Maps signature element
      ============================================================ */
   .map-search-trigger {
-    display: flex;
-    align-items: center;
+    display: flex !important;
+    align-items: center !important;
     gap: 12px;
-    position: absolute;
-    top: calc(12px + var(--safe-top));
-    left: 12px;
-    right: 12px;
-    z-index: 800;
+    position: fixed !important;
+    top: calc(12px + var(--safe-top)) !important;
+    left: 12px !important;
+    right: 12px !important;
+    z-index: 1500 !important;
     height: 52px;
     padding: 0 18px;
     border: none;
@@ -662,13 +679,13 @@
      FAB BUTTONS — Right side
      ============================================================ */
   .map-fab-stack {
-    display: flex;
-    flex-direction: column;
+    display: flex !important;
+    flex-direction: column !important;
     gap: 10px;
-    position: absolute;
-    right: 12px;
-    bottom: calc(var(--dock-height) + var(--safe-bottom) + 32px);
-    z-index: 700;
+    position: fixed !important;
+    right: 12px !important;
+    bottom: calc(var(--dock-height) + var(--safe-bottom) + 32px) !important;
+    z-index: 1500 !important;
   }
 
   .map-fab {

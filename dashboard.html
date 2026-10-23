@@ -68,8 +68,8 @@
     </nav>
 
     <main class="main-content">
-        <!-- Sidebar Panel -->
-        <aside class="glass-panel sidebar animated mobile-sheet" id="sidebarPanel" aria-label="Daftar permohonan">
+        <!-- Sidebar Panel (Google Maps place list style on Desktop, Bottom Sheet on Mobile) -->
+        <aside class="sidebar mobile-sheet" id="sidebarPanel" aria-label="Daftar permohonan">
             <div class="sheet-handle" data-sheet-drag>
                 <h3><i data-feather="activity" style="width: 16px; height: 16px; vertical-align: middle;"></i> Progress Peta Tematik</h3>
                 <button type="button" class="sheet-close" data-sheet-close aria-label="Tutup panel">
@@ -77,108 +77,115 @@
                 </button>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-bottom: 1rem;" id="sidebarToggle" title="Sembunyikan Panel">
-                <h2 style="margin: 0;"><i data-feather="activity"></i> Progress Peta Tematik</h2>
-                <i data-feather="arrow-left-circle" id="sidebarToggleIcon" style="color: var(--text-secondary); width: 20px; height: 20px;"></i>
+                <h2 style="margin: 0; font-size: 1.05rem; font-weight: 600; color: #202124;"><i data-feather="activity" style="color: #1a73e8; vertical-align: middle; margin-right: 6px;"></i> Progress Peta Tematik</h2>
+                <i data-feather="arrow-left-circle" id="sidebarToggleIcon" style="color: #5f6368; width: 20px; height: 20px;"></i>
             </div>
             
             <div id="sidebarContent">
-                <h3>Data Terbaru</h3>
-            <div style="margin-bottom: 12px;">
-                <input type="text" id="dashboardSearch" class="form-control" placeholder="Cari Nama/Kecamatan..." style="width: 100%;">
-            </div>
-            <div class="report-list" id="reportList">
-                <div style="text-align: center; color: #94a3b8; margin-top: 2rem;">
-                    Memuat data permohonan...
+                <h3 style="font-size: 0.82rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #5f6368; margin-bottom: 8px;">Data Terbaru</h3>
+                <div style="margin-bottom: 12px;">
+                    <input type="text" id="dashboardSearch" class="form-control" placeholder="Cari Nama/Kecamatan..." style="width: 100%;">
                 </div>
-            </div>
-            
-            <!-- Sidebar Pagination -->
-            <div id="sidebarPagination" style="display: none; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid #dadce0;">
-                <button id="sidePrevBtn" class="btn" style="padding: 4px 10px; font-size: 0.75rem; background: #f8f9fa; border: 1px solid #dadce0; color: #5f6368; border-radius: 20px;" disabled>
-                    <i data-feather="chevron-left" style="width: 14px; height: 14px; vertical-align: middle;"></i>
-                </button>
-                <div style="font-size: 0.75rem; color: #5f6368;" id="sidePaginationInfo">
-                    1-5
+                <div class="report-list" id="reportList">
+                    <div style="text-align: center; color: #94a3b8; margin-top: 2rem;">
+                        Memuat data permohonan...
+                    </div>
                 </div>
-                <button id="sideNextBtn" class="btn" style="padding: 4px 10px; font-size: 0.75rem; background: #f8f9fa; border: 1px solid #dadce0; color: #5f6368; border-radius: 20px;" disabled>
-                    <i data-feather="chevron-right" style="width: 14px; height: 14px; vertical-align: middle;"></i>
-                </button>
-            </div>
+                
+                <!-- Sidebar Pagination -->
+                <div id="sidebarPagination" style="display: none; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid #dadce0;">
+                    <button id="sidePrevBtn" class="btn" style="padding: 4px 10px; font-size: 0.75rem; background: #f8f9fa; border: 1px solid #dadce0; color: #5f6368; border-radius: 20px;" disabled>
+                        <i data-feather="chevron-left" style="width: 14px; height: 14px; vertical-align: middle;"></i>
+                    </button>
+                    <div style="font-size: 0.75rem; color: #5f6368;" id="sidePaginationInfo">
+                        1-5
+                    </div>
+                    <button id="sideNextBtn" class="btn" style="padding: 4px 10px; font-size: 0.75rem; background: #f8f9fa; border: 1px solid #dadce0; color: #5f6368; border-radius: 20px;" disabled>
+                        <i data-feather="chevron-right" style="width: 14px; height: 14px; vertical-align: middle;"></i>
+                    </button>
+                </div>
             </div>
         </aside>
 
-        <!-- Map Panel -->
-        <section class="glass-panel map-container animated" style="animation-delay: 0.2s; position: relative;">
-            <button id="floatingSidebarToggle" class="btn" style="position: absolute; top: 14px; left: 14px; z-index: 1000; padding: 8px 12px; border-radius: 10px; display: none; background: #ffffff; border: 1px solid #dadce0; color: #5f6368; box-shadow: 0 2px 8px rgba(0,0,0,.2);" title="Tampilkan Panel">
-                <i data-feather="menu" style="width: 20px; height: 20px; vertical-align: middle;"></i>
-            </button>
+        <!-- Toggle Button when sidebar is collapsed (Desktop) -->
+        <button id="floatingSidebarToggle" class="btn" style="display: none;" title="Tampilkan Panel">
+            <i data-feather="menu" style="width: 20px; height: 20px; vertical-align: middle;"></i>
+        </button>
+
+        <!-- Full-screen Background Map (Google Maps style) -->
+        <div class="map-container" id="mapContainer">
             <div id="map"></div>
+        </div>
 
-            <button type="button" class="map-search-trigger" data-sheet-open="sidebarPanel" data-sheet-focus="#dashboardSearch" aria-label="Cari permohonan">
-                <i data-feather="search"></i>
-                <span>Cari nama, kecamatan, atau no. permohonan</span>
+        <!-- Floating Mobile Search Trigger (Google Maps pill) -->
+        <button type="button" class="map-search-trigger" data-sheet-open="sidebarPanel" data-sheet-focus="#dashboardSearch" aria-label="Cari permohonan">
+            <i data-feather="search"></i>
+            <span>Cari nama, kecamatan, atau no. permohonan</span>
+        </button>
+
+        <!-- Floating Action Buttons (FAB) for Mobile -->
+        <div class="map-fab-stack">
+            <button type="button" class="map-fab" id="btnOpenLayerSheet" data-sheet-open="mapOverlay" aria-label="Pilih peta dan layer" title="Peta & Layer">
+                <i data-feather="layers"></i>
             </button>
+            <button type="button" class="map-fab accent" id="btnLocate" aria-label="Lokasi saya" title="Lokasi saya">
+                <i data-feather="crosshair"></i>
+            </button>
+            <button type="button" class="map-fab" id="btnMapInfo" data-sheet-open="mapInfoSheet" aria-label="Informasi peta" title="Informasi peta">
+                <i data-feather="info"></i>
+            </button>
+        </div>
 
-            <div class="map-fab-stack">
-                <button type="button" class="map-fab" id="btnOpenLayerSheet" data-sheet-open="mapOverlay" aria-label="Pilih peta dan layer" title="Peta & Layer">
-                    <i data-feather="layers"></i>
-                </button>
-                <button type="button" class="map-fab accent" id="btnLocate" aria-label="Lokasi saya" title="Lokasi saya">
-                    <i data-feather="crosshair"></i>
-                </button>
-                <button type="button" class="map-fab" id="btnMapInfo" data-sheet-open="mapInfoSheet" aria-label="Informasi peta" title="Informasi peta">
-                    <i data-feather="info"></i>
+        <!-- Disclaimer Banner -->
+        <div class="map-disclaimer">
+            <i data-feather="info" style="width: 14px; height: 14px; flex-shrink: 0; color: #f9ab00; margin-top: 1px;"></i>
+            <span><strong>Disclaimer:</strong> Peta ini hanya bersifat sebagai informasi awal. Kantor Pertanahan tidak memberikan jaminan atas ketepatan batas atau luas tanah yang tertera tanpa adanya validasi fisik di lapangan oleh petugas berwenang.</span>
+        </div>
+        
+        <!-- Peta & Layer Panel (Floating Card on Desktop, Bottom Sheet on Mobile) -->
+        <div class="map-overlay mobile-sheet" id="mapOverlay" aria-label="Peta dan layer">
+            <div class="sheet-handle" data-sheet-drag>
+                <h3><i data-feather="layers" style="width: 16px; height: 16px; vertical-align: middle;"></i> Peta & Layer</h3>
+                <button type="button" class="sheet-close" data-sheet-close aria-label="Tutup panel">
+                    <i data-feather="x"></i>
                 </button>
             </div>
-
-            <div class="map-disclaimer">
-                <i data-feather="info" style="width: 14px; height: 14px; flex-shrink: 0; color: var(--accent-orange); margin-top: 1px;"></i>
-                <span><strong>Disclaimer:</strong> Peta ini hanya bersifat sebagai informasi awal. Kantor Pertanahan tidak memberikan jaminan atas ketepatan batas atau luas tanah yang tertera tanpa adanya validasi fisik di lapangan oleh petugas berwenang. Penggunaan data di luar ketentuan yang berlaku bukan merupakan tanggung jawab Kantor Pertanahan.</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; cursor: pointer;" id="overlayToggle">
+                <strong style="color: #202124; font-size: 0.92rem;"><i data-feather="layers" style="width: 16px; height: 16px; vertical-align: middle; color: #1a73e8; margin-right: 6px;"></i> Peta & Layer</strong>
+                <i data-feather="chevron-down" id="overlayIcon" style="width: 16px; height: 16px; color: #5f6368;"></i>
             </div>
-            
-            <div class="map-overlay mobile-sheet" id="mapOverlay" aria-label="Peta dan layer">
-                <div class="sheet-handle" data-sheet-drag>
-                    <h3><i data-feather="layers" style="width: 16px; height: 16px; vertical-align: middle;"></i> Peta & Layer</h3>
-                    <button type="button" class="sheet-close" data-sheet-close aria-label="Tutup panel">
-                        <i data-feather="x"></i>
-                    </button>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; cursor: pointer;" id="overlayToggle">
-                    <strong style="color: var(--text-secondary);"><i data-feather="layers" style="width: 14px; height: 14px; vertical-align: middle;"></i> Peta & Layer</strong>
-                    <i data-feather="chevron-down" id="overlayIcon" style="width: 16px; height: 16px; color: var(--text-secondary);"></i>
-                </div>
-                <div id="overlayContent">
-                    <div style="margin-bottom: 1.5rem;">
-                        <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 10px;"><i data-feather="monitor" style="width: 14px; height: 14px; vertical-align: middle;"></i> Pilih Peta Dasar (Basemap):</label>
-                    <div style="display: flex; flex-direction: column; gap: 8px;">
-                        <label class="layer-radio"><input type="radio" name="basemap" value="satelit" checked> <span>Citra Satelit</span></label>
+            <div id="overlayContent">
+                <div style="margin-bottom: 1.2rem;">
+                    <label style="font-size: 0.82rem; font-weight: 600; color: #5f6368; display: block; margin-bottom: 8px;"><i data-feather="map" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;"></i> Pilih Peta Dasar (Basemap):</label>
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <label class="layer-radio"><input type="radio" name="basemap" value="satelit" checked> <span>Citra Satelit (Google)</span></label>
                         <label class="layer-radio"><input type="radio" name="basemap" value="osm"> <span>Peta Jalan (OSM)</span></label>
                     </div>
                 </div>
 
-                <div style="margin-bottom: 1.5rem;">
-                    <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 10px;"><i data-feather="layers" style="width: 14px; height: 14px; vertical-align: middle;"></i> Layer Spasial (Overlay):</label>
-                    <div id="spatialLayerList" style="display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; padding-right: 5px;">
+                <div>
+                    <label style="font-size: 0.82rem; font-weight: 600; color: #5f6368; display: block; margin-bottom: 8px;"><i data-feather="layers" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;"></i> Layer Spasial (Overlay):</label>
+                    <div id="spatialLayerList" style="display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; padding-right: 4px;">
                         <!-- Custom SHP layers will appear here -->
                     </div>
                 </div>
-                </div>
             </div>
+        </div>
 
-            <div id="mapInfoSheet" class="mobile-sheet" aria-label="Informasi peta">
-                <div class="sheet-handle" data-sheet-drag>
-                    <h3><i data-feather="info" style="width: 16px; height: 16px; vertical-align: middle;"></i> Informasi Peta</h3>
-                    <button type="button" class="sheet-close" data-sheet-close aria-label="Tutup panel">
-                        <i data-feather="x"></i>
-                    </button>
-                </div>
-                <div class="map-info-body">
-                    <p><strong>Disclaimer:</strong> Peta ini hanya bersifat sebagai informasi awal. Kantor Pertanahan tidak memberikan jaminan atas ketepatan batas atau luas tanah yang tertera tanpa adanya validasi fisik di lapangan oleh petugas berwenang. Penggunaan data di luar ketentuan yang berlaku bukan merupakan tanggung jawab Kantor Pertanahan.</p>
-                    <p><strong>Sumber data:</strong> Google Satellite, OpenStreetMap, dan layer spasial Kantor Pertanahan.</p>
-                    <p><strong>Peta Tematik</strong><br>Kantor Pertanahan Kota Probolinggo</p>
-                </div>
+        <!-- Info Bottom Sheet for Mobile -->
+        <div id="mapInfoSheet" class="mobile-sheet" aria-label="Informasi peta">
+            <div class="sheet-handle" data-sheet-drag>
+                <h3><i data-feather="info" style="width: 16px; height: 16px; vertical-align: middle;"></i> Informasi Peta</h3>
+                <button type="button" class="sheet-close" data-sheet-close aria-label="Tutup panel">
+                    <i data-feather="x"></i>
+                </button>
             </div>
-        </section>
+            <div class="map-info-body">
+                <p><strong>Disclaimer:</strong> Peta ini hanya bersifat sebagai informasi awal. Kantor Pertanahan tidak memberikan jaminan atas ketepatan batas atau luas tanah yang tertera tanpa adanya validasi fisik di lapangan oleh petugas berwenang. Penggunaan data di luar ketentuan yang berlaku bukan merupakan tanggung jawab Kantor Pertanahan.</p>
+                <p><strong>Sumber data:</strong> Google Satellite, OpenStreetMap, dan layer spasial Kantor Pertanahan.</p>
+                <p><strong>Peta Tematik</strong><br>Kantor Pertanahan Kota Probolinggo</p>
+            </div>
+        </div>
     </main>
 
     <!-- Leaflet JS -->
@@ -213,14 +220,30 @@
             }
             document.querySelector('.main-content').classList.add('sidebar-collapsed');
             document.getElementById('floatingSidebarToggle').style.display = 'block';
-            setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 300); // trigger resize map
+            setTimeout(function() { 
+                window.dispatchEvent(new Event('resize')); 
+                if (window.silisaMap) window.silisaMap.invalidateSize();
+            }, 300);
         });
 
         document.getElementById('floatingSidebarToggle').addEventListener('click', function() {
             document.querySelector('.main-content').classList.remove('sidebar-collapsed');
             document.getElementById('floatingSidebarToggle').style.display = 'none';
-            setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 300); // trigger resize map
+            setTimeout(function() { 
+                window.dispatchEvent(new Event('resize')); 
+                if (window.silisaMap) window.silisaMap.invalidateSize();
+            }, 300);
         });
+
+        // Ensure Leaflet map renders immediately without gray tiles
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                if (window.silisaMap) window.silisaMap.invalidateSize();
+            }, 200);
+        });
+        setTimeout(function() {
+            if (window.silisaMap) window.silisaMap.invalidateSize();
+        }, 500);
     </script>
 </body>
 </html>
