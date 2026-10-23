@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -14,29 +14,40 @@
     <script src="js/pwa.js"></script>
     <style>
         .admin-container {
-            max-width: 1000px;
-            margin: 2rem auto;
+            max-width: 1060px;
+            margin: 1.5rem auto;
+            padding: 0 16px;
         }
         .admin-tabs {
             display: flex;
-            gap: 10px;
-            margin-bottom: 2rem;
-            border-bottom: 1px solid var(--glass-border);
-            padding-bottom: 10px;
+            gap: 8px;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--gm-border, #dadce0);
+            padding-bottom: 8px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
         .tab-btn {
             background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            padding: 10px 20px;
+            border: 1px solid transparent;
+            color: var(--gm-secondary, #5f6368);
+            padding: 8px 18px;
             cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            border-radius: 999px;
+            white-space: nowrap;
+        }
+        .tab-btn:hover {
+            background: var(--gm-hover, #f1f3f4);
+            color: var(--gm-on-surface, #202124);
         }
         .tab-btn.active {
-            background: rgba(255,255,255,0.05);
-            color: var(--accent-orange);
+            background: var(--gm-active, #e8f0fe);
+            color: var(--gm-primary, #1a73e8);
+            font-weight: 600;
+            border-color: rgba(26,115,232,0.25);
         }
         .tab-content {
             display: none;
@@ -45,18 +56,18 @@
             display: block;
         }
         .upload-zone {
-            border: 2px dashed var(--glass-border);
-            padding: 2rem;
+            border: 2px dashed var(--gm-border, #dadce0);
+            padding: 2.5rem 1.5rem;
             border-radius: 12px;
             text-align: center;
-            background: rgba(255,255,255,0.02);
-            transition: all 0.3s;
+            background: var(--gm-surface-var, #f8f9fa);
+            transition: all 0.2s;
             cursor: pointer;
             margin-bottom: 2rem;
         }
         .upload-zone:hover {
-            border-color: var(--accent-blue);
-            background: rgba(255,255,255,0.05);
+            border-color: var(--gm-primary, #1a73e8);
+            background: var(--gm-active, #e8f0fe);
         }
         .file-list, .user-list {
             margin-top: 1rem;
@@ -65,16 +76,41 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1rem;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--glass-border);
-            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            background: var(--gm-surface, #ffffff);
+            border: 1px solid var(--gm-border, #dadce0);
+            border-radius: 10px;
             margin-bottom: 0.75rem;
+            box-shadow: 0 1px 3px rgba(60,64,67,0.08);
+            transition: box-shadow 0.2s;
+        }
+        .file-item:hover, .user-item:hover {
+            box-shadow: 0 2px 6px rgba(60,64,67,0.15);
         }
         .status-badge {
             font-size: 0.75rem;
             padding: 2px 8px;
             border-radius: 4px;
+        }
+
+        .admin-user-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 12px;
+            align-items: end;
+        }
+
+        @media (max-width: 768px) {
+            .admin-user-grid {
+                grid-template-columns: 1fr;
+            }
+            .admin-user-grid button {
+                width: 100%;
+            }
+            .admin-container {
+                margin: 1rem auto;
+                padding: 0 12px;
+            }
         }
 
         /* === Category Panel (admin) === */
@@ -223,9 +259,9 @@
                         <i data-feather="users" style="color: var(--accent-orange)"></i> Akun Pengguna
                     </h2>
                     
-                    <div style="background: rgba(255,255,255,0.02); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--glass-border); margin-bottom: 2rem;">
-                        <h4 style="margin-bottom: 1rem;">Tambah User Baru</h4>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; align-items: end;">
+                    <div style="background: var(--gm-surface-var, #f8f9fa); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--gm-border, #dadce0); margin-bottom: 2rem;">
+                        <h4 style="margin-bottom: 1rem; color: var(--gm-on-surface, #202124);">Tambah User Baru</h4>
+                        <div class="admin-user-grid">
                             <div class="form-group" style="margin:0;">
                                 <label style="font-size: 0.8rem;">Username</label>
                                 <input type="text" id="newUsername" class="form-control" placeholder="admin_kanta">
@@ -345,7 +381,7 @@
                             </button>
                         </div>
                     </div>
-                    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; background:rgba(0,0,0,0.1); padding:10px; border-radius:6px; font-size:0.82rem;">
+                    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; background:var(--gm-surface-var, #f8f9fa); border:1px solid var(--gm-border, #dadce0); padding:10px; border-radius:8px; font-size:0.82rem;">
                         <div style="display:flex; align-items:center; gap:6px;">
                             <label style="color:var(--text-secondary);">Status:</label>
                             <select id="status_${item.id}" class="form-control" style="padding:4px 8px; width:auto; font-size:0.8rem;">
@@ -449,7 +485,7 @@
             } catch (e) { showAdminToast('Terjadi kesalahan koneksi.', 'error'); }
         }
 
-        // â”€â”€ Permohonan Category Color State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Permohonan Category Color State ─────────────────
         const _permCatState = {};  // { [id]: { field, colors, filePath } }
         const _permShpCache = {};  // { [id]: features[] }
 
@@ -466,7 +502,7 @@
 
             const state = _permCatState[id];
             const filePath = state && state.filePath ? state.filePath : null;
-            if (!filePath) { setPermLoading(id, 'âš  File SHP tidak tersedia.'); return; }
+            if (!filePath) { setPermLoading(id, '⚠ File SHP tidak tersedia.'); return; }
 
             setPermLoading(id, '<i data-feather="loader"></i> Memuat atribut SHP...');
             feather.replace();
@@ -482,7 +518,7 @@
                 _permShpCache[id] = features;
                 buildPermCatUI(id);
             } catch(e) {
-                setPermLoading(id, 'âš  Gagal memuat SHP: ' + e.message);
+                setPermLoading(id, '⚠ Gagal memuat SHP: ' + e.message);
             }
         }
 
@@ -811,7 +847,7 @@
             } catch (e) { showAdminToast('Terjadi kesalahan koneksi.', 'error'); }
         }
 
-        // â”€â”€ Category Color State (per basemap id) â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Category Color State (per basemap id) ─────────
         const _bmCatState  = {};   // { [id]: { field, colors: {val: color} } }
         const _bmShpCache  = {};   // { [id]: features[] }
 
@@ -856,7 +892,7 @@
                 _bmShpCache[id] = features;
                 buildAdminCatUI(id);
             } catch(e) {
-                setLoading(id, 'âš  Gagal memuat SHP: ' + e.message);
+                setLoading(id, '⚠ Gagal memuat SHP: ' + e.message);
             }
         }
 

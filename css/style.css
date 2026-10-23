@@ -1311,33 +1311,6 @@ tr:hover td {
   flex-shrink: 0;
 }
 
-.gm-directions-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #1a73e8;
-  color: #ffffff;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  margin-right: 2px;
-  flex-shrink: 0;
-  transition: background 0.15s, transform 0.1s;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-}
-
-.gm-directions-btn:hover {
-  background: #1557b0;
-  transform: scale(1.05);
-}
-
-.gm-directions-btn svg {
-  width: 16px;
-  height: 16px;
-}
-
 /* ---------- 2. Filter Chips ---------- */
 .gm-filter-chips {
   pointer-events: auto;
@@ -2091,132 +2064,40 @@ tr:hover td {
   line-height: 1.4;
 }
 
-/* ---------- 8. Google Maps Desktop Bottom-Right Controls ---------- */
-.gm-desktop-controls {
+/* ---------- 8. Desktop Map Tools (Bottom-Right) ---------- */
+.gm-desktop-tools {
   position: fixed;
-  bottom: 28px;
-  right: 14px;
+  bottom: 80px;
+  right: 12px;
   z-index: 1000;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
-.gm-zoom-group {
-  display: flex;
-  flex-direction: column;
-  background: #ffffff;
+.gm-tool-btn {
+  width: 38px;
+  height: 38px;
   border-radius: 4px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-  overflow: hidden;
-  border: 1px solid #dadce0;
-}
-
-.gm-zoom-btn {
-  width: 40px;
-  height: 40px;
-  border: none;
   background: #ffffff;
-  color: #5f6368;
+  border: 1px solid #dadce0;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #5f6368;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
 
-.gm-zoom-btn:hover {
-  background: #f1f3f4;
-  color: #202124;
-}
-
-.gm-zoom-divider {
-  width: 24px;
-  height: 1px;
-  background: #dadce0;
-  margin: 0 auto;
-}
-
-.gm-round-fab {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #ffffff;
-  border: 1px solid #dadce0;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #5f6368;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, transform 0.1s;
-}
-
-.gm-round-fab:hover {
+.gm-tool-btn:hover {
   background: #f1f3f4;
   color: #1a73e8;
-  transform: scale(1.05);
 }
 
-/* Pegman Street View Button */
-.gm-pegman-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #ffffff;
-  border: 1px solid #dadce0;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: transform 0.15s;
-}
-
-.gm-pegman-btn:hover {
-  transform: scale(1.08);
-  background: #fdf2d0;
-}
-
-/* Bottom status / attribution & scale bar */
-.gm-bottom-bar {
-  position: fixed;
-  bottom: 0;
-  right: 0;
-  background: rgba(255,255,255,0.78);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  padding: 3px 12px;
-  font-size: 11px;
-  color: #5f6368;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  z-index: 999;
-  border-top-left-radius: 4px;
-  pointer-events: none;
-}
-
-.gm-bottom-bar a {
-  color: #5f6368;
-  text-decoration: none;
-  pointer-events: auto;
-}
-
-.gm-bottom-bar a:hover {
-  text-decoration: underline;
-  color: #1a73e8;
-}
-
-.gm-scale-indicator {
-  border-bottom: 2px solid #5f6368;
-  border-left: 2px solid #5f6368;
-  border-right: 2px solid #5f6368;
-  padding: 0 6px;
-  font-size: 10px;
-  font-weight: 600;
-  line-height: 12px;
+.gm-tool-btn svg {
+  width: 18px;
+  height: 18px;
 }
 
 /* ---------- 9. Marker Pin & Popup in Leaflet ---------- */

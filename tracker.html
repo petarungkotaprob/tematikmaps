@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -10,74 +10,252 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#070e1c">
+    <meta name="theme-color" content="#ffffff">
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="js/pwa.js"></script>
     <style>
+        body.tracker-page {
+            background: #f8f9fa;
+        }
+        .tracker-card {
+            background: #ffffff;
+            border: 1px solid #dadce0;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(60,64,67,0.12), 0 1px 2px rgba(60,64,67,0.24);
+            margin: 20px auto;
+            max-width: 1240px;
+        }
+        .tracker-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .tracker-title h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #202124;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tracker-title p {
+            font-size: 0.85rem;
+            color: #5f6368;
+            margin: 4px 0 0;
+        }
+        .tracker-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .table-search-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .table-search-box input {
+            padding: 9px 14px 9px 36px;
+            border-radius: 20px;
+            border: 1px solid #dadce0;
+            background: #f8f9fa;
+            font-size: 0.88rem;
+            color: #202124;
+            width: 240px;
+            transition: all 0.2s;
+        }
+        .table-search-box input:focus {
+            background: #ffffff;
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 2px rgba(26,115,232,0.2);
+            outline: none;
+            width: 280px;
+        }
+        .table-search-box svg {
+            position: absolute;
+            left: 12px;
+            width: 16px;
+            height: 16px;
+            color: #5f6368;
+            pointer-events: none;
+        }
+        .btn-export {
+            background: #e6f4ea;
+            color: #137333;
+            border: 1px solid #ceead6;
+            font-weight: 500;
+            border-radius: 20px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.15s;
+        }
+        .btn-export:hover {
+            background: #ceead6;
+        }
+        .btn-import {
+            background: #e8f0fe;
+            color: #1a73e8;
+            border: 1px solid #c2e7ff;
+            font-weight: 500;
+            border-radius: 20px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.15s;
+        }
+        .btn-import:hover {
+            background: #d2e3fc;
+        }
         .table-container {
             width: 100%;
             overflow-x: auto;
-            margin-top: 1rem;
+            border: 1px solid #dadce0;
+            border-radius: 8px;
+            -webkit-overflow-scrolling: touch;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
+            background: #ffffff;
         }
         th, td {
-            padding: 1rem;
+            padding: 12px 16px;
             text-align: left;
-            border-bottom: 1px solid var(--glass-border);
+            border-bottom: 1px solid #dadce0;
         }
         th {
-            background: rgba(255,255,255,0.05);
-            color: var(--text-secondary);
+            background: #f8f9fa;
+            color: #5f6368;
             font-weight: 600;
             text-transform: uppercase;
-            font-size: 0.75rem;
+            font-size: 0.74rem;
             letter-spacing: 0.05em;
         }
-        tr:hover {
-            background: rgba(255,255,255,0.02);
+        tr:last-child td {
+            border-bottom: none;
         }
-        .status-badge {
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            font-weight: 700;
+        tr:hover td {
+            background: #f8f9fa;
         }
-        .search-container {
+        .action-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 5px 10px;
+            border-radius: 14px;
+            font-size: 0.76rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-decoration: none;
+            border: 1px solid transparent;
+        }
+        .action-chip.chip-map {
+            background: #e8f0fe;
+            color: #1a73e8;
+            border-color: #c2e7ff;
+        }
+        .action-chip.chip-map:hover {
+            background: #d2e3fc;
+        }
+        .action-chip.chip-hide {
+            background: #fef7e0;
+            color: #b06000;
+            border-color: #feefc3;
+        }
+        .action-chip.chip-hide.hidden {
+            background: #f1f3f4;
+            color: #5f6368;
+            border-color: #dadce0;
+        }
+        .action-chip.chip-shp {
+            background: #e6f4ea;
+            color: #137333;
+            border-color: #ceead6;
+        }
+        .action-chip.chip-del {
+            background: #fce8e6;
+            color: #d93025;
+            border-color: #fad2cf;
+        }
+        .action-chip.chip-del:hover {
+            background: #fad2cf;
+        }
+        .tracker-pagination {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 2rem;
-            gap: 1rem;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid #dadce0;
+        }
+        .page-pill-btn {
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            background: #ffffff;
+            border: 1px solid #dadce0;
+            color: #5f6368;
+            border-radius: 20px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s;
+        }
+        .page-pill-btn:hover:not(:disabled) {
+            background: #f8f9fa;
+            color: #1a73e8;
+            border-color: #a8c7fa;
+        }
+        .page-pill-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        @media (max-width: 768px) {
+            .tracker-card { padding: 16px; margin: 10px 8px; }
+            .tracker-actions { width: 100%; justify-content: flex-start; }
+            .table-search-box { width: 100%; }
+            .table-search-box input { width: 100% !important; }
         }
 
         /* Delete confirm modal */
         .delete-modal-body {
             text-align: center;
-            padding: 0.5rem 0 1.5rem;
+            padding: 0.5rem 0 1rem;
         }
         .delete-icon-wrap {
-            width: 70px; height: 70px;
+            width: 64px; height: 64px;
             border-radius: 50%;
-            background: rgba(239,68,68,0.12);
-            border: 2px solid rgba(239,68,68,0.3);
+            background: #fce8e6;
+            border: 1px solid #fad2cf;
             display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 1.2rem;
+            margin: 0 auto 1rem;
         }
         .delete-modal-info {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--glass-border);
-            border-radius: 10px;
+            background: #f8f9fa;
+            border: 1px solid #dadce0;
+            border-radius: 8px;
             padding: 1rem 1.2rem;
             margin: 1.2rem 0;
             text-align: left;
             font-size: 0.85rem;
         }
-        .delete-modal-info span { color: var(--text-secondary); }
-        .delete-modal-info b { color: var(--text-primary); }
+        .delete-modal-info span { color: #5f6368; }
+        .delete-modal-info b { color: #202124; }
     </style>
     <link rel="stylesheet" href="css/mobile.css">
 </head>
@@ -99,18 +277,24 @@
 
     <main class="main-content" style="display: block; height: auto;">
         
-        <div class="glass-panel animated">
-            <div class="search-container">
-                <h2 style="margin: 0;">Daftar Permohonan</h2>
-                <div style="display: flex; gap: 10px;">
-                    <button class="btn" style="background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2);" onclick="exportData()">
+        <div class="tracker-card animated">
+            <div class="tracker-header">
+                <div class="tracker-title">
+                    <h2><i data-feather="file-text" style="color: #1a73e8; width: 22px; height: 22px;"></i> Daftar Permohonan Bidang Tanah</h2>
+                    <p>Basis data spasial permohonan pendaftaran tanah Kantor Pertanahan Kota Probolinggo</p>
+                </div>
+                <div class="tracker-actions">
+                    <button class="btn-export" onclick="exportData()" title="Unduh data dalam format CSV">
                         <i data-feather="download" style="width: 14px; height: 14px;"></i> Export CSV
                     </button>
-                    <button class="btn" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2);" onclick="document.getElementById('importFile').click()">
-                        <i data-feather="upload" style="width: 14px; height: 14px;"></i> Import
+                    <button class="btn-import" onclick="document.getElementById('importFile').click()" title="Unggah data dari file CSV">
+                        <i data-feather="upload" style="width: 14px; height: 14px;"></i> Import CSV
                     </button>
                     <input type="file" id="importFile" hidden accept=".csv" onchange="importData(this)">
-                    <input type="text" id="tableSearch" class="form-control" placeholder="Cari Nama/NIK..." style="width: 200px; background: rgba(255,255,255,0.02);">
+                    <div class="table-search-box">
+                        <i data-feather="search"></i>
+                        <input type="text" id="tableSearch" placeholder="Cari Nama/NIK/No...">
+                    </div>
                 </div>
             </div>
 
@@ -129,7 +313,7 @@
                     <tbody id="permohonanBody">
                         <!-- Data will be loaded via JS -->
                         <tr>
-                            <td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 3rem;">
+                            <td colspan="6" style="text-align: center; color: #5f6368; padding: 3rem;">
                                 Memuat data permohonan...
                             </td>
                         </tr>
@@ -138,16 +322,16 @@
             </div>
 
             <!-- Pagination Controls -->
-            <div id="pagination" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--glass-border);">
-                <div style="font-size: 0.85rem; color: var(--text-secondary);" id="paginationInfo">
+            <div id="pagination" class="tracker-pagination">
+                <div style="font-size: 0.85rem; color: #5f6368; font-weight: 500;" id="paginationInfo">
                     Menampilkan 1-5 dari 0 data
                 </div>
-                <div style="display: flex; gap: 10px;">
-                    <button id="prevBtn" class="btn" style="padding: 5px 15px; background: rgba(255,255,255,0.05);" disabled>
-                        <i data-feather="chevron-left" style="width: 16px; height: 16px; vertical-align: middle;"></i> Sebelum
+                <div style="display: flex; gap: 8px;">
+                    <button id="prevBtn" class="page-pill-btn" disabled>
+                        <i data-feather="chevron-left" style="width: 15px; height: 15px;"></i> Sebelum
                     </button>
-                    <button id="nextBtn" class="btn" style="padding: 5px 15px; background: rgba(255,255,255,0.05);" disabled>
-                        Berikut <i data-feather="chevron-right" style="width: 16px; height: 16px; vertical-align: middle;"></i>
+                    <button id="nextBtn" class="page-pill-btn" disabled>
+                        Berikut <i data-feather="chevron-right" style="width: 15px; height: 15px;"></i>
                     </button>
                 </div>
             </div>
@@ -156,14 +340,14 @@
     </main>
 
     <!-- Delete Confirm Modal -->
-    <div id="deleteModal" class="modal" style="display:none; position: fixed; z-index: 1100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); justify-content: center; align-items: center;">
-        <div class="glass-panel animated" style="width: 90%; max-width: 420px; padding: 2rem; border: 1px solid rgba(239,68,68,0.3);">
+    <div id="deleteModal" class="modal" style="display:none; position: fixed; z-index: 1100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(32,33,36,0.6); backdrop-filter: blur(4px); justify-content: center; align-items: center;">
+        <div style="background: #ffffff; border-radius: 12px; width: 90%; max-width: 420px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.25); border: 1px solid #dadce0;">
             <div class="delete-modal-body">
                 <div class="delete-icon-wrap">
-                    <i data-feather="trash-2" style="width:32px; height:32px; color:#ef4444;"></i>
+                    <i data-feather="trash-2" style="width:28px; height:28px; color:#d93025;"></i>
                 </div>
-                <h3 style="margin-bottom: 0.4rem; color: #ef4444;">Hapus Data Permohonan?</h3>
-                <p style="color: var(--text-secondary); font-size: 0.88rem;">Tindakan ini tidak dapat dibatalkan. Data akan dihapus permanen dari sistem.</p>
+                <h3 style="margin-bottom: 0.4rem; color: #202124; font-size: 1.15rem; font-weight: 600;">Hapus Data Permohonan?</h3>
+                <p style="color: #5f6368; font-size: 0.88rem; line-height: 1.4;">Tindakan ini tidak dapat dibatalkan. Berkas permohonan akan dihapus permanen dari sistem.</p>
 
                 <div class="delete-modal-info">
                     <div style="margin-bottom: 6px;"><span>No. Permohonan: </span><b id="delNoPerm">-</b></div>
@@ -171,10 +355,10 @@
                 </div>
 
                 <div style="display: flex; gap: 10px;">
-                    <button class="btn" style="flex:1; background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3);" id="btnConfirmDelete" onclick="executeDelete()">
+                    <button class="btn" style="flex:1; background:#d93025; color:#ffffff; border-radius: 20px;" id="btnConfirmDelete" onclick="executeDelete()">
                         <i data-feather="trash-2" style="width:14px;height:14px;margin-right:5px;vertical-align:middle;"></i> Ya, Hapus
                     </button>
-                    <button class="btn" style="flex:1; background:rgba(255,255,255,0.05);" onclick="closeDeleteModal()">Batal</button>
+                    <button class="btn" style="flex:1; background:#f1f3f4; color:#202124; border-radius: 20px;" onclick="closeDeleteModal()">Batal</button>
                 </div>
             </div>
         </div>
@@ -242,41 +426,37 @@
                 tr.id = `row-${item.id}`;
                 tr.style.opacity = hidden ? '0.45' : '1';
                 tr.innerHTML = `
-                    <td data-label="No. Permohonan"><b>${item.no_permohonan}</b></td>
-                    <td data-label="Tgl Input" style="font-size: 0.8rem; color: var(--text-secondary);">${item.created_at ? item.created_at.substring(0,10) : '-'}</td>
+                    <td data-label="No. Permohonan"><b style="color: #202124;">${item.no_permohonan}</b></td>
+                    <td data-label="Tgl Input" style="font-size: 0.8rem; color: #5f6368;">${item.created_at ? item.created_at.substring(0,10) : '-'}</td>
                     <td data-label="NIK / Pemohon">
-                        <div style="font-weight: 600;">${item.nama_pemohon}</div>
-                        <div style="font-size: 0.8rem; color: var(--text-secondary);">${item.nik}</div>
+                        <div style="font-weight: 600; color: #202124;">${item.nama_pemohon}</div>
+                        <div style="font-size: 0.8rem; color: #5f6368;">NIK: ${item.nik}</div>
                     </td>
                     <td data-label="Kecamatan / Kelurahan">
-                        <div>${item.kecamatan}</div>
-                        <div style="font-size: 0.8rem; color: var(--text-secondary);">${item.kelurahan}</div>
+                        <div style="font-weight: 500; color: #202124;">${item.kecamatan}</div>
+                        <div style="font-size: 0.8rem; color: #5f6368;">${item.kelurahan}</div>
                     </td>
                     <td data-label="Hak / Sertipikat">
-                        <div>${item.jenis_hak}</div>
-                        <div style="font-size: 0.8rem; color: var(--text-secondary);">No: ${item.nomor_hak}</div>
+                        <div style="font-weight: 500; color: #202124;">${item.jenis_hak}</div>
+                        <div style="font-size: 0.8rem; color: #5f6368;">No: ${item.nomor_hak}</div>
                     </td>
-                    
                     <td data-label="Aksi">
-                        <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-                            <button class="btn" style="padding: 5px 10px; font-size: 0.8rem; background: rgba(59, 130, 246, 0.1); color: #3b82f6;" onclick="viewDetail('${item.latitude}','${item.longitude}','${item.nama_pemohon}')" title="Lihat di Peta">
-                                <i data-feather="eye" style="width: 14px; height: 14px;"></i>
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                            <button class="action-chip chip-map" onclick="viewDetail('${item.latitude}','${item.longitude}','${item.nama_pemohon}')" title="Lihat di Peta">
+                                <i data-feather="map-pin" style="width: 13px; height: 13px;"></i> Peta
                             </button>
-                            <button id="hide-btn-${item.id}" class="btn" style="padding: 5px 10px; font-size: 0.8rem; ${hidden ? "background: rgba(156,163,175,0.15); color: #9ca3af; border: 1px solid rgba(156,163,175,0.2);" : "background: rgba(234,179,8,0.1); color: #eab308; border: 1px solid rgba(234,179,8,0.2);"}" onclick="toggleHideItem('${item.id}')" title="${hidden ? 'Tampilkan di Peta' : 'Sembunyikan dari Peta'}">
-                                <i data-feather="${hidden ? 'eye-off' : 'eye-off'}" style="width: 14px; height: 14px;"></i>
+                            <button id="hide-btn-${item.id}" class="action-chip chip-hide ${hidden ? 'hidden' : ''}" onclick="toggleHideItem('${item.id}')" title="${hidden ? 'Tampilkan di Peta' : 'Sembunyikan dari Peta'}">
+                                <i data-feather="${hidden ? 'eye' : 'eye-off'}" style="width: 13px; height: 13px;"></i>
                                 ${hidden ? 'Tampilkan' : 'Sembunyikan'}
                             </button>
                             ${item.shp_file ? `
-                                <a href="${item.shp_file}" download class="btn" style="padding: 5px 10px; font-size: 0.8rem; background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2);" title="Download SHP">
-                                    <i data-feather="download" style="width: 14px; height: 14px;"></i>
+                                <a href="${item.shp_file}" download class="action-chip chip-shp" title="Download SHP">
+                                    <i data-feather="download" style="width: 13px; height: 13px;"></i> SHP
                                 </a>
                             ` : ''}
-                            ${(window.currentUser && (window.currentUser.role === 'admin' || window.currentUser.role === 'petugas')) ? `
-                                
-                            ` : ''}
                             ${(window.currentUser && window.currentUser.role === 'admin') ? `
-                                <button class="btn" style="padding: 5px 10px; font-size: 0.8rem; background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2);" onclick="confirmDelete('${item.id}', '${item.no_permohonan}', '${item.nama_pemohon}')" title="Hapus Data">
-                                    <i data-feather="trash-2" style="width: 14px; height: 14px;"></i>
+                                <button class="action-chip chip-del" onclick="confirmDelete('${item.id}', '${item.no_permohonan}', '${item.nama_pemohon}')" title="Hapus Data">
+                                    <i data-feather="trash-2" style="width: 13px; height: 13px;"></i>
                                 </button>
                             ` : ''}
                         </div>
@@ -334,7 +514,7 @@
 
         loadData();
 
-        // â”€â”€â”€ HIDE/SHOW LAYER LOGIC â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ─── HIDE/SHOW LAYER LOGIC ────────────────────────────
         const HIDDEN_KEY = 'hiddenPermohonanIds';
 
         function getHiddenIds() {
@@ -362,7 +542,7 @@
             }
         }
 
-        // â”€â”€â”€ DELETE LOGIC â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ─── DELETE LOGIC ──────────────────────────────
         let _deleteTargetId = null;
 
         function confirmDelete(id, noPerm, nama) {
@@ -414,7 +594,7 @@
             }
         }
 
-        // â”€â”€â”€ TOAST NOTIFICATION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ─── TOAST NOTIFICATION ───────────────────────
         function showToast(msg, type = 'success') {
             const existing = document.getElementById('toastNotif');
             if (existing) existing.remove();

@@ -104,8 +104,8 @@
                     <i data-feather="search"></i>
                 </button>
                 <div class="gm-search-divider"></div>
-                <button type="button" class="gm-directions-btn" id="btnToggleSidePanel" aria-label="Rute & Daftar Bidang Tanah" title="Rute & Daftar Bidang Tanah">
-                    <i data-feather="navigation"></i>
+                <button type="button" class="gm-search-icon-btn" id="btnToggleSidePanel" aria-label="Tutup / Buka Panel" title="Tutup / Buka Panel">
+                    <i data-feather="sidebar"></i>
                 </button>
             </div>
 
@@ -256,9 +256,9 @@
 
         <!-- 4. Google Maps Bottom-Left Layers Widget (Desktop) -->
         <div class="gm-layers-widget" id="gmLayersWidget">
-            <button type="button" class="gm-layers-btn" id="btnToggleLayersMenu" title="Ganti ke Peta Default / Buka Lapisan">
-                <div class="gm-layers-thumb osm-thumb" id="layerThumbPreview"></div>
-                <span class="gm-layers-label">Peta</span>
+            <button type="button" class="gm-layers-btn" id="btnToggleLayersMenu" title="Pilih lapisan peta (Basemap & Layer Spasial)">
+                <div class="gm-layers-thumb satelit-thumb" id="layerThumbPreview"></div>
+                <span class="gm-layers-label">Lapisan</span>
             </button>
 
             <!-- Layers popup card -->
@@ -291,39 +291,14 @@
             </div>
         </div>
 
-        <!-- 5. Google Maps Desktop Bottom-Right Controls -->
-        <div class="gm-desktop-controls">
-            <!-- Pegman (Street view icon) -->
-            <button type="button" class="gm-pegman-btn" id="btnPegman" title="Jelajahi Citra / Street View">
-                <svg viewBox="0 0 24 24" width="22" height="22">
-                    <circle cx="12" cy="5" r="3.2" fill="#fbbc04"/>
-                    <path d="M8.5 9h7c.8 0 1.5.7 1.5 1.5v4l-1.5 6.5h-2.2l-1.3-4.5-1.3 4.5H8.5L7 14.5v-4C7 9.7 7.7 9 8.5 9z" fill="#fbbc04" stroke="#ea8600" stroke-width="0.6"/>
-                    <circle cx="12" cy="5" r="1.5" fill="#ea8600"/>
-                </svg>
+        <!-- 5. Desktop Map Tools (Bottom-Right) -->
+        <div class="gm-desktop-tools">
+            <button type="button" class="gm-tool-btn" id="btnCenterProbolinggo" title="Pusatkan ke Kota Probolinggo">
+                <i data-feather="navigation-2"></i>
             </button>
-            <!-- Lokasi Saya -->
-            <button type="button" class="gm-round-fab" id="btnLocateDesktop" title="Tampilkan lokasi Anda">
+            <button type="button" class="gm-tool-btn" id="btnLocateDesktop" title="Lokasi Saya (GPS)">
                 <i data-feather="crosshair"></i>
             </button>
-            <!-- Zoom controls vertical pill -->
-            <div class="gm-zoom-group">
-                <button type="button" class="gm-zoom-btn" id="btnZoomIn" title="Perbesar">
-                    <i data-feather="plus"></i>
-                </button>
-                <div class="gm-zoom-divider"></div>
-                <button type="button" class="gm-zoom-btn" id="btnZoomOut" title="Perkecil">
-                    <i data-feather="minus"></i>
-                </button>
-            </div>
-        </div>
-
-        <!-- Google Maps Bottom Attribution / Scale Bar -->
-        <div class="gm-bottom-bar">
-            <span>Data peta &copy;2026 Google</span>
-            <span>Citra &copy;2026 CNES / Airbus, Maxar Technologies</span>
-            <span>Indonesia</span>
-            <a href="javascript:void(0)" onclick="alert('Peta Tematik Kantor Pertanahan Kota Probolinggo')">Persyaratan</a>
-            <span class="gm-scale-indicator">200 m</span>
         </div>
 
         <!-- 6. Mobile Floating Action Buttons (FAB Stack) -->
@@ -469,23 +444,10 @@
         const btnCloseLayersPopup = document.getElementById('btnCloseLayersPopup');
         const gmLayersPopup = document.getElementById('gmLayersPopup');
 
-        if (btnToggleLayersMenu) {
+        if (btnToggleLayersMenu && gmLayersPopup) {
             btnToggleLayersMenu.addEventListener('click', (e) => {
                 e.stopPropagation();
-                if (window.toggleBasemapMode) {
-                    window.toggleBasemapMode();
-                }
-            });
-
-            // Hover to open full layers menu (Google Maps desktop interaction)
-            let hoverTimer;
-            btnToggleLayersMenu.addEventListener('mouseenter', () => {
-                hoverTimer = setTimeout(() => {
-                    if (gmLayersPopup) gmLayersPopup.style.display = 'block';
-                }, 350);
-            });
-            btnToggleLayersMenu.addEventListener('mouseleave', () => {
-                clearTimeout(hoverTimer);
+                gmLayersPopup.style.display = (gmLayersPopup.style.display === 'none') ? 'block' : 'none';
             });
         }
 
@@ -504,12 +466,12 @@
             }
         });
 
-        // 4. Center Probolinggo (Koordinat persis dari URL Google Maps: -7.7504036, 113.2186935)
+        // 4. Center Probolinggo & Locate Desktop
         const btnCenterProbolinggo = document.getElementById('btnCenterProbolinggo');
         if (btnCenterProbolinggo) {
             btnCenterProbolinggo.addEventListener('click', () => {
                 if (window.silisaMap) {
-                    window.silisaMap.flyTo([-7.7504036, 113.2186935], 15, { animate: true, duration: 1.2 });
+                    window.silisaMap.flyTo([-7.7543, 113.2159], 14, { animate: true, duration: 1 });
                 }
             });
         }

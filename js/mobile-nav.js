@@ -89,11 +89,29 @@
 
     return [
       {
+        href: 'dashboard.html',
+        icon: 'map',
+        label: 'Peta',
+        active: page === 'dashboard.html'
+      },
+      {
+        href: 'tracker.html',
+        icon: 'list',
+        label: 'Daftar',
+        active: page === 'tracker.html'
+      },
+      {
         href: 'portal.html',
         icon: 'plus',
         label: 'Input',
         center: true,
         active: page === 'portal.html'
+      },
+      {
+        href: 'laporan.html',
+        icon: 'bar-chart-2',
+        label: 'Laporan',
+        active: page === 'laporan.html'
       },
       {
         href: 'login.html',
