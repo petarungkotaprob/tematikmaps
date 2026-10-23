@@ -794,72 +794,107 @@
     margin-bottom: 14px !important;
   }
 
-  body.tracker-page table,
-  body.tracker-page tbody,
-  body.tracker-page tr,
-  body.tracker-page td {
-    display: block;
-    width: 100%;
+  /* === TRACKER PAGE: True responsive table format on mobile === */
+  body.tracker-page .table-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--gm-border, #dadce0) !important;
+    margin-bottom: 14px !important;
+    background: var(--gm-white, #ffffff) !important;
   }
 
-  body.tracker-page thead { display: none; }
+  body.tracker-page table {
+    display: table !important;
+    width: 100% !important;
+    min-width: 620px !important;
+    border-collapse: collapse !important;
+    margin: 0 !important;
+  }
+
+  body.tracker-page thead {
+    display: table-header-group !important;
+  }
+
+  body.tracker-page tbody {
+    display: table-row-group !important;
+  }
 
   body.tracker-page tr {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 2px 8px;
-    margin-bottom: 8px;
-    padding: 12px 14px;
-    border: 1px solid #dadce0;
-    border-radius: 14px;
-    background: #ffffff;
-    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    display: table-row !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-bottom: 1px solid var(--gm-border, #dadce0) !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
 
-  body.tracker-page tr:hover { background: #f8f9fa; }
+  body.tracker-page th {
+    display: table-cell !important;
+    padding: 10px 12px !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    color: var(--gm-text-2, #5f6368) !important;
+    background: var(--gm-surface-2, #f8f9fa) !important;
+    border-bottom: 1px solid var(--gm-border, #dadce0) !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+  }
 
   body.tracker-page td {
-    display: block;
-    width: auto;
-    padding: 0 !important;
-    border: 0;
-    text-align: left;
-    font-size: 0.76rem !important;
-    line-height: 1.35;
-    grid-column: 1 / -1;
-    color: #202124;
+    display: table-cell !important;
+    padding: 10px 12px !important;
+    font-size: 0.8rem !important;
+    border-bottom: 1px solid var(--gm-border, #dadce0) !important;
+    vertical-align: middle !important;
+    white-space: nowrap !important;
+    color: var(--gm-text-1, #202124) !important;
+    background: transparent !important;
   }
 
-  body.tracker-page td[data-label="No. Permohonan"] { grid-column: 1; align-self: center; }
-  body.tracker-page td[data-label="No. Permohonan"] b { font-size: 0.86rem; color: #202124; }
+  body.tracker-page tr:hover td {
+    background: var(--gm-surface-2, #f8f9fa) !important;
+  }
 
-  body.tracker-page td[data-label="Tgl Input"] {
-    grid-column: 2;
-    align-self: center;
-    text-align: right;
-    white-space: nowrap;
-    font-size: 0.64rem !important;
-    color: #5f6368;
+  body.dark-mode.tracker-page th {
+    background: #35373a !important;
+    border-bottom-color: #3c4043 !important;
+    color: #e8eaed !important;
+  }
+
+  body.dark-mode.tracker-page td {
+    border-bottom-color: #3c4043 !important;
+    color: #bdc1c6 !important;
+  }
+
+  body.dark-mode.tracker-page tr:hover td {
+    background: #3c4043 !important;
   }
 
   body.tracker-page td[data-label="Aksi"] {
-    margin-top: 6px;
-    padding-top: 8px !important;
-    border-top: 1px solid #dadce0;
+    margin-top: 0 !important;
+    padding-top: 10px !important;
+    border-top: none !important;
+    white-space: nowrap !important;
   }
 
   body.tracker-page td[data-label="Aksi"] > div {
-    display: flex !important;
-    flex-wrap: wrap;
-    gap: 6px;
+    display: inline-flex !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
   }
 
+  body.tracker-page td[data-label="Aksi"] .action-chip,
   body.tracker-page td[data-label="Aksi"] .btn {
-    flex: 1 1 auto;
-    min-height: 34px;
-    padding: 6px 10px !important;
-    border-radius: 20px;
-    font-size: 0.72rem !important;
+    flex: none !important;
+    padding: 4px 10px !important;
+    font-size: 0.75rem !important;
+    white-space: nowrap !important;
+    height: 28px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
   }
 
   body.tracker-page #toastNotif {
