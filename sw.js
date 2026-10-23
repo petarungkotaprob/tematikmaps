@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tematikmap-v12';
+const CACHE_NAME = 'tematikmap-v13';
 const ASSETS = [
     './',
     './index.html',

@@ -29,7 +29,7 @@
 
         // Update meta theme-color
         var meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) meta.setAttribute('content', dark ? '#202124' : '#ffffff');
+        if (meta) meta.setAttribute('content', dark ? '#070e1c' : '#ffffff');
     }
 
     // Apply on DOMContentLoaded to ensure body exists

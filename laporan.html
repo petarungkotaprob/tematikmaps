@@ -107,104 +107,112 @@
             border-color: #a8c7fa;
         }
 
-        /* ===== DARK MODE ===== */
+        /* ===== DARK MODE (SILISA Style) ===== */
         body.dark-mode.tracker-page {
-            background: #1e1f21 !important;
-            color: #e8eaed !important;
+            background: #070e1c !important;
+            background-image: radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.15), transparent 25%),
+                              radial-gradient(circle at 85% 30%, rgba(249, 115, 22, 0.1), transparent 25%) !important;
+            color: #f8fafc !important;
         }
         body.dark-mode .laporan-card {
-            background: #282a2d !important;
-            border-color: #3c4043 !important;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.4) !important;
+            background: rgba(11, 17, 32, 0.85) !important;
+            backdrop-filter: blur(16px) !important;
+            -webkit-backdrop-filter: blur(16px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5) !important;
         }
         body.dark-mode .stat-card {
-            background: #282a2d !important;
-            border-color: #3c4043 !important;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.4) !important;
+            background: rgba(255, 255, 255, 0.03) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+        }
+        body.dark-mode .stat-card:hover {
+            background: rgba(255, 255, 255, 0.06) !important;
+            border-color: rgba(255, 255, 255, 0.18) !important;
         }
         body.dark-mode .stat-val {
-            color: #e8eaed !important;
+            color: #f8fafc !important;
         }
         body.dark-mode .stat-lbl {
-            color: #9aa0a6 !important;
+            color: #94a3b8 !important;
         }
         body.dark-mode .stat-icon.icon-blue {
-            background: rgba(138, 180, 248, 0.18) !important;
-            color: #8ab4f8 !important;
+            background: rgba(59, 130, 246, 0.18) !important;
+            color: #60a5fa !important;
         }
         body.dark-mode .stat-icon.icon-yellow {
-            background: rgba(253, 214, 99, 0.18) !important;
-            color: #fdd663 !important;
+            background: rgba(234, 179, 8, 0.18) !important;
+            color: #eab308 !important;
         }
         body.dark-mode .stat-icon.icon-green {
-            background: rgba(129, 201, 149, 0.18) !important;
-            color: #81c995 !important;
+            background: rgba(16, 185, 129, 0.18) !important;
+            color: #10b981 !important;
         }
         body.dark-mode .laporan-header-icon {
-            background: rgba(138, 180, 248, 0.18) !important;
-            color: #8ab4f8 !important;
+            background: rgba(59, 130, 246, 0.18) !important;
+            color: #60a5fa !important;
         }
         body.dark-mode .laporan-title,
         body.dark-mode .laporan-card h2,
         body.dark-mode .laporan-card h3 {
-            color: #e8eaed !important;
+            color: #f8fafc !important;
         }
         body.dark-mode .laporan-desc {
-            color: #9aa0a6 !important;
+            color: #94a3b8 !important;
         }
         body.dark-mode .table-wrap {
-            border-color: #3c4043 !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
         }
         body.dark-mode table {
-            background: #282a2d !important;
-            color: #e8eaed !important;
+            background: rgba(11, 17, 32, 0.6) !important;
+            color: #f8fafc !important;
         }
         body.dark-mode th {
-            background: #35373a !important;
-            color: #e8eaed !important;
-            border-bottom-color: #3c4043 !important;
+            background: rgba(255, 255, 255, 0.05) !important;
+            color: #94a3b8 !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
         }
         body.dark-mode td {
-            border-bottom-color: #3c4043 !important;
-            color: #bdc1c6 !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+            color: #f8fafc !important;
         }
         body.dark-mode tr:hover td {
-            background: #35373a !important;
+            background: rgba(255, 255, 255, 0.04) !important;
         }
         body.dark-mode .btn-print {
-            background: #2d2e30 !important;
-            border-color: #3c4043 !important;
-            color: #8ab4f8 !important;
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            color: #60a5fa !important;
         }
         body.dark-mode .btn-print:hover {
-            background: #383a3d !important;
-            border-color: #8ab4f8 !important;
+            background: rgba(255, 255, 255, 0.1) !important;
+            border-color: #3b82f6 !important;
         }
         body.dark-mode .badge-pending {
-            background: #3c4043 !important;
-            color: #bdc1c6 !important;
-            border-color: #48494b !important;
+            background: rgba(255, 255, 255, 0.05) !important;
+            color: #94a3b8 !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
         }
         body.dark-mode .badge-verif {
-            background: rgba(251, 192, 45, 0.16) !important;
-            color: #fdd663 !important;
-            border-color: rgba(251, 192, 45, 0.3) !important;
+            background: rgba(234, 179, 8, 0.15) !important;
+            color: #eab308 !important;
+            border: 1px solid rgba(234, 179, 8, 0.3) !important;
         }
         body.dark-mode .badge-selesai {
-            background: rgba(129, 201, 149, 0.16) !important;
-            color: #81c995 !important;
-            border-color: rgba(129, 201, 149, 0.3) !important;
+            background: rgba(16, 185, 129, 0.15) !important;
+            color: #10b981 !important;
+            border: 1px solid rgba(16, 185, 129, 0.3) !important;
         }
         body.dark-mode .filter-bar .form-control {
-            background: #3c4043 !important;
-            border-color: #48494b !important;
-            color: #e8eaed !important;
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: #f8fafc !important;
         }
         body.dark-mode .filter-bar .form-control::placeholder {
-            color: #9aa0a6 !important;
+            color: #94a3b8 !important;
         }
         body.dark-mode #laporanEmpty {
-            color: #9aa0a6 !important;
+            color: #94a3b8 !important;
         }
 
         @media print {

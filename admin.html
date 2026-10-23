@@ -183,8 +183,8 @@
         .admin-perm-name { font-weight: 600; font-size: 0.9rem; color: #202124; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .admin-perm-sub { font-size: 0.75rem; color: #5f6368; margin-top: 3px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
         .perm-status-badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 99px; font-weight: 700; display: inline-flex; align-items: center; letter-spacing: 0.03em; }
-        body.dark-mode .admin-bm-name, body.dark-mode .admin-perm-name { color: #e8eaed; }
-        body.dark-mode .admin-bm-meta, body.dark-mode .admin-perm-sub, body.dark-mode .admin-ctrl-item label { color: #9aa0a6; }
+        body.dark-mode .admin-bm-name, body.dark-mode .admin-perm-name { color: #f8fafc; }
+        body.dark-mode .admin-bm-meta, body.dark-mode .admin-perm-sub, body.dark-mode .admin-ctrl-item label { color: #94a3b8; }
 
         /* Admin Permohonan Table */
         .table-container {
@@ -216,20 +216,20 @@
             background: var(--gm-surface-2, #f8f9fa);
         }
         body.dark-mode .table-container {
-            background: #202124;
-            border-color: #3c4043;
+            background: rgba(11, 17, 32, 0.85);
+            border-color: rgba(255, 255, 255, 0.1);
         }
         body.dark-mode #adminPermTable th {
-            background: #2d2e30;
-            border-bottom-color: #3c4043;
-            color: #e8eaed;
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom-color: rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
         }
         body.dark-mode #adminPermTable td {
-            border-bottom-color: #3c4043;
-            color: #bdc1c6;
+            border-bottom-color: rgba(255, 255, 255, 0.08);
+            color: #f8fafc;
         }
         body.dark-mode #adminPermTable tr:hover td:not([colspan]) {
-            background: #2d2e30;
+            background: rgba(255, 255, 255, 0.04);
         }
 
         @media (max-width: 768px) {

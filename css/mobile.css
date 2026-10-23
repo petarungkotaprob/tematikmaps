@@ -858,18 +858,18 @@
   }
 
   body.dark-mode.tracker-page th {
-    background: #35373a !important;
-    border-bottom-color: #3c4043 !important;
-    color: #e8eaed !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+    color: #94a3b8 !important;
   }
 
   body.dark-mode.tracker-page td {
-    border-bottom-color: #3c4043 !important;
-    color: #bdc1c6 !important;
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+    color: #f8fafc !important;
   }
 
   body.dark-mode.tracker-page tr:hover td {
-    background: #3c4043 !important;
+    background: rgba(255, 255, 255, 0.04) !important;
   }
 
   body.tracker-page td[data-label="Aksi"] {
@@ -1123,57 +1123,70 @@
    DARK MODE — Mobile overrides
    ============================================================ */
 body.dark-mode .mobile-dock {
-  background: #1e1f21 !important;
-  border-top-color: #3c4043 !important;
+  background: rgba(11, 17, 32, 0.95) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5) !important;
 }
 body.dark-mode .dock-item {
-  color: #9aa0a6 !important;
+  color: #94a3b8 !important;
 }
 body.dark-mode .dock-item.active {
-  color: #8ab4f8 !important;
+  color: #3b82f6 !important;
 }
 body.dark-mode .dock-item.active svg {
-  stroke: #8ab4f8 !important;
+  stroke: #3b82f6 !important;
 }
 body.dark-mode .mobile-sheet {
-  background: #2d2e30 !important;
-  border-top-color: #3c4043 !important;
-  color: #e8eaed !important;
+  background: rgba(11, 17, 32, 0.96) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #f8fafc !important;
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.6) !important;
 }
 body.dark-mode .sheet-handle-bar {
-  background: #5f6368 !important;
+  background: rgba(255, 255, 255, 0.25) !important;
 }
 body.dark-mode .sheet-close {
-  background: #3c4043 !important;
-  border-color: #48494b !important;
-  color: #9aa0a6 !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #f8fafc !important;
 }
 body.dark-mode .sheet-backdrop {
-  background: rgba(0,0,0,0.6) !important;
+  background: rgba(0,0,0,0.7) !important;
 }
 body.dark-mode .mobile-search-pill {
-  background: #2d2e30 !important;
-  border-color: #3c4043 !important;
-  color: #e8eaed !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.5) !important;
+  background: rgba(11, 17, 32, 0.9) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  color: #f8fafc !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.55) !important;
 }
 body.dark-mode .mobile-search-pill input {
-  color: #e8eaed !important;
+  color: #f8fafc !important;
   background: transparent !important;
 }
 body.dark-mode .mobile-search-pill input::placeholder {
-  color: #9aa0a6 !important;
+  color: #94a3b8 !important;
 }
 body.dark-mode .map-fab-btn {
-  background: #2d2e30 !important;
-  border-color: #3c4043 !important;
-  color: #e8eaed !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.5) !important;
+  background: rgba(11, 17, 32, 0.9) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #f8fafc !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5) !important;
 }
 body.dark-mode .panel-open-fab {
-  background: #2d2e30 !important;
-  border-color: #3c4043 !important;
-  color: #8ab4f8 !important;
+  background: rgba(11, 17, 32, 0.9) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #60a5fa !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5) !important;
 }
 
 /* ============================================================
