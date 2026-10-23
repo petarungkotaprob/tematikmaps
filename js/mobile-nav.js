@@ -177,7 +177,7 @@
     });
   }
 
-  const NON_MODAL_SHEETS = ['mapOverlay', 'mapInfoSheet'];
+  const NON_MODAL_SHEETS = ['sidebarPanel', 'mapOverlay', 'mapInfoSheet'];
 
   function isNonModal(sheet) {
     return !!sheet && NON_MODAL_SHEETS.indexOf(sheet.id) !== -1;

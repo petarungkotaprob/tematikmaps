@@ -247,9 +247,9 @@
             </div>
         </aside>
 
-        <!-- Toggle Button when sidebar is collapsed (Desktop) -->
-        <button id="floatingSidebarToggle" class="btn" style="display: none;" title="Tampilkan Hasil Panel">
-            <i data-feather="chevron-right" style="width: 16px; height: 16px; vertical-align: middle;"></i> Buka Panel
+        <!-- Toggle Button when sidebar is collapsed (Desktop) - Left Center Tab -->
+        <button id="floatingSidebarToggle" type="button" aria-label="Buka Panel" title="Buka Panel" style="display: none;">
+            <i data-feather="chevron-right" style="width: 20px; height: 20px;"></i>
         </button>
 
         <!-- 3. Full-bleed Background Map (Google Maps Primary Canvas) -->
@@ -431,7 +431,7 @@
             } else {
                 mainContent.classList.add('sidebar-collapsed');
                 document.body.classList.add('sidebar-collapsed');
-                if (floatingSidebarToggle) floatingSidebarToggle.style.display = 'block';
+                if (floatingSidebarToggle) floatingSidebarToggle.style.display = 'flex';
             }
 
             setTimeout(function() { 

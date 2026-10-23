@@ -11,8 +11,11 @@ if ('serviceWorker' in navigator) {
 
 // --- Anti-Screenshot & DevTools Security Suite ---
 (function() {
-    // 1. Right Click Block
-    document.addEventListener('contextmenu', e => e.preventDefault());
+    // 1. Right Click Block (Desktop only, don't lock mobile gestures)
+    document.addEventListener('contextmenu', e => {
+        if (window.innerWidth <= 768) return;
+        e.preventDefault();
+    });
 
     // 2. Keyboard & Shortcut Prevention
     document.addEventListener('keydown', e => {

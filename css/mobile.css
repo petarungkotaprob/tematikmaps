@@ -296,37 +296,28 @@
   /* Hide dock on login, hide when sheet open */
   body.login-page .mobile-dock { display: none !important; }
 
-  body.keyboard-open .mobile-dock,
-  body.sheet-open .mobile-dock {
+  body.keyboard-open .mobile-dock {
     transform: translateY(120%);
     opacity: 0;
     pointer-events: none;
   }
 
   /* ==========================================================
-     BOTTOM SHEET SYSTEM
-     Sheets slide up from bottom. Positioned above dock.
-     Z=9300 (below dock z=9500, below drawer z=1000*)
-     *Drawer uses z=1001 in style.css which is for full-page draw
-     Actually sheet z=9300 > drawer z=1001 so sheet wins.
-     We set drawer to z=9600 to appear above sheets.
+     BOTTOM SHEET SYSTEM — Google Maps Style (No Blur, No Lock)
+     Sheets slide up smoothly over the map without dark blur overlay.
+     The map remains visible, touchable, and fully interactive!
      ========================================================== */
   .sheet-backdrop {
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 9200;
-    background: rgba(32,33,36,.45);
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s ease;
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 
   .sheet-backdrop.active {
-    opacity: 1;
-    pointer-events: auto;
+    display: none !important;
+    pointer-events: none !important;
   }
 
   .mobile-sheet {
@@ -374,7 +365,10 @@
     flex-shrink: 0;
   }
 
-  body.sheet-open { overflow: hidden; }
+  /* No screen lock on mobile */
+  body.sheet-open {
+    overflow: visible;
+  }
 
   body.keyboard-open .mobile-sheet.active {
     max-height: 62dvh !important;
