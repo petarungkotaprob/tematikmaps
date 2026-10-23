@@ -76,7 +76,6 @@ document.addEventListener('DOMContentLoaded', () => {
             attribution: 'Google Imagery'
         });
 
-        googleSatelite.addTo(map);
         const layers = {
             "satelit": googleSatelite,
             "osm": osmStandard
@@ -86,8 +85,11 @@ document.addEventListener('DOMContentLoaded', () => {
         let activeBasemaps = [];
         const activeLegends = {}; // To store legend controls for active basemaps
 
-        // 1. Basemap Switch Logic (Sync Radio & Google Maps Widget Cards)
+        // 1. Basemap Switch Logic (Sync Radio & Google Maps Widget Cards & LocalStorage)
         window.setBasemap = function(val) {
+            val = val || 'satelit';
+            try { localStorage.setItem('silisa_basemap', val); } catch(e){}
+
             const nextLayer = layers[val] || layers.satelit;
             Object.values(layers).forEach(l => map.removeLayer(l));
             if (nextLayer) nextLayer.addTo(map);
@@ -108,6 +110,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 thumbPreview.className = 'gm-layers-thumb ' + (val === 'satelit' ? 'satelit-thumb' : 'osm-thumb');
             }
         };
+
+        // Initialize with previously selected basemap
+        const savedBasemap = localStorage.getItem('silisa_basemap') || 'satelit';
+        window.setBasemap(savedBasemap);
 
         document.querySelectorAll('input[name="basemap"]').forEach(radio => {
             radio.addEventListener('change', function() {
@@ -130,6 +136,18 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll(`input[type="checkbox"][data-layer-id="${id}"], input[type="checkbox"][value="${id}"]`).forEach(cb => {
                 cb.checked = isChecked;
             });
+
+            // Persist active spatial layer state to localStorage
+            try {
+                let saved = JSON.parse(localStorage.getItem('silisa_active_spatial_layers') || '[]');
+                const strId = String(id);
+                if (isChecked) {
+                    if (!saved.includes(strId)) saved.push(strId);
+                } else {
+                    saved = saved.filter(x => String(x) !== strId);
+                }
+                localStorage.setItem('silisa_active_spatial_layers', JSON.stringify(saved));
+            } catch (e) {}
 
             if (isChecked) {
                 try {
@@ -241,7 +259,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
 
+                    let savedActive = [];
+                    try { savedActive = JSON.parse(localStorage.getItem('silisa_active_spatial_layers') || '[]'); } catch(e){}
+
                     activeBasemaps.forEach(bm => {
+                        const isSavedChecked = savedActive.includes(String(bm.id));
                         targets.forEach(container => {
                             const containerDiv = document.createElement('div');
                             containerDiv.style.display = 'flex';
@@ -251,7 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             const label = document.createElement('label');
                             label.className = 'layer-checkbox gm-spatial-item';
                             label.innerHTML = `
-                                <input type="checkbox" value="${bm.id}" data-layer-id="${bm.id}">
+                                <input type="checkbox" value="${bm.id}" data-layer-id="${bm.id}" ${isSavedChecked ? 'checked' : ''}>
                                 <span>${bm.name}</span>
                                 <div style="width:12px;height:12px;background:${bm.color || '#1a73e8'};border-radius:3px;margin-left:auto;"></div>
                             `;
@@ -270,6 +292,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             containerDiv.appendChild(legendDiv);
                             container.appendChild(containerDiv);
                         });
+
+                        // Restore layer to map if it was saved as active
+                        if (isSavedChecked) {
+                            toggleSpatialLayer(bm.id, true);
+                        }
                     });
                 }
             });

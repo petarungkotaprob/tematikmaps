@@ -520,14 +520,27 @@ body.map-page #map {
   }
 
   /* Collapsed sidebar */
-  body.map-page .main-content.sidebar-collapsed #sidebarPanel {
+  body.map-page .main-content.sidebar-collapsed #sidebarPanel,
+  body.map-page.sidebar-collapsed #sidebarPanel {
     display: none !important;
+  }
+
+  /* When sidebar is collapsed/minimized: shift layers widget smoothly to the left (Google Maps style) */
+  body.map-page .main-content.sidebar-collapsed .gm-layers-widget,
+  body.map-page.sidebar-collapsed .gm-layers-widget {
+    left: 16px !important;
+  }
+
+  /* Shift disclaimer bar when sidebar is collapsed */
+  body.map-page .main-content.sidebar-collapsed .map-disclaimer,
+  body.map-page.sidebar-collapsed .map-disclaimer {
+    left: 92px !important;
   }
 
   /* Floating sidebar re-open button */
   body.map-page #floatingSidebarToggle {
     position: fixed !important;
-    top: var(--top-gap) !important;
+    top: 68px !important;
     left: 12px !important;
     z-index: 500 !important;
     background: #ffffff !important;
@@ -560,6 +573,7 @@ body.map-page #map {
     line-height: 1.35;
     pointer-events: none;
     box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   /* Hide mobile-only elements on desktop */
@@ -574,6 +588,7 @@ body.map-page #map {
   bottom: 32px;
   left: calc(var(--sidebar-w) + 24px);
   z-index: 400;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .gm-layers-btn {

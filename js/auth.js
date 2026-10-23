@@ -66,6 +66,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentPage = window.location.pathname.split('/').pop() || 'index.html';
     const protectedPages = ['dashboard.html', 'admin.html', 'tracker.html', 'report.html', 'settings.html'];
 
+    // Jika sudah login dan mengakses login.html, otomatis arahkan ke dashboard
+    if (currentPage === 'login.html' && currentUser) {
+        window.location.replace('dashboard.html');
+        return;
+    }
+
     if (protectedPages.includes(currentPage) && !currentUser) {
         window.location.href = 'login.html';
         return;

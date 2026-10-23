@@ -15,6 +15,9 @@
     <link rel="stylesheet" href="css/mobile.css">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#ffffff">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <!-- Feather Icons -->
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="js/pwa.js"></script>
@@ -423,9 +426,11 @@
 
             if (mainContent.classList.contains('sidebar-collapsed')) {
                 mainContent.classList.remove('sidebar-collapsed');
+                document.body.classList.remove('sidebar-collapsed');
                 if (floatingSidebarToggle) floatingSidebarToggle.style.display = 'none';
             } else {
                 mainContent.classList.add('sidebar-collapsed');
+                document.body.classList.add('sidebar-collapsed');
                 if (floatingSidebarToggle) floatingSidebarToggle.style.display = 'block';
             }
 

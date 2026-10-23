@@ -13,6 +13,11 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#ffffff">
     <script src="https://unpkg.com/feather-icons"></script>
+    <script>
+        if (localStorage.getItem('silisa_user')) {
+            window.location.replace('dashboard.html');
+        }
+    </script>
     <script src="js/pwa.js"></script>
     <style>
         /* Google Sign-in style login page */

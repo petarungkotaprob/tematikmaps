@@ -2,13 +2,23 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0;url=login.html">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peta Tematik - Memuat...</title>
     <script>
-        window.location.href = "login.html";
+        // Check session before redirecting
+        try {
+            var user = localStorage.getItem('silisa_user');
+            if (user) {
+                window.location.replace('dashboard.html');
+            } else {
+                window.location.replace('login.html');
+            }
+        } catch (e) {
+            window.location.replace('dashboard.html');
+        }
     </script>
-    <title>Redirecting...</title>
 </head>
-<body>
-    <p>Jika Anda tidak dialihkan secara otomatis, klik <a href="login.html">di sini</a>.</p>
+<body style="font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f8f9fa;">
+    <p style="color: #5f6368;">Memuat Peta Tematik...</p>
 </body>
 </html>

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tematikmap-v6';
+const CACHE_NAME = 'tematikmap-v7';
 const ASSETS = [
     './',
     './index.html',
@@ -11,6 +11,7 @@ const ASSETS = [
     './settings.html',
     './css/style.css',
     './css/mobile.css',
+    './js/app.js',
     './js/mobile-nav.js',
     './manifest.json',
     './images/logo.png',
@@ -23,37 +24,59 @@ const ASSETS = [
 self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => {
-            console.log('Caching static assets');
+            console.log('Caching latest static assets');
             return cache.addAll(ASSETS);
         }).then(() => self.skipWaiting())
     );
 });
 
-// Activate Event
+// Activate Event: Clear all obsolete caches immediately
 self.addEventListener('activate', event => {
     event.waitUntil(
         caches.keys().then(keys => {
             return Promise.all(keys
                 .filter(key => key !== CACHE_NAME)
-                .map(key => caches.delete(key))
+                .map(key => {
+                    console.log('Deleting obsolete cache:', key);
+                    return caches.delete(key);
+                })
             );
         }).then(() => self.clients.claim())
     );
 });
 
-// Fetch Event
+// Fetch Event: Network-First for HTML pages & APIs to always display the latest dashboard
 self.addEventListener('fetch', event => {
-    // Network first for API, Cache first for static assets
-    if (event.request.url.includes('api/')) {
+    const isNavigation = event.request.mode === 'navigate' || 
+                         event.request.destination === 'document' ||
+                         event.request.url.includes('.html') || 
+                         event.request.url.endsWith('/');
+
+    if (event.request.url.includes('api/') || isNavigation) {
         event.respondWith(
-            fetch(event.request).catch(() => caches.match(event.request))
+            fetch(event.request)
+                .then(response => {
+                    if (response && response.status === 200) {
+                        const copy = response.clone();
+                        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+                    }
+                    return response;
+                })
+                .catch(() => caches.match(event.request))
         );
     } else {
+        // Stale-while-revalidate for static assets
         event.respondWith(
-            caches.match(event.request).then(response => {
-                return response || fetch(event.request);
+            caches.match(event.request).then(cachedResponse => {
+                const fetchPromise = fetch(event.request).then(networkResponse => {
+                    if (networkResponse && networkResponse.status === 200) {
+                        const copy = networkResponse.clone();
+                        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+                    }
+                    return networkResponse;
+                }).catch(() => cachedResponse);
+                return cachedResponse || fetchPromise;
             })
         );
     }
 });
-
