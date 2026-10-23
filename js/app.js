@@ -132,9 +132,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const selectedBasemap = activeBasemaps.find(b => b.id == id);
             if (!selectedBasemap) return;
 
-            // Sync all checkboxes with this id
+            // Sync all checkboxes with this id without disturbing active event
             document.querySelectorAll(`input[type="checkbox"][data-layer-id="${id}"], input[type="checkbox"][value="${id}"]`).forEach(cb => {
-                cb.checked = isChecked;
+                if (cb.checked !== isChecked) {
+                    cb.checked = isChecked;
+                }
             });
 
             // Persist active spatial layer state to localStorage
@@ -211,15 +213,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         // Build legend if categorical
                         if (catColors) {
-                            const legendDiv = document.getElementById(`legend-container-${id}`);
-                            if (legendDiv) {
+                            const legendElements = document.querySelectorAll(`.legend-container-${id}`);
+                            if (legendElements.length > 0) {
                                 let html = `<div style="font-weight:600;font-size:0.75rem;text-transform:uppercase;color:#5f6368;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #dadce0;">${selectedBasemap.name} - ${catField}</div>`;
                                 Object.entries(catColors).forEach(([val, color]) => {
                                     const display = val === '__null__' ? '(kosong)' : val;
                                     html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:0.75rem;color:#202124;"><span style="width:12px;height:12px;border-radius:2px;flex-shrink:0;background:${color};"></span><span>${display}</span></div>`;
                                 });
-                                legendDiv.innerHTML = html;
-                                legendDiv.style.display = 'block';
+                                legendElements.forEach(legendDiv => {
+                                    legendDiv.innerHTML = html;
+                                    legendDiv.style.display = 'block';
+                                });
                                 activeLegends[id] = true;
                             }
                         }
@@ -231,11 +235,10 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 if (customLayers[id]) map.removeLayer(customLayers[id]);
                 if (activeLegends[id]) {
-                    const legendDiv = document.getElementById(`legend-container-${id}`);
-                    if (legendDiv) {
+                    document.querySelectorAll(`.legend-container-${id}`).forEach(legendDiv => {
                         legendDiv.style.display = 'none';
                         legendDiv.innerHTML = '';
-                    }
+                    });
                     delete activeLegends[id];
                 }
             }
@@ -270,21 +273,28 @@ document.addEventListener('DOMContentLoaded', () => {
                             containerDiv.style.flexDirection = 'column';
                             containerDiv.style.marginBottom = '6px';
 
+                            const cbId = `spatial_cb_${container.id}_${bm.id}`;
                             const label = document.createElement('label');
                             label.className = 'layer-checkbox gm-spatial-item';
+                            label.htmlFor = cbId;
                             label.innerHTML = `
-                                <input type="checkbox" value="${bm.id}" data-layer-id="${bm.id}" ${isSavedChecked ? 'checked' : ''}>
-                                <span>${bm.name}</span>
-                                <div style="width:12px;height:12px;background:${bm.color || '#1a73e8'};border-radius:3px;margin-left:auto;"></div>
+                                <input type="checkbox" id="${cbId}" value="${bm.id}" data-layer-id="${bm.id}" ${isSavedChecked ? 'checked' : ''}>
+                                <span style="pointer-events:none;user-select:none;">${bm.name}</span>
+                                <div style="width:12px;height:12px;background:${bm.color || '#1a73e8'};border-radius:3px;margin-left:auto;pointer-events:none;flex-shrink:0;"></div>
                             `;
 
                             const legendDiv = document.createElement('div');
-                            legendDiv.id = `legend-container-${bm.id}`;
+                            legendDiv.className = `legend-container-${bm.id}`;
                             legendDiv.style.display = 'none';
                             legendDiv.style.paddingLeft = '28px';
                             legendDiv.style.marginTop = '4px';
 
-                            label.querySelector('input').addEventListener('change', function() {
+                            const input = label.querySelector('input');
+                            // Prevent synthetic double-event on mobile when tapping the checkbox directly
+                            input.addEventListener('click', function(e) {
+                                e.stopPropagation();
+                            });
+                            input.addEventListener('change', function() {
                                 toggleSpatialLayer(bm.id, this.checked);
                             });
 

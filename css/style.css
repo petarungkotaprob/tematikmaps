@@ -1589,9 +1589,20 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   transition: background 0.15s, border-color 0.15s;
   color: var(--gm-text-1);
   margin-bottom: 6px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-.layer-radio:hover, .layer-checkbox:hover {
+@media (hover: hover) and (pointer: fine) {
+  .layer-radio:hover, .layer-checkbox:hover {
+    background: var(--gm-active-bg);
+    border-color: #a8c7fa;
+  }
+}
+
+.layer-radio:active, .layer-checkbox:active {
   background: var(--gm-active-bg);
   border-color: #a8c7fa;
 }
@@ -1599,6 +1610,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 .layer-radio input, .layer-checkbox input {
   cursor: pointer;
   accent-color: var(--gm-blue);
+  touch-action: manipulation;
 }
 
 /* ============================================================
