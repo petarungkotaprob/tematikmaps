@@ -22,6 +22,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $name = 'logo_' . time() . '_' . rand(100,999) . '.' . $ext;
         $target = $targetDir . $name;
         if (move_uploaded_file($file['tmp_name'], $target)) {
+            @copy($target, $targetDir . 'logo.png');
+            @copy($target, $targetDir . 'favicon.png');
+            @copy($target, $targetDir . 'pwa-192.png');
+            @copy($target, $targetDir . 'pwa-512.png');
             echo json_encode(['status'=>'success','path'=>'images/'.$name]);
         } else {
             http_response_code(500);
