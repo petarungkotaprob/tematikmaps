@@ -86,15 +86,38 @@ document.addEventListener('DOMContentLoaded', () => {
         let activeBasemaps = [];
         const activeLegends = {}; // To store legend controls for active basemaps
 
-        // 1. Basemap Radio Logic
+        // 1. Basemap Switch Logic (Sync Radio & Google Maps Widget Cards)
+        window.setBasemap = function(val) {
+            const nextLayer = layers[val] || layers.satelit;
+            Object.values(layers).forEach(l => map.removeLayer(l));
+            if (nextLayer) nextLayer.addTo(map);
+
+            // Sync radio inputs
+            document.querySelectorAll('input[name="basemap"]').forEach(radio => {
+                radio.checked = (radio.value === val);
+            });
+
+            // Sync GM Basemap Cards
+            document.querySelectorAll('.gm-basemap-card').forEach(card => {
+                card.classList.toggle('active', card.dataset.basemap === val);
+            });
+
+            // Update thumb preview
+            const thumbPreview = document.getElementById('layerThumbPreview');
+            if (thumbPreview) {
+                thumbPreview.className = 'gm-layers-thumb ' + (val === 'satelit' ? 'satelit-thumb' : 'osm-thumb');
+            }
+        };
+
         document.querySelectorAll('input[name="basemap"]').forEach(radio => {
             radio.addEventListener('change', function() {
-                if (this.checked) {
-                    const val = this.value;
-                    const nextLayer = layers[val] || layers.satelit;
-                    Object.values(layers).forEach(l => map.removeLayer(l));
-                    if (nextLayer) nextLayer.addTo(map);
-                }
+                if (this.checked) window.setBasemap(this.value);
+            });
+        });
+
+        document.querySelectorAll('.gm-basemap-card').forEach(card => {
+            card.addEventListener('click', function() {
+                window.setBasemap(this.dataset.basemap);
             });
         });
 
@@ -102,6 +125,11 @@ document.addEventListener('DOMContentLoaded', () => {
         async function toggleSpatialLayer(id, isChecked) {
             const selectedBasemap = activeBasemaps.find(b => b.id == id);
             if (!selectedBasemap) return;
+
+            // Sync all checkboxes with this id
+            document.querySelectorAll(`input[type="checkbox"][data-layer-id="${id}"], input[type="checkbox"][value="${id}"]`).forEach(cb => {
+                cb.checked = isChecked;
+            });
 
             if (isChecked) {
                 try {
@@ -136,10 +164,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                 }
                                 return { 
                                     color: c, 
-                                    fillColor: c,
+                                    fillColor: c, 
                                     weight: layerWeight, 
-                                    fillOpacity: fillOpacity,
-                                    dashArray: dashArray
+                                    fillOpacity: fillOpacity, 
+                                    dashArray: dashArray 
                                 };
                             },
                             pointToLayer: (feature, latlng) => {
@@ -153,26 +181,24 @@ document.addEventListener('DOMContentLoaded', () => {
                             onEachFeature: (feature, layer) => {
                                 if (feature.properties) {
                                     const rows = Object.entries(feature.properties)
-                                        .map(([k,v]) => `<tr><td style="color:#94a3b8;padding:2px 6px;font-size:0.75rem;">${k}</td><td style="padding:2px 6px;font-size:0.75rem;">${v ?? '-'}</td></tr>`)
+                                        .map(([k,v]) => `<tr><td style="color:#5f6368;padding:3px 6px;font-size:0.75rem;">${k}</td><td style="padding:3px 6px;font-size:0.75rem;font-weight:500;">${v ?? '-'}</td></tr>`)
                                         .join('');
-                                    layer.bindPopup(`<table style="border-collapse:collapse;min-width:160px;">${rows}</table>`, { maxHeight: 200 });
+                                    layer.bindPopup(`<table style="border-collapse:collapse;min-width:180px;">${rows}</table>`, { maxHeight: 200, className: 'gm-leaflet-popup' });
                                 }
                             }
                         }).addTo(map);
                         
                         customLayers[id] = geoJsonLayer;
-                        
-                        // Fit bounds only if it's the first time
-                        map.fitBounds(geoJsonLayer.getBounds());
+                        map.fitBounds(geoJsonLayer.getBounds(), { padding: [40, 40] });
 
                         // Build legend if categorical
                         if (catColors) {
                             const legendDiv = document.getElementById(`legend-container-${id}`);
                             if (legendDiv) {
-                                let html = `<div style="font-weight:700;font-size:0.75rem;text-transform:uppercase;color:#94a3b8;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.1);">${selectedBasemap.name} - ${catField}</div>`;
+                                let html = `<div style="font-weight:600;font-size:0.75rem;text-transform:uppercase;color:#5f6368;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #dadce0;">${selectedBasemap.name} - ${catField}</div>`;
                                 Object.entries(catColors).forEach(([val, color]) => {
                                     const display = val === '__null__' ? '(kosong)' : val;
-                                    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:0.75rem;color:#fff;"><span style="width:12px;height:12px;border-radius:2px;flex-shrink:0;border:1px solid rgba(255,255,255,0.15);background:${color};"></span><span>${display}</span></div>`;
+                                    html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:0.75rem;color:#202124;"><span style="width:12px;height:12px;border-radius:2px;flex-shrink:0;background:${color};"></span><span>${display}</span></div>`;
                                 });
                                 legendDiv.innerHTML = html;
                                 legendDiv.style.display = 'block';
@@ -182,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 } catch (e) {
                     console.error("Gagal memuat SHP:", e);
-                    alert("Gagal memuat file SHP. Pesan Error: " + e.message);
+                    alert("Gagal memuat file SHP: " + e.message);
                 }
             } else {
                 if (customLayers[id]) map.removeLayer(customLayers[id]);
@@ -197,54 +223,56 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Fetch extra basemaps and render list
-        const spatialContainer = document.getElementById('spatialLayerList');
-        if (spatialContainer) {
-            fetch('api/basemaps.php')
-                .then(res => res.json())
-                .then(result => {
-                    if (result.status === 'success') {
-                        activeBasemaps = result.data;
-                        spatialContainer.innerHTML = '';
-                        
-                        if (activeBasemaps.length === 0) {
-                            spatialContainer.innerHTML = '<div style="font-size: 0.75rem; color: #64748b;">Belum ada layer tambahan.</div>';
-                        }
+        // Fetch extra basemaps and render in both layer containers
+        fetch('api/basemaps.php')
+            .then(res => res.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    activeBasemaps = result.data;
+                    const targets = [
+                        document.getElementById('spatialLayerList'),
+                        document.getElementById('gmSpatialLayerList')
+                    ].filter(Boolean);
 
-                        activeBasemaps.forEach(bm => {
+                    targets.forEach(container => {
+                        container.innerHTML = '';
+                        if (activeBasemaps.length === 0) {
+                            container.innerHTML = '<div style="font-size:0.78rem;color:#5f6368;padding:6px 0;">Belum ada layer spasial tambahan.</div>';
+                        }
+                    });
+
+                    activeBasemaps.forEach(bm => {
+                        targets.forEach(container => {
                             const containerDiv = document.createElement('div');
                             containerDiv.style.display = 'flex';
                             containerDiv.style.flexDirection = 'column';
-                            containerDiv.style.marginBottom = '8px';
+                            containerDiv.style.marginBottom = '6px';
 
                             const label = document.createElement('label');
-                            label.className = 'layer-checkbox';
-                            label.style.marginBottom = '0'; // Override gap behavior slightly
+                            label.className = 'layer-checkbox gm-spatial-item';
                             label.innerHTML = `
-                                <input type="checkbox" value="${bm.id}">
+                                <input type="checkbox" value="${bm.id}" data-layer-id="${bm.id}">
                                 <span>${bm.name}</span>
-                                <div style="width: 12px; height: 12px; background: ${bm.color || '#22c55e'}; border-radius: 2px; margin-left: auto;"></div>
+                                <div style="width:12px;height:12px;background:${bm.color || '#1a73e8'};border-radius:3px;margin-left:auto;"></div>
                             `;
 
                             const legendDiv = document.createElement('div');
                             legendDiv.id = `legend-container-${bm.id}`;
                             legendDiv.style.display = 'none';
-                            legendDiv.style.paddingLeft = '32px';
-                            legendDiv.style.paddingRight = '12px';
-                            legendDiv.style.paddingBottom = '8px';
+                            legendDiv.style.paddingLeft = '28px';
                             legendDiv.style.marginTop = '4px';
-                            
+
                             label.querySelector('input').addEventListener('change', function() {
                                 toggleSpatialLayer(bm.id, this.checked);
                             });
-                            
+
                             containerDiv.appendChild(label);
                             containerDiv.appendChild(legendDiv);
-                            spatialContainer.appendChild(containerDiv);
+                            container.appendChild(containerDiv);
                         });
-                    }
-                });
-        }
+                    });
+                }
+            });
 
         fetchReports();
     }
@@ -350,33 +378,171 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        // Helper: Google Maps Teardrop SVG Pin
+        function getGooglePin(status, hak) {
+            let color = '#ea4335'; // Default Google Red
+            if (status === 'selesai') color = '#0f9d58'; // Google Green
+            else if (status === 'verifikasi') color = '#f9ab00'; // Google Amber
+            else if (status === 'mediasi') color = '#1a73e8'; // Google Blue
+            else if (hak === 'Milik') color = '#1a73e8';
+            else if (hak === 'Guna Bangunan') color = '#ea8600';
+
+            return L.divIcon({
+                className: 'gm-marker-pin-wrap',
+                html: `
+                    <div class="gm-pin-marker" style="--pin-c: ${color};">
+                        <svg viewBox="0 0 24 36" width="30" height="42">
+                            <path d="M12 0C5.373 0 0 5.373 0 12c0 9 12 24 12 24s12-15 12-24c0-6.627-5.373-12-12-12z" fill="${color}" stroke="#ffffff" stroke-width="1.2" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.35))"/>
+                            <circle cx="12" cy="12" r="4.5" fill="#ffffff"/>
+                        </svg>
+                    </div>
+                `,
+                iconSize: [30, 42],
+                iconAnchor: [15, 42],
+                popupAnchor: [0, -38]
+            });
+        }
+
+        // Global: Google Maps Place Detail Sheet
+        window.showPlaceDetails = function(item) {
+            if (!item) return;
+
+            // Switch to detail view in panel
+            const vList = document.getElementById('viewList');
+            const vDetail = document.getElementById('viewDetail');
+            if (vList && vDetail) {
+                vList.style.display = 'none';
+                vDetail.style.display = 'block';
+            }
+
+            // Fill details
+            const elNama = document.getElementById('detNamaPemohon');
+            const elNo = document.getElementById('detNoPermohonan');
+            const elBadge = document.getElementById('detStatusBadge');
+            const elAlamat = document.getElementById('detAlamat');
+            const elHak = document.getElementById('detHak');
+            const elLuas = document.getElementById('detLuas');
+            const elKep = document.getElementById('detKeperluan');
+            const elPem = document.getElementById('detPemohon');
+            const elKoor = document.getElementById('detKoordinat');
+
+            if (elNama) elNama.textContent = item.nama_pemohon || '-';
+            if (elNo) elNo.textContent = `No. Permohonan: ${item.no_permohonan || '-'} · ${item.created_at || 'Baru'}`;
+            if (elBadge) {
+                const st = (item.status || 'pending').toLowerCase();
+                elBadge.className = `gm-cover-badge st-${st}`;
+                elBadge.textContent = st === 'selesai' ? 'Selesai' : (st === 'verifikasi' ? 'Terverifikasi' : (st === 'mediasi' ? 'Mediasi' : 'Proses Verifikasi'));
+            }
+            if (elAlamat) elAlamat.textContent = `${item.alamat || '-'}, Kel. ${item.kelurahan || '-'}, Kec. ${item.kecamatan || '-'}`;
+            if (elHak) elHak.textContent = `${item.jenis_hak || '-'} No. ${item.nomor_hak || '-'}`;
+            if (elLuas) elLuas.textContent = `${item.luas_sertipikat || '-'} m²`;
+            if (elKep) elKep.textContent = `${item.keadaan_tanah || '-'} · Keperluan: ${item.keperluan || '-'}`;
+            if (elPem) elPem.textContent = `NIK: ${item.nik || '-'} · HP: ${item.no_telp || '-'}`;
+            if (elKoor) elKoor.textContent = `${parseFloat(item.latitude).toFixed(6)}, ${parseFloat(item.longitude).toFixed(6)}`;
+
+            // Wire action buttons
+            const btnFly = document.getElementById('btnDetailFly');
+            if (btnFly) {
+                btnFly.onclick = () => {
+                    map.flyTo([item.latitude, item.longitude], 17, { animate: true, duration: 1.2 });
+                    if (item._marker && item._marker.openPopup) item._marker.openPopup();
+                    if (window.MobileUI && MobileUI.isMobile()) MobileUI.closeSheets();
+                };
+            }
+
+            const btnPrint = document.getElementById('btnDetailPrint');
+            if (btnPrint) {
+                btnPrint.onclick = () => {
+                    const printWin = window.open('', '_blank');
+                    printWin.document.write(`
+                        <html><head><title>Tanda Terima - ${item.no_permohonan}</title>
+                        <style>body{font-family:sans-serif;padding:30px;line-height:1.6;}table{width:100%;border-collapse:collapse;margin-top:15px;}td{padding:8px;border-bottom:1px solid #ddd;}strong{color:#1a73e8;}</style></head>
+                        <body>
+                        <h2>KANTOR PERTANAHAN KOTA PROBOLINGGO</h2>
+                        <h3>Tanda Bukti Permohonan Peta Tematik</h3>
+                        <table>
+                            <tr><td>No. Permohonan</td><td><b>${item.no_permohonan}</b></td></tr>
+                            <tr><td>Nama Pemohon</td><td>${item.nama_pemohon}</td></tr>
+                            <tr><td>NIK</td><td>${item.nik}</td></tr>
+                            <tr><td>Alamat</td><td>${item.alamat}</td></tr>
+                            <tr><td>Kecamatan / Kelurahan</td><td>${item.kecamatan} / ${item.kelurahan}</td></tr>
+                            <tr><td>Jenis Hak</td><td>${item.jenis_hak} No. ${item.nomor_hak}</td></tr>
+                            <tr><td>Luas Sertipikat</td><td>${item.luas_sertipikat} m²</td></tr>
+                            <tr><td>Koordinat</td><td>${item.latitude}, ${item.longitude}</td></tr>
+                        </table>
+                        <br><p style="font-size:0.8rem;color:#666;">Dicetak otomatis melalui Peta Tematik Kota Probolinggo</p>
+                        </body></html>
+                    `);
+                    printWin.document.close();
+                    printWin.focus();
+                    setTimeout(() => printWin.print(), 300);
+                };
+            }
+
+            const btnCopy = document.getElementById('btnDetailCopy');
+            if (btnCopy) {
+                btnCopy.onclick = () => {
+                    const shareText = `Lokasi Lahan: ${item.nama_pemohon} (${item.no_permohonan}) - https://maps.google.com/?q=${item.latitude},${item.longitude}`;
+                    navigator.clipboard.writeText(shareText).then(() => {
+                        alert('Tautan lokasi berhasil disalin ke clipboard!');
+                    });
+                };
+            }
+
+            // Fly to marker & open popup
+            map.flyTo([item.latitude, item.longitude], 16, { animate: true, duration: 1 });
+            if (item._marker && item._marker.openPopup) item._marker.openPopup();
+
+            // Mobile: open bottom sheet
+            if (window.MobileUI && MobileUI.isMobile()) {
+                MobileUI.openSheet('sidebarPanel');
+            }
+
+            if (typeof feather !== 'undefined') feather.replace();
+        };
+
+        // Wire Back to List button
+        const btnBackToList = document.getElementById('btnBackToList');
+        if (btnBackToList && !btnBackToList.hasListener) {
+            btnBackToList.addEventListener('click', () => {
+                const vList = document.getElementById('viewList');
+                const vDetail = document.getElementById('viewDetail');
+                if (vList && vDetail) {
+                    vDetail.style.display = 'none';
+                    vList.style.display = 'block';
+                }
+            });
+            btnBackToList.hasListener = true;
+        }
+
         // Only render visible (non-hidden) items on map
         visibleData.forEach(item => {
-            let colorHex = '#3b82f6';
-
             const popupContent = `
-                <div style="font-family: var(--font-family); color: #333; min-width: 200px;">
-                    <span class="badge" style="background:#1d4ed8; margin-bottom:5px; display:inline-block;">${item.no_permohonan}</span><br>
-                    <strong style="font-size: 14px;">${item.nama_pemohon}</strong><br>
-                    <span style="font-size: 11px; color: #666;">${item.kecamatan}, ${item.kelurahan}</span><br>
-                    <div style="margin: 5px 0; font-size: 12px; border-top: 1px solid #eee; padding-top: 5px;">
-                        <b>Jenis Hak:</b> ${item.jenis_hak} No. ${item.nomor_hak}<br>
-                        <b>Keperluan:</b> ${item.keperluan}
+                <div class="gm-popup-card">
+                    <div class="gm-popup-header">
+                        <span class="gm-popup-badge">${item.no_permohonan}</span>
+                        <span class="gm-popup-status st-${(item.status || 'pending').toLowerCase()}">${item.status || 'Pending'}</span>
                     </div>
+                    <strong class="gm-popup-title">${item.nama_pemohon}</strong>
+                    <div class="gm-popup-sub">${item.kecamatan}, ${item.kelurahan}</div>
+                    <div class="gm-popup-detail">
+                        <div><b>Hak:</b> ${item.jenis_hak} No. ${item.nomor_hak}</div>
+                        <div><b>Luas:</b> ${item.luas_sertipikat || '-'} m²</div>
+                    </div>
+                    <button type="button" class="gm-popup-action-btn" onclick="window.showPlaceDetails && window.showPlaceDetails(window.allReportsData.find(x => x.id == ${item.id}))">
+                        Lihat Rincian Lahan &rarr;
+                    </button>
                 </div>
             `;
 
             const createMarker = () => {
-                const circleMarker = L.circleMarker([item.latitude, item.longitude], {
-                    radius: 10,
-                    fillColor: colorHex, color: '#ffffff', weight: 2, opacity: 1, fillOpacity: 0.8
-                }).addTo(map);
-                circleMarker.bindPopup(popupContent);
-                circleMarker.on('click', () => { 
-                    map.setView([item.latitude, item.longitude], 15); 
-                    item._marker = circleMarker; // Store for sidebar click
+                const pinIcon = getGooglePin(item.status, item.jenis_hak);
+                const marker = L.marker([item.latitude, item.longitude], { icon: pinIcon }).addTo(map);
+                marker.bindPopup(popupContent, { maxWidth: 260, className: 'gm-leaflet-popup' });
+                marker.on('click', () => { 
+                    window.showPlaceDetails(item);
                 });
-                item._marker = circleMarker;
+                item._marker = marker;
             };
 
             if (item.shp_file) {
@@ -387,14 +553,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         layers.forEach(layer => { if (layer?.features) combinedFeatures.push(...layer.features); });
                         const combinedGeojson = { type: 'FeatureCollection', features: combinedFeatures };
 
-                        // Apply style from admin settings
-                        const shpColor    = item.color      || colorHex || '#3b82f6';
+                        const shpColor    = item.color      || '#1a73e8';
                         const fillType    = item.fill_type  || 'fill';
                         const shpWeight   = parseInt(item.weight) || 2;
                         const dashArray   = item.dash_array || null;
-                        const fillOpacity = fillType === 'hollow' ? 0 : 0.4;
+                        const fillOpacity = fillType === 'hollow' ? 0 : 0.45;
 
-                        // Category colors per feature
                         let catField  = item.category_field  || null;
                         let catColors = {};
                         if (item.category_colors) {
@@ -417,10 +581,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                 };
                             }
                         }).addTo(map);
-                        layer.bindPopup(popupContent);
+                        layer.bindPopup(popupContent, { maxWidth: 260, className: 'gm-leaflet-popup' });
                         layer.on('click', () => { 
-                            map.fitBounds(layer.getBounds()); 
-                            item._marker = layer;
+                            map.fitBounds(layer.getBounds(), { padding: [50, 50] }); 
+                            window.showPlaceDetails(item);
                         });
                         item._marker = layer;
                     }).catch(e => createMarker());
@@ -429,23 +593,46 @@ document.addEventListener('DOMContentLoaded', () => {
                 createMarker();
             }
         });
+
+        window.allReportsData = visibleData;
     }
 
-    
-        const searchInput = document.getElementById('dashboardSearch');
-        if (searchInput && !searchInput.hasListener) {
-            searchInput.addEventListener('input', (e) => {
-                const val = e.target.value.toLowerCase();
-                filteredReports = allReports.filter(item => 
-                    item.nama_pemohon.toLowerCase().includes(val) || 
-                    item.kecamatan.toLowerCase().includes(val) ||
-                    item.no_permohonan.toLowerCase().includes(val)
-                );
-                sidebarPage = 1;
-                updateSidebarList();
-            });
-            searchInput.hasListener = true;
-        }
+    const searchInput = document.getElementById('dashboardSearch');
+    if (searchInput && !searchInput.hasListener) {
+        searchInput.addEventListener('input', (e) => {
+            const val = e.target.value.toLowerCase();
+            filteredReports = allReports.filter(item => 
+                (item.nama_pemohon && item.nama_pemohon.toLowerCase().includes(val)) || 
+                (item.kecamatan && item.kecamatan.toLowerCase().includes(val)) ||
+                (item.kelurahan && item.kelurahan.toLowerCase().includes(val)) ||
+                (item.nomor_hak && item.nomor_hak.toLowerCase().includes(val)) ||
+                (item.no_permohonan && item.no_permohonan.toLowerCase().includes(val))
+            );
+            sidebarPage = 1;
+            updateSidebarList();
+        });
+        searchInput.hasListener = true;
+    }
+
+    // Google Maps Filter Chips logic
+    document.querySelectorAll('.gm-chip').forEach(chip => {
+        chip.addEventListener('click', function() {
+            document.querySelectorAll('.gm-chip').forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            const filter = this.dataset.filter;
+
+            if (filter === 'all') {
+                filteredReports = allReports;
+            } else if (filter.startsWith('status-')) {
+                const st = filter.replace('status-', '');
+                filteredReports = allReports.filter(item => (item.status || '').toLowerCase() === st);
+            } else {
+                filteredReports = allReports.filter(item => item.jenis_hak === filter);
+            }
+            sidebarPage = 1;
+            updateSidebarList();
+        });
+    });
 
     function updateSidebarList() {
         const container = document.getElementById('reportList');
@@ -453,13 +640,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const info = document.getElementById('sidePaginationInfo');
         const prevBtn = document.getElementById('sidePrevBtn');
         const nextBtn = document.getElementById('sideNextBtn');
+        const totalBadge = document.getElementById('totalCountBadge');
 
         if (!container) return;
         container.innerHTML = '';
 
+        if (totalBadge) {
+            totalBadge.textContent = `${filteredReports.length} lokasi lahan ditemukan`;
+        }
+
         if (filteredReports.length === 0) {
-            container.innerHTML = '<div style="text-align: center; color: #94a3b8; margin-top: 2rem;">Tidak ada data.</div>';
+            container.innerHTML = `
+                <div class="gm-empty-state">
+                    <i data-feather="map-pin" style="width:36px;height:36px;color:#dadce0;margin-bottom:8px;"></i>
+                    <p style="font-size:0.9rem;color:#5f6368;margin:0;">Tidak ada permohonan yang sesuai dengan filter.</p>
+                </div>
+            `;
             if (pagination) pagination.style.display = 'none';
+            if (typeof feather !== 'undefined') feather.replace();
             return;
         }
 
@@ -470,38 +668,47 @@ document.addEventListener('DOMContentLoaded', () => {
         const pageData = filteredReports.slice(start, end);
 
         pageData.forEach(item => {
-            let colorHex = '#3b82f6';
+            const st = (item.status || 'pending').toLowerCase();
+            let statusLabel = st === 'selesai' ? 'Selesai' : (st === 'verifikasi' ? 'Verifikasi' : (st === 'mediasi' ? 'Mediasi' : 'Pending'));
 
             const listItem = document.createElement('div');
-            listItem.className = `report-item animated`;
-            listItem.style.borderLeft = `4px solid ${colorHex}`;
+            listItem.className = `gm-place-card`;
             listItem.innerHTML = `
-                <div class="report-header">
-                    <div class="report-title">${item.nama_pemohon}</div>
-                    
+                <div class="gm-card-main">
+                    <div class="gm-card-icon-wrap">
+                        <i data-feather="map-pin"></i>
+                    </div>
+                    <div class="gm-card-body">
+                        <div class="gm-card-title-row">
+                            <span class="gm-card-title">${item.nama_pemohon}</span>
+                            <span class="gm-status-pill st-${st}">${statusLabel}</span>
+                        </div>
+                        <div class="gm-card-subtitle">${item.no_permohonan} · ${item.jenis_hak} No. ${item.nomor_hak}</div>
+                        <div class="gm-card-address">${item.kecamatan}, ${item.kelurahan} · Luas: ${item.luas_sertipikat || '-'} m²</div>
+                    </div>
                 </div>
-                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
-                    ${item.no_permohonan} | ${item.jenis_hak}
-                </div>
-                <div style="font-size: 0.85rem;">
-                    ${item.kecamatan} - ${item.kelurahan}
+                <div class="gm-card-actions">
+                    <button type="button" class="gm-card-chip">
+                        <i data-feather="navigation" style="width:12px;height:12px;"></i> Rute
+                    </button>
+                    <button type="button" class="gm-card-chip">
+                        <i data-feather="info" style="width:12px;height:12px;"></i> Rincian
+                    </button>
                 </div>
             `;
             
             listItem.addEventListener('click', () => {
-                map.flyTo([item.latitude, item.longitude], 16, { animate: true, duration: 1 });
-                if (item._marker) item._marker.openPopup();
-                if (window.MobileUI && MobileUI.isMobile()) MobileUI.closeSheets();
+                window.showPlaceDetails(item);
             });
 
             container.appendChild(listItem);
         });
 
-        if (info) info.innerText = `${start + 1}-${Math.min(end, filteredReports.length)} / ${filteredReports.length}`;
+        if (info) info.innerText = `${start + 1}-${Math.min(end, filteredReports.length)} dari ${filteredReports.length}`;
         if (prevBtn) prevBtn.disabled = sidebarPage === 1;
         if (nextBtn) nextBtn.disabled = end >= filteredReports.length;
         
-        feather.replace();
+        if (typeof feather !== 'undefined') feather.replace();
     }
 
     // ======== 4. FUNGSI UNTUK HALAMAN REPORT ========

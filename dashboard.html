@@ -3,48 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Peta Tematik</title>
+    <title>Peta Tematik - Google Maps</title>
     <link rel="icon" type="image/png" href="images/favicon.png">
-<link rel="apple-touch-icon" href="images/pwa-192.png">
-<meta name="apple-mobile-web-app-title" content="Peta Tematik">
+    <link rel="apple-touch-icon" href="images/pwa-192.png">
+    <meta name="apple-mobile-web-app-title" content="Peta Tematik">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Leaflet CSS for Map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="css/style.css">
-    <style>
-        .layer-radio, .layer-checkbox {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            padding: 9px 12px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border: 1px solid #dadce0;
-            transition: background 0.15s, border-color 0.15s;
-            color: #202124;
-        }
-        .layer-radio:hover, .layer-checkbox:hover {
-            background: #e8f0fe;
-            border-color: #a8c7fa;
-        }
-        .layer-radio input, .layer-checkbox input {
-            cursor: pointer;
-            accent-color: #1a73e8;
-        }
-        #spatialLayerList::-webkit-scrollbar { width: 4px; }
-        #spatialLayerList::-webkit-scrollbar-thumb {
-            background: #dadce0;
-            border-radius: 10px;
-        }
-        @media (max-width: 768px) {
-            body.map-page #sidebarToggle { display: none !important; }
-        }
-    </style>
     <link rel="stylesheet" href="css/mobile.css">
-    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#ffffff">
     <!-- Feather Icons -->
@@ -53,11 +21,11 @@
 </head>
 <body class="map-page">
 
-    <nav class="navbar">
+    <!-- Fallback desktop navbar (hidden by CSS on map-page, preserved for script compatibility) -->
+    <nav class="navbar" style="display: none;">
         <a href="dashboard.html" class="brand">
-            <img src="images/logo.png" alt="Peta Tematik Logo" style="height: 40px; width: auto; border-radius: 4px;">
+            <img src="images/logo.png" alt="Logo" style="height: 40px; width: auto;">
             Peta<span>Tematik</span>
-            <div class="brand-motto">Peta Tematik Kantor Pertanahan Kota Probolinggo</div>
         </a>
         <div class="nav-links">
             <a href="dashboard.html" class="active">Peta Tematik</a>
@@ -67,63 +35,273 @@
         </div>
     </nav>
 
+    <!-- Google Maps Left Navigation Drawer & Backdrop -->
+    <div class="gm-drawer-backdrop" id="gmDrawerBackdrop"></div>
+    <aside class="gm-drawer" id="gmDrawer" aria-label="Menu Navigasi">
+        <div class="gm-drawer-header">
+            <img src="images/logo.png" alt="Logo Kanta" class="gm-drawer-logo">
+            <div class="gm-drawer-title-wrap">
+                <h3 class="gm-drawer-app-name">Peta<span>Tematik</span></h3>
+                <p class="gm-drawer-agency">Kantor Pertanahan Kota Probolinggo</p>
+            </div>
+            <button type="button" class="gm-icon-btn-sm" id="btnCloseDrawer" title="Tutup menu">
+                <i data-feather="x"></i>
+            </button>
+        </div>
+
+        <div class="gm-drawer-body">
+            <div class="gm-drawer-group-title">Navigasi Utama</div>
+            <a href="dashboard.html" class="gm-drawer-item active">
+                <i data-feather="map"></i>
+                <span>Peta Tematik</span>
+            </a>
+            <a href="tracker.html" class="gm-drawer-item">
+                <i data-feather="list"></i>
+                <span>Daftar Permohonan</span>
+            </a>
+            <a href="report.html" class="gm-drawer-item">
+                <i data-feather="plus-circle"></i>
+                <span>Input Lahan Baru</span>
+            </a>
+            <a href="laporan.html" class="gm-drawer-item">
+                <i data-feather="bar-chart-2"></i>
+                <span>Rekap & Laporan</span>
+            </a>
+
+            <div class="gm-drawer-divider"></div>
+            <div class="gm-drawer-group-title">Portal & Akses</div>
+            <a href="portal.html" class="gm-drawer-item">
+                <i data-feather="home"></i>
+                <span>Portal Beranda</span>
+            </a>
+            <a href="admin.html" class="gm-drawer-item">
+                <i data-feather="shield"></i>
+                <span>Panel Admin</span>
+            </a>
+            <a href="login.html" class="gm-drawer-item">
+                <i data-feather="lock"></i>
+                <span>Login Petugas</span>
+            </a>
+        </div>
+
+        <div class="gm-drawer-footer">
+            <strong>Kantor Pertanahan Kota Probolinggo</strong><br>
+            Jl. Raya Panglima Sudirman No. 12, Kota Probolinggo<br>
+            <span style="font-size: 0.72rem; color: #5f6368;">Peta Tematik &copy; 2026</span>
+        </div>
+    </aside>
+
     <main class="main-content">
-        <!-- Sidebar Panel (Google Maps place list style on Desktop, Bottom Sheet on Mobile) -->
-        <aside class="sidebar mobile-sheet" id="sidebarPanel" aria-label="Daftar permohonan">
+
+        <!-- 1. Google Maps Floating Search Bar & Filter Chips -->
+        <div class="gm-search-container" id="gmSearchContainer">
+            <div class="gm-search-box">
+                <button type="button" class="gm-search-icon-btn" id="btnOpenDrawer" aria-label="Buka Menu" title="Menu Navigasi">
+                    <i data-feather="menu"></i>
+                </button>
+                <input type="text" id="dashboardSearch" class="gm-search-input" placeholder="Telusuri pemohon, berkas, kelurahan..." autocomplete="off">
+                <button type="button" class="gm-search-icon-btn" id="btnSearchSubmit" aria-label="Telusuri" title="Telusuri">
+                    <i data-feather="search"></i>
+                </button>
+                <div class="gm-search-divider"></div>
+                <button type="button" class="gm-search-icon-btn" id="btnToggleSidePanel" aria-label="Tutup / Buka Panel" title="Tutup / Buka Panel">
+                    <i data-feather="sidebar"></i>
+                </button>
+            </div>
+
+            <!-- Filter Chips Row -->
+            <div class="gm-filter-chips" id="gmFilterChips">
+                <button type="button" class="gm-chip active" data-filter="all">Semua</button>
+                <button type="button" class="gm-chip" data-filter="Milik">SHM</button>
+                <button type="button" class="gm-chip" data-filter="Guna Bangunan">HGB</button>
+                <button type="button" class="gm-chip" data-filter="Pakai">Hak Pakai</button>
+                <button type="button" class="gm-chip" data-filter="status-verifikasi">Verifikasi</button>
+                <button type="button" class="gm-chip" data-filter="status-selesai">Selesai</button>
+            </div>
+        </div>
+
+        <!-- 2. Google Maps Left Place Panel / Mobile Bottom Sheet -->
+        <aside class="sidebar mobile-sheet gm-side-panel" id="sidebarPanel" aria-label="Daftar Lahan">
             <div class="sheet-handle" data-sheet-drag>
-                <h3><i data-feather="activity" style="width: 16px; height: 16px; vertical-align: middle;"></i> Progress Peta Tematik</h3>
+                <h3><i data-feather="map-pin" style="width: 16px; height: 16px; vertical-align: middle;"></i> Lokasi Bidang Tanah</h3>
                 <button type="button" class="sheet-close" data-sheet-close aria-label="Tutup panel">
                     <i data-feather="x"></i>
                 </button>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-bottom: 1rem;" id="sidebarToggle" title="Sembunyikan Panel">
-                <h2 style="margin: 0; font-size: 1.05rem; font-weight: 600; color: #202124;"><i data-feather="activity" style="color: #1a73e8; vertical-align: middle; margin-right: 6px;"></i> Progress Peta Tematik</h2>
-                <i data-feather="arrow-left-circle" id="sidebarToggleIcon" style="color: #5f6368; width: 20px; height: 20px;"></i>
-            </div>
-            
-            <div id="sidebarContent">
-                <h3 style="font-size: 0.82rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #5f6368; margin-bottom: 8px;">Data Terbaru</h3>
-                <div style="margin-bottom: 12px;">
-                    <input type="text" id="dashboardSearch" class="form-control" placeholder="Cari Nama/Kecamatan..." style="width: 100%;">
+
+            <!-- VIEW 1: Places list -->
+            <div id="viewList" class="gm-panel-view">
+                <div class="gm-panel-header">
+                    <div>
+                        <h2 class="gm-panel-title">Lokasi Bidang Tanah</h2>
+                        <div id="totalCountBadge" class="gm-count-badge">Memuat data permohonan...</div>
+                    </div>
+                    <button type="button" class="gm-icon-btn-sm" id="sidebarToggle" title="Sembunyikan Panel">
+                        <i data-feather="chevron-left"></i>
+                    </button>
                 </div>
-                <div class="report-list" id="reportList">
-                    <div style="text-align: center; color: #94a3b8; margin-top: 2rem;">
+
+                <div class="report-list gm-place-list" id="reportList">
+                    <div style="text-align: center; color: #5f6368; padding: 2rem 0;">
                         Memuat data permohonan...
                     </div>
                 </div>
-                
-                <!-- Sidebar Pagination -->
-                <div id="sidebarPagination" style="display: none; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid #dadce0;">
-                    <button id="sidePrevBtn" class="btn" style="padding: 4px 10px; font-size: 0.75rem; background: #f8f9fa; border: 1px solid #dadce0; color: #5f6368; border-radius: 20px;" disabled>
-                        <i data-feather="chevron-left" style="width: 14px; height: 14px; vertical-align: middle;"></i>
+
+                <!-- Pagination -->
+                <div id="sidebarPagination" style="display: none; justify-content: space-between; align-items: center; margin-top: 12px; padding: 12px 16px; border-top: 1px solid #dadce0;">
+                    <button id="sidePrevBtn" class="btn gm-page-btn" disabled>
+                        <i data-feather="chevron-left" style="width: 14px; height: 14px;"></i> Sebelumnya
                     </button>
-                    <div style="font-size: 0.75rem; color: #5f6368;" id="sidePaginationInfo">
+                    <div style="font-size: 0.78rem; color: #5f6368; font-weight: 500;" id="sidePaginationInfo">
                         1-5
                     </div>
-                    <button id="sideNextBtn" class="btn" style="padding: 4px 10px; font-size: 0.75rem; background: #f8f9fa; border: 1px solid #dadce0; color: #5f6368; border-radius: 20px;" disabled>
-                        <i data-feather="chevron-right" style="width: 14px; height: 14px; vertical-align: middle;"></i>
+                    <button id="sideNextBtn" class="btn gm-page-btn" disabled>
+                        Berikutnya <i data-feather="chevron-right" style="width: 14px; height: 14px;"></i>
                     </button>
+                </div>
+            </div>
+
+            <!-- VIEW 2: Google Maps Place Detail View -->
+            <div id="viewDetail" class="gm-panel-view" style="display: none;">
+                <div class="gm-detail-top-nav">
+                    <button type="button" id="btnBackToList" class="gm-back-btn">
+                        <i data-feather="arrow-left" style="width: 16px; height: 16px;"></i> <span>Kembali ke Hasil</span>
+                    </button>
+                </div>
+
+                <div class="gm-place-cover">
+                    <div class="gm-cover-gradient"></div>
+                    <div class="gm-cover-content">
+                        <span id="detStatusBadge" class="gm-cover-badge st-verifikasi">Verifikasi</span>
+                        <h2 id="detNamaPemohon" class="gm-detail-title">-</h2>
+                        <p id="detNoPermohonan" class="gm-detail-subtitle">-</p>
+                    </div>
+                </div>
+
+                <!-- Google Maps Circular Action Buttons -->
+                <div class="gm-action-row">
+                    <button type="button" class="gm-round-action" id="btnDetailFly" title="Pusatkan peta ke lokasi ini">
+                        <div class="gm-round-icon"><i data-feather="navigation"></i></div>
+                        <span>Rute</span>
+                    </button>
+                    <button type="button" class="gm-round-action" id="btnDetailPrint" title="Cetak tanda bukti pendaftaran">
+                        <div class="gm-round-icon"><i data-feather="printer"></i></div>
+                        <span>Cetak</span>
+                    </button>
+                    <button type="button" class="gm-round-action" id="btnDetailCopy" title="Salin tautan lokasi">
+                        <div class="gm-round-icon"><i data-feather="share-2"></i></div>
+                        <span>Bagikan</span>
+                    </button>
+                </div>
+
+                <div class="gm-detail-divider"></div>
+
+                <!-- Attributes list -->
+                <div class="gm-attrs-list">
+                    <div class="gm-attr-item">
+                        <div class="gm-attr-icon"><i data-feather="map-pin"></i></div>
+                        <div class="gm-attr-info">
+                            <span class="gm-attr-label">Lokasi / Alamat</span>
+                            <span class="gm-attr-val" id="detAlamat">-</span>
+                        </div>
+                    </div>
+                    <div class="gm-attr-item">
+                        <div class="gm-attr-icon"><i data-feather="file-text"></i></div>
+                        <div class="gm-attr-info">
+                            <span class="gm-attr-label">Jenis & Nomor Hak</span>
+                            <span class="gm-attr-val" id="detHak">-</span>
+                        </div>
+                    </div>
+                    <div class="gm-attr-item">
+                        <div class="gm-attr-icon"><i data-feather="maximize"></i></div>
+                        <div class="gm-attr-info">
+                            <span class="gm-attr-label">Luas Sertipikat</span>
+                            <span class="gm-attr-val" id="detLuas">-</span>
+                        </div>
+                    </div>
+                    <div class="gm-attr-item">
+                        <div class="gm-attr-icon"><i data-feather="tag"></i></div>
+                        <div class="gm-attr-info">
+                            <span class="gm-attr-label">Keadaan Tanah & Keperluan</span>
+                            <span class="gm-attr-val" id="detKeperluan">-</span>
+                        </div>
+                    </div>
+                    <div class="gm-attr-item">
+                        <div class="gm-attr-icon"><i data-feather="user"></i></div>
+                        <div class="gm-attr-info">
+                            <span class="gm-attr-label">Data Pemohon</span>
+                            <span class="gm-attr-val" id="detPemohon">-</span>
+                        </div>
+                    </div>
+                    <div class="gm-attr-item">
+                        <div class="gm-attr-icon"><i data-feather="crosshair"></i></div>
+                        <div class="gm-attr-info">
+                            <span class="gm-attr-label">Koordinat GPS</span>
+                            <span class="gm-attr-val" id="detKoordinat">-</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </aside>
 
         <!-- Toggle Button when sidebar is collapsed (Desktop) -->
-        <button id="floatingSidebarToggle" class="btn" style="display: none;" title="Tampilkan Panel">
-            <i data-feather="menu" style="width: 20px; height: 20px; vertical-align: middle;"></i>
+        <button id="floatingSidebarToggle" class="btn" style="display: none;" title="Tampilkan Hasil Panel">
+            <i data-feather="chevron-right" style="width: 16px; height: 16px; vertical-align: middle;"></i> Buka Panel
         </button>
 
-        <!-- Full-screen Background Map (Google Maps style) -->
+        <!-- 3. Full-bleed Background Map (Google Maps Primary Canvas) -->
         <div class="map-container" id="mapContainer">
             <div id="map"></div>
         </div>
 
-        <!-- Floating Mobile Search Trigger (Google Maps pill) -->
-        <button type="button" class="map-search-trigger" data-sheet-open="sidebarPanel" data-sheet-focus="#dashboardSearch" aria-label="Cari permohonan">
-            <i data-feather="search"></i>
-            <span>Cari nama, kecamatan, atau no. permohonan</span>
-        </button>
+        <!-- 4. Google Maps Bottom-Left Layers Widget (Desktop) -->
+        <div class="gm-layers-widget" id="gmLayersWidget">
+            <button type="button" class="gm-layers-btn" id="btnToggleLayersMenu" title="Pilih lapisan peta (Basemap & Layer Spasial)">
+                <div class="gm-layers-thumb satelit-thumb" id="layerThumbPreview"></div>
+                <span class="gm-layers-label">Lapisan</span>
+            </button>
 
-        <!-- Floating Action Buttons (FAB) for Mobile -->
+            <!-- Layers popup card -->
+            <div class="gm-layers-popup" id="gmLayersPopup" style="display: none;">
+                <div class="gm-layers-popup-header">
+                    <h4>Lapisan Peta</h4>
+                    <button type="button" id="btnCloseLayersPopup" class="gm-icon-btn-sm" title="Tutup">
+                        <i data-feather="x"></i>
+                    </button>
+                </div>
+                <div class="gm-layers-popup-section">
+                    <span class="gm-section-title">Jenis Peta</span>
+                    <div class="gm-basemap-grid">
+                        <div class="gm-basemap-card active" data-basemap="satelit">
+                            <div class="gm-basemap-thumb satelit-thumb"></div>
+                            <span class="gm-basemap-name">Satelit</span>
+                        </div>
+                        <div class="gm-basemap-card" data-basemap="osm">
+                            <div class="gm-basemap-thumb osm-thumb"></div>
+                            <span class="gm-basemap-name">Peta Jalan</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="gm-layers-popup-section">
+                    <span class="gm-section-title">Layer Spasial Tematik</span>
+                    <div id="gmSpatialLayerList" class="gm-spatial-list">
+                        <!-- Populated by app.js -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Desktop Map Tools (Bottom-Right) -->
+        <div class="gm-desktop-tools">
+            <button type="button" class="gm-tool-btn" id="btnCenterProbolinggo" title="Pusatkan ke Kota Probolinggo">
+                <i data-feather="navigation-2"></i>
+            </button>
+            <button type="button" class="gm-tool-btn" id="btnLocateDesktop" title="Lokasi Saya (GPS)">
+                <i data-feather="crosshair"></i>
+            </button>
+        </div>
+
+        <!-- 6. Mobile Floating Action Buttons (FAB Stack) -->
         <div class="map-fab-stack">
             <button type="button" class="map-fab" id="btnOpenLayerSheet" data-sheet-open="mapOverlay" aria-label="Pilih peta dan layer" title="Peta & Layer">
                 <i data-feather="layers"></i>
@@ -136,13 +314,13 @@
             </button>
         </div>
 
-        <!-- Disclaimer Banner -->
+        <!-- 7. Disclaimer Banner (Bottom) -->
         <div class="map-disclaimer">
             <i data-feather="info" style="width: 14px; height: 14px; flex-shrink: 0; color: #f9ab00; margin-top: 1px;"></i>
-            <span><strong>Disclaimer:</strong> Peta ini hanya bersifat sebagai informasi awal. Kantor Pertanahan tidak memberikan jaminan atas ketepatan batas atau luas tanah yang tertera tanpa adanya validasi fisik di lapangan oleh petugas berwenang.</span>
+            <span><strong>Disclaimer:</strong> Peta ini bersifat informasi awal. Validasi fisik batas atau luas tanah tetap diverifikasi langsung oleh petugas berwenang Kantor Pertanahan Kota Probolinggo.</span>
         </div>
-        
-        <!-- Peta & Layer Panel (Floating Card on Desktop, Bottom Sheet on Mobile) -->
+
+        <!-- 8. Mobile Layer Bottom Sheet -->
         <div class="map-overlay mobile-sheet" id="mapOverlay" aria-label="Peta dan layer">
             <div class="sheet-handle" data-sheet-drag>
                 <h3><i data-feather="layers" style="width: 16px; height: 16px; vertical-align: middle;"></i> Peta & Layer</h3>
@@ -150,29 +328,34 @@
                     <i data-feather="x"></i>
                 </button>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; cursor: pointer;" id="overlayToggle">
-                <strong style="color: #202124; font-size: 0.92rem;"><i data-feather="layers" style="width: 16px; height: 16px; vertical-align: middle; color: #1a73e8; margin-right: 6px;"></i> Peta & Layer</strong>
-                <i data-feather="chevron-down" id="overlayIcon" style="width: 16px; height: 16px; color: #5f6368;"></i>
-            </div>
             <div id="overlayContent">
                 <div style="margin-bottom: 1.2rem;">
-                    <label style="font-size: 0.82rem; font-weight: 600; color: #5f6368; display: block; margin-bottom: 8px;"><i data-feather="map" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;"></i> Pilih Peta Dasar (Basemap):</label>
-                    <div style="display: flex; flex-direction: column; gap: 6px;">
-                        <label class="layer-radio"><input type="radio" name="basemap" value="satelit" checked> <span>Citra Satelit (Google)</span></label>
-                        <label class="layer-radio"><input type="radio" name="basemap" value="osm"> <span>Peta Jalan (OSM)</span></label>
+                    <label style="font-size: 0.82rem; font-weight: 600; color: #5f6368; display: block; margin-bottom: 8px;">Pilih Peta Dasar:</label>
+                    <div class="gm-basemap-grid">
+                        <div class="gm-basemap-card active" data-basemap="satelit">
+                            <div class="gm-basemap-thumb satelit-thumb"></div>
+                            <span class="gm-basemap-name">Satelit</span>
+                        </div>
+                        <div class="gm-basemap-card" data-basemap="osm">
+                            <div class="gm-basemap-thumb osm-thumb"></div>
+                            <span class="gm-basemap-name">Peta Jalan</span>
+                        </div>
                     </div>
+                    <!-- Hidden radio inputs for compatibility with existing scripts -->
+                    <input type="radio" name="basemap" value="satelit" checked style="display:none;">
+                    <input type="radio" name="basemap" value="osm" style="display:none;">
                 </div>
 
                 <div>
-                    <label style="font-size: 0.82rem; font-weight: 600; color: #5f6368; display: block; margin-bottom: 8px;"><i data-feather="layers" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;"></i> Layer Spasial (Overlay):</label>
-                    <div id="spatialLayerList" style="display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; padding-right: 4px;">
-                        <!-- Custom SHP layers will appear here -->
+                    <label style="font-size: 0.82rem; font-weight: 600; color: #5f6368; display: block; margin-bottom: 8px;">Layer Spasial (Overlay):</label>
+                    <div id="spatialLayerList" style="display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto;">
+                        <!-- Populated by app.js -->
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Info Bottom Sheet for Mobile -->
+        <!-- 9. Info Bottom Sheet for Mobile -->
         <div id="mapInfoSheet" class="mobile-sheet" aria-label="Informasi peta">
             <div class="sheet-handle" data-sheet-drag>
                 <h3><i data-feather="info" style="width: 16px; height: 16px; vertical-align: middle;"></i> Informasi Peta</h3>
@@ -181,11 +364,12 @@
                 </button>
             </div>
             <div class="map-info-body">
-                <p><strong>Disclaimer:</strong> Peta ini hanya bersifat sebagai informasi awal. Kantor Pertanahan tidak memberikan jaminan atas ketepatan batas atau luas tanah yang tertera tanpa adanya validasi fisik di lapangan oleh petugas berwenang. Penggunaan data di luar ketentuan yang berlaku bukan merupakan tanggung jawab Kantor Pertanahan.</p>
+                <p><strong>Disclaimer:</strong> Peta ini hanya bersifat sebagai informasi awal. Kantor Pertanahan tidak memberikan jaminan atas ketepatan batas atau luas tanah yang tertera tanpa adanya validasi fisik di lapangan oleh petugas berwenang.</p>
                 <p><strong>Sumber data:</strong> Google Satellite, OpenStreetMap, dan layer spasial Kantor Pertanahan.</p>
                 <p><strong>Peta Tematik</strong><br>Kantor Pertanahan Kota Probolinggo</p>
             </div>
         </div>
+
     </main>
 
     <!-- Leaflet JS -->
@@ -199,51 +383,126 @@
     <script src="js/site.js"></script>
     <script>
         feather.replace();
-        document.getElementById('overlayToggle').addEventListener('click', function() {
-            var content = document.getElementById('overlayContent');
-            var icon = document.getElementById('overlayIcon');
-            if (content.style.display === 'none') {
-                content.style.display = 'block';
-                icon.setAttribute('data-feather', 'chevron-down');
-                feather.replace();
-            } else {
-                content.style.display = 'none';
-                icon.setAttribute('data-feather', 'chevron-left');
-                feather.replace();
-            }
-        });
 
-        document.getElementById('sidebarToggle').addEventListener('click', function() {
+        // 1. Drawer open/close
+        const btnOpenDrawer = document.getElementById('btnOpenDrawer');
+        const btnCloseDrawer = document.getElementById('btnCloseDrawer');
+        const gmDrawer = document.getElementById('gmDrawer');
+        const gmDrawerBackdrop = document.getElementById('gmDrawerBackdrop');
+
+        function openDrawer() {
+            if (gmDrawer) gmDrawer.classList.add('open');
+            if (gmDrawerBackdrop) gmDrawerBackdrop.classList.add('active');
+        }
+
+        function closeDrawer() {
+            if (gmDrawer) gmDrawer.classList.remove('open');
+            if (gmDrawerBackdrop) gmDrawerBackdrop.classList.remove('active');
+        }
+
+        if (btnOpenDrawer) btnOpenDrawer.addEventListener('click', openDrawer);
+        if (btnCloseDrawer) btnCloseDrawer.addEventListener('click', closeDrawer);
+        if (gmDrawerBackdrop) gmDrawerBackdrop.addEventListener('click', closeDrawer);
+
+        // 2. Sidebar panel collapse/expand
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const btnToggleSidePanel = document.getElementById('btnToggleSidePanel');
+        const floatingSidebarToggle = document.getElementById('floatingSidebarToggle');
+        const mainContent = document.querySelector('.main-content');
+
+        function togglePanel() {
             if (window.MobileUI && MobileUI.isMobile()) {
-                MobileUI.closeSheets();
+                const sheet = document.getElementById('sidebarPanel');
+                if (sheet && sheet.classList.contains('active')) {
+                    MobileUI.closeSheets();
+                } else {
+                    MobileUI.openSheet('sidebarPanel');
+                }
                 return;
             }
-            document.querySelector('.main-content').classList.add('sidebar-collapsed');
-            document.getElementById('floatingSidebarToggle').style.display = 'block';
+
+            if (mainContent.classList.contains('sidebar-collapsed')) {
+                mainContent.classList.remove('sidebar-collapsed');
+                if (floatingSidebarToggle) floatingSidebarToggle.style.display = 'none';
+            } else {
+                mainContent.classList.add('sidebar-collapsed');
+                if (floatingSidebarToggle) floatingSidebarToggle.style.display = 'block';
+            }
+
             setTimeout(function() { 
                 window.dispatchEvent(new Event('resize')); 
                 if (window.silisaMap) window.silisaMap.invalidateSize();
             }, 300);
+        }
+
+        if (sidebarToggle) sidebarToggle.addEventListener('click', togglePanel);
+        if (btnToggleSidePanel) btnToggleSidePanel.addEventListener('click', togglePanel);
+        if (floatingSidebarToggle) floatingSidebarToggle.addEventListener('click', togglePanel);
+
+        // 3. Desktop Layers Popup toggle
+        const btnToggleLayersMenu = document.getElementById('btnToggleLayersMenu');
+        const btnCloseLayersPopup = document.getElementById('btnCloseLayersPopup');
+        const gmLayersPopup = document.getElementById('gmLayersPopup');
+
+        if (btnToggleLayersMenu && gmLayersPopup) {
+            btnToggleLayersMenu.addEventListener('click', (e) => {
+                e.stopPropagation();
+                gmLayersPopup.style.display = (gmLayersPopup.style.display === 'none') ? 'block' : 'none';
+            });
+        }
+
+        if (btnCloseLayersPopup && gmLayersPopup) {
+            btnCloseLayersPopup.addEventListener('click', (e) => {
+                e.stopPropagation();
+                gmLayersPopup.style.display = 'none';
+            });
+        }
+
+        document.addEventListener('click', (e) => {
+            if (gmLayersPopup && gmLayersPopup.style.display === 'block') {
+                if (!gmLayersPopup.contains(e.target) && !btnToggleLayersMenu.contains(e.target)) {
+                    gmLayersPopup.style.display = 'none';
+                }
+            }
         });
 
-        document.getElementById('floatingSidebarToggle').addEventListener('click', function() {
-            document.querySelector('.main-content').classList.remove('sidebar-collapsed');
-            document.getElementById('floatingSidebarToggle').style.display = 'none';
-            setTimeout(function() { 
-                window.dispatchEvent(new Event('resize')); 
-                if (window.silisaMap) window.silisaMap.invalidateSize();
-            }, 300);
-        });
+        // 4. Center Probolinggo & Locate Desktop
+        const btnCenterProbolinggo = document.getElementById('btnCenterProbolinggo');
+        if (btnCenterProbolinggo) {
+            btnCenterProbolinggo.addEventListener('click', () => {
+                if (window.silisaMap) {
+                    window.silisaMap.flyTo([-7.7543, 113.2159], 14, { animate: true, duration: 1 });
+                }
+            });
+        }
 
-        // Ensure Leaflet map renders immediately without gray tiles
+        const btnLocateDesktop = document.getElementById('btnLocateDesktop');
+        const btnLocate = document.getElementById('btnLocate');
+        if (btnLocateDesktop && btnLocate) {
+            btnLocateDesktop.addEventListener('click', () => {
+                btnLocate.click();
+            });
+        }
+
+        // 5. Mobile Search input triggers sheet on mobile
+        const searchInput = document.getElementById('dashboardSearch');
+        if (searchInput) {
+            searchInput.addEventListener('focus', () => {
+                if (window.MobileUI && MobileUI.isMobile()) {
+                    MobileUI.openSheet('sidebarPanel');
+                }
+            });
+        }
+
+        // 6. Ensure Leaflet map renders immediately without gray tiles
         window.addEventListener('load', function() {
             setTimeout(function() {
                 if (window.silisaMap) window.silisaMap.invalidateSize();
-            }, 200);
+            }, 150);
         });
         setTimeout(function() {
             if (window.silisaMap) window.silisaMap.invalidateSize();
-        }, 500);
+        }, 400);
     </script>
 </body>
 </html>

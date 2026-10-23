@@ -639,40 +639,43 @@
   /* ============================================================
      FLOATING SEARCH BAR — Google Maps signature element
      ============================================================ */
-  .map-search-trigger {
-    display: flex !important;
-    align-items: center !important;
-    gap: 12px;
+  body.map-page .gm-search-container {
     position: fixed !important;
-    top: calc(12px + var(--safe-top)) !important;
-    left: 12px !important;
-    right: 12px !important;
-    z-index: 1500 !important;
-    height: 52px;
-    padding: 0 18px;
-    border: none;
-    border-radius: 26px;
-    background: #ffffff;
-    box-shadow: 0 2px 10px rgba(0,0,0,.22), 0 1px 4px rgba(0,0,0,.12);
-    color: #5f6368;
-    font-family: inherit;
-    font-size: 0.92rem;
-    text-align: left;
-    cursor: pointer;
+    top: calc(8px + var(--safe-top)) !important;
+    left: 8px !important;
+    right: 8px !important;
+    width: auto !important;
+    max-width: none !important;
+    z-index: 2000 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    pointer-events: none !important;
   }
 
-  .map-search-trigger svg {
-    width: 20px;
-    height: 20px;
-    flex-shrink: 0;
-    color: #1a73e8;
+  body.map-page .gm-search-box {
+    pointer-events: auto !important;
+    height: 48px !important;
+    border-radius: 24px !important;
+    padding: 0 6px !important;
+    background: #ffffff !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.22) !important;
   }
 
-  .map-search-trigger span {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    color: #80868b;
+  body.map-page .gm-filter-chips {
+    pointer-events: auto !important;
+    padding: 2px 2px !important;
+  }
+
+  body.map-page .gm-chip {
+    padding: 5px 12px !important;
+    font-size: 0.78rem !important;
+  }
+
+  body.map-page .gm-layers-widget,
+  body.map-page .gm-desktop-tools,
+  body.map-page .map-search-trigger {
+    display: none !important;
   }
 
   /* ============================================================
