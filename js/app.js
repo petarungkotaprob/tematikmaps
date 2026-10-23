@@ -5,69 +5,116 @@
 document.addEventListener('DOMContentLoaded', () => {
     const mobileQuery = window.matchMedia('(max-width: 768px), (max-width: 900px) and (max-height: 500px)');
 
-    // ======== 1. INISIALISASI PETA (LEAFLET.JS) ========
+    // ======== 1. INISIALISASI PETA (LEAFLET.JS - GOOGLE MAPS STYLE) ========
     const mapElement = document.getElementById('map');
     let map;
     
     if (mapElement) {
-        // Koordinat Kota Probolinggo
-        map = L.map('map', { zoomControl: false }).setView([-7.7543, 113.2159], 13);
-        const isMobileView = mobileQuery.matches;
-        L.control.zoom({ position: isMobileView ? 'topright' : 'bottomright' }).addTo(map);
+        // Koordinat Kota Probolinggo persis sesuai format URL Google Maps:
+        // https://www.google.com/maps/@-7.7504036,113.2186935,2870m/data=!3m1!1e3
+        let initialLat = -7.7504036;
+        let initialLng = 113.2186935;
+        let initialZoom = 15;
+
+        // Parse hash jika ada: #@-7.7504036,113.2186935,15z
+        const hashMatch = window.location.hash.match(/@(-?\d+\.\d+),(-?\d+\.\d+),(\d+)z?/);
+        if (hashMatch) {
+            initialLat = parseFloat(hashMatch[1]);
+            initialLng = parseFloat(hashMatch[2]);
+            initialZoom = parseInt(hashMatch[3]);
+        }
+
+        map = L.map('map', { zoomControl: false }).setView([initialLat, initialLng], initialZoom);
         window.silisaMap = map;
 
-        // 1b. Lokasi Saya (mobile FAB)
+        // Update URL hash secara otomatis saat peta digeser / dizoom (persis Google Maps)
+        map.on('moveend', () => {
+            const center = map.getCenter();
+            const z = map.getZoom();
+            const newHash = `@${center.lat.toFixed(7)},${center.lng.toFixed(7)},${z}z`;
+            if (window.history.replaceState) {
+                window.history.replaceState(null, '', `#${newHash}`);
+            }
+        });
+
+        // 1b. Lokasi Saya (GPS)
         const locateBtn = document.getElementById('btnLocate');
-        if (locateBtn) {
-            let locationMarker = null;
-            locateBtn.addEventListener('click', () => {
-                if (!navigator.geolocation) {
-                    alert('Perangkat ini tidak mendukung layanan lokasi.');
-                    return;
-                }
+        const locateDesktopBtn = document.getElementById('btnLocateDesktop');
+        let locationMarker = null;
 
-                const originalIcon = locateBtn.innerHTML;
-                locateBtn.disabled = true;
-                locateBtn.innerHTML = '<i data-feather="loader"></i>';
+        function runGeolocation() {
+            if (!navigator.geolocation) {
+                alert('Perangkat ini tidak mendukung layanan lokasi.');
+                return;
+            }
+
+            const targetBtn = locateBtn || locateDesktopBtn;
+            let originalIcon = '';
+            if (targetBtn) {
+                originalIcon = targetBtn.innerHTML;
+                targetBtn.disabled = true;
+                targetBtn.innerHTML = '<i data-feather="loader"></i>';
                 if (typeof feather !== 'undefined') feather.replace();
+            }
 
-                const resetButton = () => {
-                    locateBtn.disabled = false;
-                    locateBtn.innerHTML = originalIcon;
+            const resetButton = () => {
+                if (targetBtn) {
+                    targetBtn.disabled = false;
+                    targetBtn.innerHTML = originalIcon;
                     if (typeof feather !== 'undefined') feather.replace();
-                };
+                }
+            };
 
-                navigator.geolocation.getCurrentPosition(
-                    position => {
-                        const lat = position.coords.latitude;
-                        const lng = position.coords.longitude;
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
 
-                        if (locationMarker) {
-                            locationMarker.setLatLng([lat, lng]);
-                        } else {
-                            locationMarker = L.circleMarker([lat, lng], {
-                                radius: 9,
-                                color: '#ffffff',
-                                weight: 3,
-                                fillColor: '#1d4ed8',
-                                fillOpacity: 1
-                            }).addTo(map);
-                            locationMarker.bindPopup('Lokasi Anda saat ini');
-                        }
+                    if (locationMarker) {
+                        locationMarker.setLatLng([lat, lng]);
+                    } else {
+                        locationMarker = L.circleMarker([lat, lng], {
+                            radius: 9,
+                            color: '#ffffff',
+                            weight: 3,
+                            fillColor: '#1a73e8',
+                            fillOpacity: 1
+                        }).addTo(map);
+                        locationMarker.bindPopup('Lokasi Anda saat ini');
+                    }
 
-                        map.flyTo([lat, lng], 17, { animate: true, duration: 1 });
-                        locationMarker.openPopup();
-                        resetButton();
-                    },
-                    error => {
-                        resetButton();
-                        alert('Gagal mendapatkan lokasi: ' + error.message);
-                    },
-                    { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 }
-                );
+                    map.flyTo([lat, lng], 17, { animate: true, duration: 1.2 });
+                    locationMarker.openPopup();
+                    resetButton();
+                },
+                error => {
+                    resetButton();
+                    alert('Gagal mendapatkan lokasi: ' + error.message);
+                },
+                { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 }
+            );
+        }
+
+        if (locateBtn) locateBtn.addEventListener('click', runGeolocation);
+        if (locateDesktopBtn) locateDesktopBtn.addEventListener('click', runGeolocation);
+
+        // Google Maps Custom Zoom Buttons
+        const btnZoomIn = document.getElementById('btnZoomIn');
+        const btnZoomOut = document.getElementById('btnZoomOut');
+        if (btnZoomIn) btnZoomIn.addEventListener('click', () => map.zoomIn());
+        if (btnZoomOut) btnZoomOut.addEventListener('click', () => map.zoomOut());
+
+        // Pegman Street View button -> buka Google Street View di koordinat aktif
+        const btnPegman = document.getElementById('btnPegman');
+        if (btnPegman) {
+            btnPegman.addEventListener('click', () => {
+                const c = map.getCenter();
+                const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${c.lat},${c.lng}`;
+                window.open(streetViewUrl, '_blank');
             });
         }
 
+        // Base layer Google Hybrid Satelit (Satelit + Jalan & Label seperti !1e3)
         const osmStandard = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap', maxZoom: 19
         });
@@ -77,6 +124,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         googleSatelite.addTo(map);
+        let activeBasemapKey = 'satelit';
+
         const layers = {
             "satelit": googleSatelite,
             "osm": osmStandard
@@ -88,6 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 1. Basemap Switch Logic (Sync Radio & Google Maps Widget Cards)
         window.setBasemap = function(val) {
+            activeBasemapKey = val;
             const nextLayer = layers[val] || layers.satelit;
             Object.values(layers).forEach(l => map.removeLayer(l));
             if (nextLayer) nextLayer.addTo(map);
@@ -102,11 +152,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 card.classList.toggle('active', card.dataset.basemap === val);
             });
 
-            // Update thumb preview
+            // Di Google Maps saat satelit aktif, tombol kiri bawah menampilkan thumbnail peta default (OSM) dan label 'Peta'
             const thumbPreview = document.getElementById('layerThumbPreview');
+            const thumbLabel = document.querySelector('.gm-layers-label');
             if (thumbPreview) {
-                thumbPreview.className = 'gm-layers-thumb ' + (val === 'satelit' ? 'satelit-thumb' : 'osm-thumb');
+                thumbPreview.className = 'gm-layers-thumb ' + (val === 'satelit' ? 'osm-thumb' : 'satelit-thumb');
             }
+            if (thumbLabel) {
+                thumbLabel.textContent = (val === 'satelit') ? 'Peta' : 'Satelit';
+            }
+        };
+
+        // Quick toggle basemap saat tombol Lapisan kiri bawah diklik langsung
+        window.toggleBasemapMode = function() {
+            window.setBasemap(activeBasemapKey === 'satelit' ? 'osm' : 'satelit');
         };
 
         document.querySelectorAll('input[name="basemap"]').forEach(radio => {

@@ -674,6 +674,8 @@
 
   body.map-page .gm-layers-widget,
   body.map-page .gm-desktop-tools,
+  body.map-page .gm-desktop-controls,
+  body.map-page .gm-bottom-bar,
   body.map-page .map-search-trigger {
     display: none !important;
   }
