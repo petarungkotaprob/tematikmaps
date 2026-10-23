@@ -1141,3 +1141,28 @@ body.dark-mode .panel-open-fab {
   color: #8ab4f8 !important;
 }
 
+/* ============================================================
+   HIDE FLOATING CONTROLS WHEN LAYER SHEET IS OPENED (MOBILE)
+   ============================================================ */
+@media (max-width: 768px) {
+  body.layer-sheet-open .mobile-dock,
+  body.layer-sheet-open .map-fab-stack,
+  body.layer-sheet-open .panel-open-fab,
+  body.layer-sheet-open .gm-search-container,
+  body.layer-sheet-open .mobile-search-pill,
+  body.layer-sheet-open #floatingSidebarToggle,
+  body:has(#mapOverlay.active) .mobile-dock,
+  body:has(#mapOverlay.active) .map-fab-stack,
+  body:has(#mapOverlay.active) .panel-open-fab,
+  body:has(#mapOverlay.active) .gm-search-container,
+  body:has(#mapOverlay.active) .mobile-search-pill,
+  body:has(#mapOverlay.active) #floatingSidebarToggle {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transform: translateY(24px) !important;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s !important;
+  }
+}
+
+

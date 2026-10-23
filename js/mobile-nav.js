@@ -213,6 +213,13 @@
       ensureBackdrop().classList.add('active');
       document.body.classList.add('sheet-open');
     }
+
+    // Toggle layer-sheet-open state to hide floating UI elements when layer sheet is open
+    if (sheet.id === 'mapOverlay' || sheet.classList.contains('map-overlay')) {
+      document.body.classList.add('layer-sheet-open');
+    } else {
+      document.body.classList.remove('layer-sheet-open');
+    }
   }
 
   function closeSheets(immediate) {
@@ -233,6 +240,7 @@
     if (backdrop) backdrop.classList.remove('active');
 
     document.body.classList.remove('sheet-open');
+    document.body.classList.remove('layer-sheet-open');
     activeSheet = null;
 
     if (!immediate && lastFocused && document.contains(lastFocused)) {

@@ -1,22 +1,38 @@
 /**
  * Site branding loader: applies app name, logo and favicon from settings API.
+ * Ensures ALL logo images on all pages stay in sync with system settings.
  */
 (function () {
   'use strict';
 
   function applyBranding(s) {
+    if (!s) return;
     var logo = s.app_logo || 'images/logo.png';
     var favicon = s.app_favicon || logo;
     var name = (s.app_name || 'Peta Tematik').trim();
     var motto = s.app_motto || '';
 
-    document.querySelectorAll('.brand').forEach(function (brand) {
-      var img = brand.querySelector('img');
-      if (img) {
+    // 1. Update ALL logo images everywhere across all pages
+    var logoSelectors = [
+      '.brand img',
+      '.brand-logo',
+      '.app-logo',
+      '.gm-drawer-logo',
+      '.login-logo img',
+      'img[src*="images/logo.png"]',
+      'img[src*="uploads/logo"]',
+      'img[alt*="Logo"]',
+      '#preview_logo'
+    ];
+    document.querySelectorAll(logoSelectors.join(', ')).forEach(function (img) {
+      if (img.src !== logo) {
         img.src = logo;
-        img.alt = name + ' Logo';
       }
+      img.alt = name + ' Logo';
+    });
 
+    // 2. Update Brand text & Motto
+    document.querySelectorAll('.brand').forEach(function (brand) {
       var words = name.split(/\s+/);
       var first = words.shift() || '';
       var rest = words.join(' ');
@@ -38,11 +54,26 @@
       if (mottoEl && motto) mottoEl.textContent = motto;
     });
 
+    // 3. Update Drawer header app name
+    var drawerAppName = document.querySelector('.gm-drawer-app-name');
+    if (drawerAppName) {
+      var dWords = name.split(/\s+/);
+      var dFirst = dWords.shift() || '';
+      var dRest = dWords.join(' ');
+      drawerAppName.innerHTML = dFirst + (dRest ? '<span>' + dRest + '</span>' : '');
+    }
+    var drawerAgency = document.querySelector('.gm-drawer-agency');
+    if (drawerAgency && motto) {
+      drawerAgency.textContent = motto;
+    }
+
+    // 4. Update login motto / subtitle
     if (motto) {
-      var loginMotto = document.querySelector('.login-card > p');
+      var loginMotto = document.querySelector('.login-card > p, .login-subtitle');
       if (loginMotto) loginMotto.textContent = motto;
     }
 
+    // 5. Update title & favicon
     if (document.title.indexOf('Peta Tematik') !== -1) {
       document.title = document.title.replace(/Peta Tematik/g, name);
     }
@@ -55,7 +86,19 @@
     });
   }
 
-  function init() {
+  // Early sync from cache to prevent image flicker
+  try {
+    var cached = JSON.parse(localStorage.getItem('silisa_settings') || 'null');
+    if (cached) {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () { applyBranding(cached); });
+      } else {
+        applyBranding(cached);
+      }
+    }
+  } catch (e) {}
+
+  function fetchLatest() {
     if (!window.fetch) return;
     fetch('api/site-settings.php', { cache: 'no-store' })
       .then(function (res) { return res.json(); })
@@ -67,15 +110,15 @@
       })
       .catch(function () {
         try {
-          var cached = JSON.parse(localStorage.getItem('silisa_settings') || 'null');
-          if (cached) applyBranding(cached);
+          var c = JSON.parse(localStorage.getItem('silisa_settings') || 'null');
+          if (c) applyBranding(c);
         } catch (e) {}
       });
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', fetchLatest);
   } else {
-    init();
+    fetchLatest();
   }
 })();

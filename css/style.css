@@ -202,6 +202,89 @@ body.dark-mode .stat-value, body.dark-mode .stat-val { color: #8ab4f8 !important
 body.dark-mode .btn { color: #bdc1c6 !important; }
 body.dark-mode .btn-primary { background: #8ab4f8 !important; color: #202124 !important; }
 
+/* Dark mode: Tables & data displays */
+body.dark-mode table {
+  background: #2d2e30 !important;
+  color: #e8eaed !important;
+  border-color: #3c4043 !important;
+}
+body.dark-mode th {
+  background: #35373a !important;
+  color: #e8eaed !important;
+  border-color: #3c4043 !important;
+}
+body.dark-mode td {
+  border-color: #3c4043 !important;
+  color: #bdc1c6 !important;
+}
+body.dark-mode tr:hover td {
+  background: #3c4043 !important;
+}
+
+/* Dark mode: Cards on all pages */
+body.dark-mode .tracker-card,
+body.dark-mode .login-card,
+body.dark-mode .report-card,
+body.dark-mode .card,
+body.dark-mode .settings-card,
+body.dark-mode .info-card {
+  background: #2d2e30 !important;
+  border-color: #3c4043 !important;
+  color: #e8eaed !important;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.4) !important;
+}
+
+body.dark-mode .tracker-header,
+body.dark-mode .table-responsive {
+  border-color: #3c4043 !important;
+}
+
+body.dark-mode .tab-btn {
+  background: #3c4043 !important;
+  border-color: #48494b !important;
+  color: #bdc1c6 !important;
+}
+body.dark-mode .tab-btn svg {
+  stroke: #bdc1c6 !important;
+}
+body.dark-mode .tab-btn.active {
+  background: #8ab4f8 !important;
+  color: #202124 !important;
+}
+body.dark-mode .tab-btn.active svg {
+  stroke: #202124 !important;
+}
+
+body.dark-mode .btn-admin-settings {
+  background: rgba(138,180,248,0.12) !important;
+  border-color: rgba(138,180,248,0.3) !important;
+  color: #8ab4f8 !important;
+}
+
+body.dark-mode .upload-zone {
+  background: #35373a !important;
+  border-color: #48494b !important;
+  color: #bdc1c6 !important;
+}
+body.dark-mode .upload-zone:hover {
+  background: #3c4043 !important;
+  border-color: #8ab4f8 !important;
+}
+
+body.dark-mode .modal-content,
+body.dark-mode .modal-body,
+body.dark-mode .modal-header,
+body.dark-mode .modal-footer {
+  background: #2d2e30 !important;
+  border-color: #3c4043 !important;
+  color: #e8eaed !important;
+}
+
+body.dark-mode .admin-top-bar {
+  border-bottom-color: #3c4043 !important;
+}
+
+
 /* Dark mode theme toggle button */
 .gm-theme-toggle {
   width: 40px;
@@ -312,6 +395,190 @@ a { text-decoration: none; }
 
 .nav-links a:hover { background: var(--gm-surface-3); color: var(--gm-text-1); }
 .nav-links a.active { background: var(--gm-active-bg); color: var(--gm-blue); font-weight: 600; }
+
+/* ============================================================
+   NAVBAR USER AREA & DESKTOP TOP-RIGHT USER DROPDOWN
+   ============================================================ */
+.nav-user-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.gm-top-user-wrap {
+  display: none;
+}
+
+@media (min-width: 769px) {
+  .gm-top-user-wrap {
+    display: block;
+    position: fixed;
+    top: var(--top-gap, 12px);
+    right: 12px;
+    z-index: 600;
+  }
+}
+
+.user-profile-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--gm-white, #ffffff);
+  border: 1px solid var(--gm-border, #dadce0);
+  border-radius: 999px;
+  padding: 3px 12px 3px 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--gm-text-1, #202124);
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(60,64,67,0.18);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 42px;
+}
+
+.user-profile-pill:hover {
+  background: var(--gm-surface-2, #f8f9fa);
+  box-shadow: 0 2px 8px rgba(60,64,67,0.24);
+}
+
+.user-avatar-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #1a73e8;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.user-profile-name {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Dropdown menu card */
+.user-dropdown-card {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 240px;
+  background: var(--gm-white, #ffffff);
+  border: 1px solid var(--gm-border, #dadce0);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(60,64,67,0.22);
+  padding: 10px 0;
+  z-index: 1000;
+  display: none;
+  animation: userDropFade 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes userDropFade {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.user-dropdown-card.show {
+  display: block;
+}
+
+.user-dropdown-header {
+  padding: 8px 16px 12px;
+  border-bottom: 1px solid var(--gm-border, #dadce0);
+}
+
+.user-dropdown-header strong {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--gm-text-1, #202124);
+}
+
+.user-role-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: rgba(26,115,232,0.1);
+  color: #1a73e8;
+  margin-top: 4px;
+  text-transform: capitalize;
+}
+
+.user-dropdown-links {
+  padding: 6px 0;
+}
+
+.user-dropdown-links a,
+.user-dropdown-links button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  color: var(--gm-text-2, #3c4043);
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.user-dropdown-links a:hover,
+.user-dropdown-links button:hover {
+  background: var(--gm-surface-2, #f1f3f4);
+  color: var(--gm-text-1, #202124);
+}
+
+.user-dropdown-links a svg,
+.user-dropdown-links button svg {
+  width: 15px;
+  height: 15px;
+  opacity: 0.8;
+}
+
+.user-dropdown-links .dropdown-logout {
+  color: #d93025 !important;
+}
+
+.user-dropdown-links .dropdown-logout:hover {
+  background: rgba(217,48,37,0.08) !important;
+}
+
+/* Dark mode overrides for user dropdown */
+body.dark-mode .user-profile-pill {
+  background: #2d2e30 !important;
+  border-color: #3c4043 !important;
+  color: #e8eaed !important;
+}
+body.dark-mode .user-dropdown-card {
+  background: #2d2e30 !important;
+  border-color: #3c4043 !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
+}
+body.dark-mode .user-dropdown-header {
+  border-bottom-color: #3c4043 !important;
+}
+body.dark-mode .user-dropdown-header strong {
+  color: #e8eaed !important;
+}
+body.dark-mode .user-dropdown-links a,
+body.dark-mode .user-dropdown-links button {
+  color: #bdc1c6 !important;
+}
+body.dark-mode .user-dropdown-links a:hover,
+body.dark-mode .user-dropdown-links button:hover {
+  background: #3c4043 !important;
+  color: #ffffff !important;
+}
 
 /* ============================================================
    4. MAIN CONTENT (non-map pages)
@@ -721,12 +988,12 @@ body.map-page #map {
     height: 18px !important;
   }
 
-  /* Disclaimer bar — sits to the right of sidebar */
+  /* Disclaimer bar — positioned cleanly to the right of the layers button (no overlap) */
   body.map-page .map-disclaimer {
     position: fixed;
-    left: calc(var(--sidebar-w) + 24px);
+    left: calc(var(--sidebar-w) + 96px);
     right: 80px;
-    bottom: 12px;
+    bottom: 16px;
     max-width: none;
     z-index: 300;
     background: rgba(32,33,36,0.88);
@@ -746,14 +1013,14 @@ body.map-page #map {
   /* Hide mobile-only elements on desktop */
   body.map-page .map-fab-stack { display: none !important; }
 
-  /* === FILTER CHIPS: Desktop top-right corner === */
+  /* === FILTER CHIPS: Desktop top-right corner (sits to the left of the user pill) === */
   body.map-page .gm-filter-chips {
     position: fixed !important;
     top: var(--top-gap, 12px) !important;
-    right: 88px !important;
+    right: 210px !important;
     left: auto !important;
     width: auto !important;
-    max-width: calc(100vw - var(--sidebar-w, 360px) - 200px) !important;
+    max-width: calc(100vw - var(--sidebar-w, 360px) - 230px) !important;
     height: var(--search-h, 48px) !important;
     align-items: center !important;
     padding-bottom: 0 !important;
@@ -770,8 +1037,8 @@ body.map-page #map {
    ============================================================ */
 .gm-layers-widget {
   position: fixed;
-  bottom: 32px;
-  left: calc(var(--sidebar-w) + 24px);
+  bottom: 16px;
+  left: calc(var(--sidebar-w) + 20px);
   z-index: 400;
   transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }

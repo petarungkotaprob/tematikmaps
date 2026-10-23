@@ -85,6 +85,7 @@
     <script src="js/auth.js"></script>
     <script src="js/mobile-nav.js"></script>
     <script src="js/site.js"></script>
+    <script src="js/nav.js"></script>
     <script>
         feather.replace();
         const user = JSON.parse(localStorage.getItem('silisa_user')||'null');
@@ -94,7 +95,7 @@
             try{
                 const res = await fetch('api/site-settings.php');
                 const json = await res.json();
-                if(json.status==='success'){
+                if(json.status==='success'){ try{ localStorage.setItem('silisa_settings', JSON.stringify(payload)); }catch(e){}
                     const s=json.settings||{};
                     document.getElementById('app_name').value=s.app_name||'Peta Tematik';
                     document.getElementById('app_motto').value=s.app_motto||'';
@@ -147,7 +148,7 @@
             try{
                 const res=await fetch('api/site-settings.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
                 const json=await res.json();
-                if(json.status==='success'){
+                if(json.status==='success'){ try{ localStorage.setItem('silisa_settings', JSON.stringify(payload)); }catch(e){}
                     msg.style.color='#22c55e'; msg.innerText=json.message; msg.style.display='block';
                     setTimeout(()=>location.reload(),1000);
                 }else throw new Error(json.message);

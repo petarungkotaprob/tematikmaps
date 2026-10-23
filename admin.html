@@ -187,18 +187,93 @@
         body.dark-mode .admin-bm-meta, body.dark-mode .admin-perm-sub, body.dark-mode .admin-ctrl-item label { color: #9aa0a6; }
 
         @media (max-width: 768px) {
+            .admin-container {
+                margin: 0.75rem auto;
+                padding: 0 10px;
+            }
+            .admin-top-bar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+                padding-bottom: 8px;
+            }
+            .btn-admin-settings {
+                justify-content: center;
+                width: 100%;
+            }
             .admin-user-grid {
                 grid-template-columns: 1fr;
             }
             .admin-user-grid button {
                 width: 100%;
             }
-            .admin-container {
-                margin: 1rem auto;
-                padding: 0 12px;
+            .file-item, .user-item {
+                padding: 0.75rem 0.85rem;
+                border-radius: 8px;
+                gap: 8px;
             }
-            .admin-actions { flex-wrap: wrap; }
-            .admin-ctrl-row { gap: 6px; padding: 6px 10px; }
+            .admin-perm-header {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 8px !important;
+                margin-bottom: 6px !important;
+            }
+            .admin-perm-info {
+                width: 100% !important;
+            }
+            .admin-actions {
+                display: flex !important;
+                flex-wrap: wrap !important;
+                gap: 6px !important;
+                width: 100% !important;
+                border-top: 1px dashed var(--gm-border, #dadce0);
+                padding-top: 8px;
+                margin-top: 2px;
+            }
+            .admin-actions .btn,
+            .admin-actions a.btn,
+            .admin-actions .cat-toggle-btn {
+                flex: 1 1 auto !important;
+                justify-content: center !important;
+                text-align: center !important;
+                padding: 5px 8px !important;
+                font-size: 0.76rem !important;
+                height: 32px !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                gap: 4px !important;
+            }
+            .admin-ctrl-row {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 6px 10px !important;
+                padding: 8px !important;
+                border-radius: 6px !important;
+            }
+            .admin-ctrl-item {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                gap: 6px !important;
+            }
+            .admin-ctrl-item label {
+                font-size: 0.74rem !important;
+                flex-shrink: 0;
+            }
+            .admin-ctrl-item select,
+            .admin-ctrl-item input[type="number"] {
+                flex: 1 !important;
+                width: 100% !important;
+                max-width: 90px !important;
+                height: 28px !important;
+                padding: 2px 4px !important;
+                font-size: 0.76rem !important;
+            }
+            .admin-ctrl-item input[type="color"] {
+                width: 32px !important;
+                height: 28px !important;
+                flex-shrink: 0 !important;
+            }
         }
 
         /* === Category Panel (admin) === */
@@ -405,6 +480,7 @@
     <script src="js/auth.js"></script>
     <script src="js/mobile-nav.js"></script>
     <script src="js/site.js"></script>
+    <script src="js/nav.js"></script>
     <script>
         feather.replace();
 
