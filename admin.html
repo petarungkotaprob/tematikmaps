@@ -186,7 +186,60 @@
         body.dark-mode .admin-bm-name, body.dark-mode .admin-perm-name { color: #e8eaed; }
         body.dark-mode .admin-bm-meta, body.dark-mode .admin-perm-sub, body.dark-mode .admin-ctrl-item label { color: #9aa0a6; }
 
+        /* Admin Permohonan Table */
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border: 1px solid var(--gm-border, #dadce0);
+            border-radius: 8px;
+            background: var(--gm-white, #ffffff);
+            margin-top: 1rem;
+        }
+        #adminPermTable {
+            width: 100%;
+            min-width: 820px;
+            border-collapse: collapse;
+        }
+        #adminPermTable th {
+            background: var(--gm-surface-2, #f8f9fa);
+            border-bottom: 1px solid var(--gm-border, #dadce0);
+            padding: 10px 14px;
+            font-size: 0.82rem;
+            color: var(--gm-text-2, #5f6368);
+            font-weight: 600;
+        }
+        #adminPermTable td {
+            border-bottom: 1px solid var(--gm-border, #dadce0);
+            color: var(--gm-text-1, #202124);
+        }
+        #adminPermTable tr:hover td:not([colspan]) {
+            background: var(--gm-surface-2, #f8f9fa);
+        }
+        body.dark-mode .table-container {
+            background: #202124;
+            border-color: #3c4043;
+        }
+        body.dark-mode #adminPermTable th {
+            background: #2d2e30;
+            border-bottom-color: #3c4043;
+            color: #e8eaed;
+        }
+        body.dark-mode #adminPermTable td {
+            border-bottom-color: #3c4043;
+            color: #bdc1c6;
+        }
+        body.dark-mode #adminPermTable tr:hover td:not([colspan]) {
+            background: #2d2e30;
+        }
+
         @media (max-width: 768px) {
+            #adminPermTable {
+                min-width: 720px;
+            }
+            #adminPermTable th, #adminPermTable td {
+                padding: 8px 10px;
+                font-size: 0.78rem;
+            }
             .admin-container {
                 margin: 0.75rem auto;
                 padding: 0 10px;
@@ -465,11 +518,22 @@
                     <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px;">
                         <i data-feather="file-text" style="color: var(--accent-orange)"></i> Manajemen Permohonan
                     </h2>
-                    <p style="color: var(--text-secondary); margin-bottom: 2rem;">Daftar seluruh data permohonan yang dapat dihapus jika terdapat kesalahan fatal.</p>
+                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Daftar seluruh data permohonan yang dapat dikelola status dan layer spasialnya.</p>
                     
-                    <div class="user-list" id="permohonanList">
-                        <!-- Permohonan items appear here -->
-                        <p class="text-center">Memuat data permohonan...</p>
+                    <div class="table-container" style="overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--gm-border, #dadce0); border-radius: 8px; margin-top: 1rem; background: var(--gm-white, #ffffff);">
+                        <table style="width: 100%; min-width: 820px; border-collapse: collapse;" id="adminPermTable">
+                            <thead>
+                                <tr style="background: var(--gm-surface-2, #f8f9fa); border-bottom: 1px solid var(--gm-border, #dadce0);">
+                                    <th style="padding: 10px 14px; font-size: 0.82rem; text-align: left; white-space: nowrap; color: var(--gm-text-2, #5f6368); font-weight: 600;">No. Permohonan</th>
+                                    <th style="padding: 10px 14px; font-size: 0.82rem; text-align: left; white-space: nowrap; color: var(--gm-text-2, #5f6368); font-weight: 600;">Pemohon & Lokasi</th>
+                                    <th style="padding: 10px 14px; font-size: 0.82rem; text-align: left; white-space: nowrap; color: var(--gm-text-2, #5f6368); font-weight: 600;">Pengaturan Layer</th>
+                                    <th style="padding: 10px 14px; font-size: 0.82rem; text-align: center; white-space: nowrap; color: var(--gm-text-2, #5f6368); font-weight: 600;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="permohonanList">
+                                <tr><td colspan="4" style="text-align:center; padding: 2rem; color: #5f6368;">Memuat data permohonan...</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -527,7 +591,7 @@
             const list = document.getElementById('permohonanList');
             list.innerHTML = '';
             if (data.length === 0) {
-                list.innerHTML = '<p style="text-align:center;color:#5f6368;padding:2rem;">Belum ada data permohonan.</p>';
+                list.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#5f6368;padding:2rem;">Belum ada data permohonan.</td></tr>';
                 return;
             }
             data.forEach(item => {
@@ -540,95 +604,109 @@
                 };
                 const sc = statusMap[status] || statusMap.pending;
 
-                const div = document.createElement('div');
-                div.className = 'file-item';
-                div.id = `perm-item-${item.id}`;
-                div.style.flexDirection = 'column';
-                div.style.alignItems = 'stretch';
-                div.innerHTML = `
-                    <div class="admin-perm-header">
-                        <div class="admin-perm-info">
-                            <div class="admin-perm-name">
-                                <span>${item.no_permohonan || '-'}</span>
-                                <span class="perm-status-badge" style="background:${sc.bg};color:${sc.color};border:1px solid ${sc.border};">${sc.label}</span>
+                const tr = document.createElement('tr');
+                tr.id = `perm-item-${item.id}`;
+                tr.style.borderBottom = '1px solid var(--gm-border, #dadce0)';
+                tr.innerHTML = `
+                    <td style="padding: 10px 14px; vertical-align: top; white-space: nowrap;">
+                        <div style="font-weight: 600; font-size: 0.88rem; color: var(--gm-text-1, #202124);">${item.no_permohonan || '-'}</div>
+                        <div style="margin-top: 4px;">
+                            <span class="perm-status-badge" style="background:${sc.bg};color:${sc.color};border:1px solid ${sc.border};">${sc.label}</span>
+                        </div>
+                        <div style="font-size: 0.72rem; color: var(--gm-text-3, #5f6368); margin-top: 4px;">
+                            <i data-feather="calendar" style="width:10px;height:10px;vertical-align:middle;"></i> ${item.created_at ? item.created_at.substring(0,10) : '-'}
+                        </div>
+                    </td>
+                    <td style="padding: 10px 14px; vertical-align: top; white-space: nowrap;">
+                        <div style="font-weight: 500; font-size: 0.85rem; color: var(--gm-text-1, #202124);">
+                            <i data-feather="user" style="width:11px;height:11px;vertical-align:middle;"></i> ${item.nama_pemohon || '-'}
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--gm-text-3, #5f6368); margin-top: 3px;">
+                            <i data-feather="map-pin" style="width:11px;height:11px;vertical-align:middle;"></i> ${item.kecamatan || '-'}, ${item.kelurahan || '-'}
+                        </div>
+                    </td>
+                    <td style="padding: 10px 14px; vertical-align: middle;">
+                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 4px;">
+                                <label style="font-size: 0.74rem; color: var(--gm-text-3, #5f6368); white-space: nowrap;">Status:</label>
+                                <select id="status_${item.id}" class="form-control" style="padding:2px 6px;width:auto;font-size:0.78rem;height:28px;">
+                                    <option value="pending" ${status==='pending' ? 'selected':''}>Pending</option>
+                                    <option value="proses"  ${status==='proses'  ? 'selected':''}>Proses</option>
+                                    <option value="selesai" ${status==='selesai' ? 'selected':''}>Selesai</option>
+                                    <option value="ditolak" ${status==='ditolak' ? 'selected':''}>Ditolak</option>
+                                </select>
                             </div>
-                            <div class="admin-perm-sub">
-                                <span><i data-feather="user" style="width:10px;height:10px;"></i> ${item.nama_pemohon || '-'}</span>
-                                <span style="color:#dadce0;">·</span>
-                                <span><i data-feather="map-pin" style="width:10px;height:10px;"></i> ${item.kecamatan || '-'}, ${item.kelurahan || '-'}</span>
-                                <span style="color:#dadce0;">·</span>
-                                <span><i data-feather="calendar" style="width:10px;height:10px;"></i> ${item.created_at ? item.created_at.substring(0,10) : '-'}</span>
+                            <div style="display: flex; align-items: center; gap: 4px;">
+                                <label style="font-size: 0.74rem; color: var(--gm-text-3, #5f6368);">Warna:</label>
+                                <input type="color" id="perm_color_${item.id}" value="${item.color || '#3b82f6'}" style="width:26px;height:26px;padding:0;border:none;border-radius:3px;cursor:pointer;background:transparent;">
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 4px;">
+                                <label style="font-size: 0.74rem; color: var(--gm-text-3, #5f6368);">Tipe:</label>
+                                <select id="perm_fill_${item.id}" class="form-control" style="padding:2px 6px;width:auto;font-size:0.78rem;height:28px;">
+                                    <option value="fill"   ${(item.fill_type||'fill')==='fill'   ? 'selected':''}>Fill</option>
+                                    <option value="hollow" ${(item.fill_type||'fill')==='hollow' ? 'selected':''}>Hollow</option>
+                                </select>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 4px;">
+                                <label style="font-size: 0.74rem; color: var(--gm-text-3, #5f6368);">Tebal:</label>
+                                <input type="number" id="perm_weight_${item.id}" class="form-control" value="${item.weight || 2}" min="1" max="10" style="padding:2px 4px;width:44px;font-size:0.78rem;height:28px;">
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 4px;">
+                                <label style="font-size: 0.74rem; color: var(--gm-text-3, #5f6368);">Garis:</label>
+                                <select id="perm_dash_${item.id}" class="form-control" style="padding:2px 6px;width:auto;font-size:0.78rem;height:28px;">
+                                    <option value=""    ${!(item.dash_array) ? 'selected':''}>Solid</option>
+                                    <option value="5,5" ${item.dash_array==='5,5' ? 'selected':''}>Putus</option>
+                                    <option value="10,5" ${item.dash_array==='10,5' ? 'selected':''}>Panjang</option>
+                                </select>
                             </div>
                         </div>
-                        <div class="admin-actions">
+                    </td>
+                    <td style="padding: 10px 14px; vertical-align: middle; text-align: center; white-space: nowrap;">
+                        <div style="display: inline-flex; gap: 6px; align-items: center;">
                             ${item.shp_file ? `
-                                <button class="cat-toggle-btn ${item.category_field ? 'active' : ''}" id="permCatToggle_${item.id}" onclick="togglePermCatPanel(${item.id})" title="Warna Kategori SHP">
+                                <button class="cat-toggle-btn ${item.category_field ? 'active' : ''}" id="permCatToggle_${item.id}" onclick="togglePermCatPanel(${item.id})" title="Warna Kategori SHP" style="padding: 4px 8px; font-size: 0.75rem;">
                                     <i data-feather="sliders" style="width:12px;height:12px;"></i>
                                 </button>
-                                <a href="${item.shp_file}" download class="btn" style="padding:4px 10px;font-size:0.78rem;background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.2);" title="Download SHP">
+                                <a href="${item.shp_file}" download class="btn" style="padding:4px 8px;font-size:0.75rem;background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.2);" title="Download SHP">
                                     <i data-feather="download" style="width:12px;height:12px;"></i>
                                 </a>
                             ` : ''}
-                            <button class="btn" style="padding:4px 12px;font-size:0.78rem;background:rgba(26,115,232,0.1);color:#1a73e8;border:1px solid rgba(26,115,232,0.2);" onclick="savePermStatus(${item.id})" title="Simpan">
-                                <i data-feather="save" style="width:12px;height:12px;"></i>
+                            <button class="btn btn-primary" style="padding:4px 10px;font-size:0.75rem;" onclick="savePermStatus(${item.id})" title="Simpan">
+                                <i data-feather="save" style="width:12px;height:12px;"></i> Simpan
                             </button>
-                            <button class="btn" style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2);padding:4px 10px;font-size:0.78rem;" onclick="deletePermohonan(${item.id})" title="Hapus">
+                            <button class="btn" style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2);padding:4px 8px;font-size:0.75rem;" onclick="deletePermohonan(${item.id})" title="Hapus">
                                 <i data-feather="trash-2" style="width:12px;height:12px;"></i>
                             </button>
                         </div>
-                    </div>
-                    <div class="admin-ctrl-row">
-                        <div class="admin-ctrl-item">
-                            <label>Status:</label>
-                            <select id="status_${item.id}" class="form-control" style="padding:3px 6px;width:auto;font-size:0.78rem;height:28px;">
-                                <option value="pending" ${status==='pending' ? 'selected':''}>Pending</option>
-                                <option value="proses"  ${status==='proses'  ? 'selected':''}>Proses</option>
-                                <option value="selesai" ${status==='selesai' ? 'selected':''}>Selesai</option>
-                                <option value="ditolak" ${status==='ditolak' ? 'selected':''}>Ditolak</option>
-                            </select>
-                        </div>
-                        <div class="admin-ctrl-item">
-                            <label>Warna:</label>
-                            <input type="color" id="perm_color_${item.id}" value="${item.color || '#3b82f6'}" style="width:26px;height:26px;padding:0;border:none;border-radius:3px;cursor:pointer;background:transparent;">
-                        </div>
-                        <div class="admin-ctrl-item">
-                            <label>Tipe:</label>
-                            <select id="perm_fill_${item.id}" class="form-control" style="padding:3px 6px;width:auto;font-size:0.78rem;height:28px;">
-                                <option value="fill"   ${(item.fill_type||'fill')==='fill'   ? 'selected':''}>Fill</option>
-                                <option value="hollow" ${(item.fill_type||'fill')==='hollow' ? 'selected':''}>Hollow</option>
-                            </select>
-                        </div>
-                        <div class="admin-ctrl-item">
-                            <label>Tebal:</label>
-                            <input type="number" id="perm_weight_${item.id}" class="form-control" value="${item.weight || 2}" min="1" max="10" style="padding:3px;width:50px;font-size:0.78rem;height:28px;">
-                        </div>
-                        <div class="admin-ctrl-item">
-                            <label>Garis:</label>
-                            <select id="perm_dash_${item.id}" class="form-control" style="padding:3px 6px;width:auto;font-size:0.78rem;height:28px;">
-                                <option value=""    ${!(item.dash_array) ? 'selected':''}>Solid</option>
-                                <option value="5,5" ${item.dash_array==='5,5' ? 'selected':''}>Putus</option>
-                                <option value="10,5" ${item.dash_array==='10,5' ? 'selected':''}>Panjang</option>
-                            </select>
-                        </div>
-                    </div>
-                    ${item.shp_file ? `
-                    <div class="cat-admin-panel">
-                        <div class="cat-admin-title">
-                            <i data-feather="sliders" style="width:12px;height:12px;"></i> Pengaturan Warna Kategori SHP
-                        </div>
-                        <div class="cat-admin-body" id="permCatBody_${item.id}">
-                            <div class="cat-loading" id="permCatLoading_${item.id}">Klik tombol warna kategori untuk memuat atribut SHP...</div>
-                            <select id="permCatField_${item.id}" class="form-control cat-field-select" style="font-size:0.82rem;margin-bottom:10px;display:none;"></select>
-                            <div class="admin-palette-row" id="permCatPalette_${item.id}" style="display:none;"></div>
-                            <div class="admin-cat-values" id="permCatValues_${item.id}"></div>
-                            <button type="button" class="btn-save-cat" id="btnSavePermCat_${item.id}" style="display:none;" onclick="savePermCategory(${item.id})">
-                                <i data-feather="save" style="width:14px;height:14px;"></i> Simpan Konfigurasi Warna
-                            </button>
-                        </div>
-                    </div>
-                    ` : ''}
+                    </td>
                 `;
-                // Restore saved category state if exists
+                list.appendChild(tr);
+
+                if (item.shp_file) {
+                    const catTr = document.createElement('tr');
+                    catTr.id = `catRow_${item.id}`;
+                    catTr.style.display = 'none';
+                    catTr.innerHTML = `
+                        <td colspan="4" style="background: var(--gm-surface-2, #f8f9fa); padding: 12px 16px; border-bottom: 1px solid var(--gm-border, #dadce0);">
+                            <div class="cat-admin-panel" style="margin-top:0; border-top:none; padding-top:0;">
+                                <div class="cat-admin-title">
+                                    <i data-feather="sliders" style="width:12px;height:12px;"></i> Pengaturan Warna Kategori SHP (${item.no_permohonan || '-'})
+                                </div>
+                                <div class="cat-admin-body" id="permCatBody_${item.id}">
+                                    <div class="cat-loading" id="permCatLoading_${item.id}">Klik tombol warna kategori untuk memuat atribut SHP...</div>
+                                    <select id="permCatField_${item.id}" class="form-control cat-field-select" style="font-size:0.82rem;margin-bottom:10px;display:none;"></select>
+                                    <div class="admin-palette-row" id="permCatPalette_${item.id}" style="display:none;"></div>
+                                    <div class="admin-cat-values" id="permCatValues_${item.id}"></div>
+                                    <button type="button" class="btn-save-cat" id="btnSavePermCat_${item.id}" style="display:none;" onclick="savePermCategory(${item.id})">
+                                        <i data-feather="save" style="width:14px;height:14px;"></i> Simpan Konfigurasi Warna
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    `;
+                    list.appendChild(catTr);
+                }
+
                 if (item.category_field && item.category_colors) {
                     try {
                         const saved = typeof item.category_colors === 'string' ? JSON.parse(item.category_colors) : item.category_colors;
@@ -637,7 +715,6 @@
                 } else if (item.shp_file) {
                     _permCatState[item.id] = _permCatState[item.id] || { field: null, colors: {}, filePath: item.shp_file };
                 }
-                list.appendChild(div);
             });
             feather.replace();
         }
@@ -690,11 +767,18 @@
         async function togglePermCatPanel(id) {
             const body = document.getElementById(`permCatBody_${id}`);
             const btn  = document.getElementById(`permCatToggle_${id}`);
+            const row  = document.getElementById(`catRow_${id}`);
             if (!body) return;
             const isOpen = body.classList.contains('open');
-            if (isOpen) { body.classList.remove('open'); btn.classList.remove('active'); return; }
+            if (isOpen) {
+                body.classList.remove('open');
+                if (btn) btn.classList.remove('active');
+                if (row) row.style.display = 'none';
+                return;
+            }
             body.classList.add('open');
-            btn.classList.add('active');
+            if (btn) btn.classList.add('active');
+            if (row) row.style.display = 'table-row';
 
             if (_permShpCache[id]) { buildPermCatUI(id); return; }
 

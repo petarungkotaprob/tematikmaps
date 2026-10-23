@@ -1,11 +1,11 @@
-const CACHE_NAME = 'tematikmap-v11';
+const CACHE_NAME = 'tematikmap-v12';
 const ASSETS = [
     './',
     './index.html',
-    './portal.html',
     './dashboard.html',
     './report.html',
     './tracker.html',
+    './laporan.html',
     './login.html',
     './admin.html',
     './settings.html',

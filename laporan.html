@@ -16,6 +16,8 @@
     <style>
         body.tracker-page {
             background: #f8f9fa;
+            color: #202124;
+            transition: background-color 0.2s, color 0.2s;
         }
         .laporan-container { max-width: 1200px; margin: 24px auto; padding: 0 16px; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 24px; }
@@ -28,8 +30,13 @@
             display: flex;
             align-items: center;
             gap: 14px;
+            transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
         }
         .stat-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .stat-icon.icon-blue { background: #e8f0fe; color: #1a73e8; }
+        .stat-icon.icon-yellow { background: #fef7e0; color: #b06000; }
+        .stat-icon.icon-green { background: #e6f4ea; color: #137333; }
+
         .stat-val { font-size: 1.85rem; font-weight: 700; color: #202124; line-height: 1; margin-bottom: 4px; }
         .stat-lbl { color: #5f6368; font-size: 0.82rem; font-weight: 500; }
         
@@ -40,6 +47,29 @@
             padding: 24px;
             box-shadow: 0 1px 3px rgba(60,64,67,0.12);
             margin-bottom: 24px;
+            transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+        }
+        .laporan-header-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #e8f0fe;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1a73e8;
+            flex-shrink: 0;
+        }
+        .laporan-title {
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #202124;
+        }
+        .laporan-desc {
+            margin: 4px 0 0 0;
+            color: #5f6368;
+            font-size: 0.85rem;
         }
         .table-wrap {
             overflow-x: auto;
@@ -47,13 +77,13 @@
             border-radius: 8px;
             -webkit-overflow-scrolling: touch;
         }
-        table { width: 100%; border-collapse: collapse; background: #ffffff; font-size: 0.88rem; }
+        table { width: 100%; border-collapse: collapse; background: #ffffff; font-size: 0.88rem; min-width: 760px; }
         th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid #dadce0; }
-        th { background: #f8f9fa; color: #5f6368; font-weight: 600; text-transform: uppercase; font-size: 0.74rem; letter-spacing: .05em; }
+        th { background: #f8f9fa; color: #5f6368; font-weight: 600; text-transform: uppercase; font-size: 0.74rem; letter-spacing: .05em; white-space: nowrap; }
         tr:last-child td { border-bottom: none; }
         tr:hover td { background: #f8f9fa; }
         
-        .badge { display: inline-flex; padding: 3px 10px; border-radius: 99px; font-size: 0.74rem; font-weight: 600; }
+        .badge { display: inline-flex; padding: 3px 10px; border-radius: 99px; font-size: 0.74rem; font-weight: 600; white-space: nowrap; }
         .badge-pending { background: #f1f3f4; color: #5f6368; border: 1px solid #dadce0; }
         .badge-verif { background: #fef7e0; color: #b06000; border: 1px solid #feefc3; }
         .badge-selesai { background: #e6f4ea; color: #137333; border: 1px solid #ceead6; }
@@ -76,10 +106,114 @@
             background: #f8f9fa;
             border-color: #a8c7fa;
         }
+
+        /* ===== DARK MODE ===== */
+        body.dark-mode.tracker-page {
+            background: #1e1f21 !important;
+            color: #e8eaed !important;
+        }
+        body.dark-mode .laporan-card {
+            background: #282a2d !important;
+            border-color: #3c4043 !important;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.4) !important;
+        }
+        body.dark-mode .stat-card {
+            background: #282a2d !important;
+            border-color: #3c4043 !important;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.4) !important;
+        }
+        body.dark-mode .stat-val {
+            color: #e8eaed !important;
+        }
+        body.dark-mode .stat-lbl {
+            color: #9aa0a6 !important;
+        }
+        body.dark-mode .stat-icon.icon-blue {
+            background: rgba(138, 180, 248, 0.18) !important;
+            color: #8ab4f8 !important;
+        }
+        body.dark-mode .stat-icon.icon-yellow {
+            background: rgba(253, 214, 99, 0.18) !important;
+            color: #fdd663 !important;
+        }
+        body.dark-mode .stat-icon.icon-green {
+            background: rgba(129, 201, 149, 0.18) !important;
+            color: #81c995 !important;
+        }
+        body.dark-mode .laporan-header-icon {
+            background: rgba(138, 180, 248, 0.18) !important;
+            color: #8ab4f8 !important;
+        }
+        body.dark-mode .laporan-title,
+        body.dark-mode .laporan-card h2,
+        body.dark-mode .laporan-card h3 {
+            color: #e8eaed !important;
+        }
+        body.dark-mode .laporan-desc {
+            color: #9aa0a6 !important;
+        }
+        body.dark-mode .table-wrap {
+            border-color: #3c4043 !important;
+        }
+        body.dark-mode table {
+            background: #282a2d !important;
+            color: #e8eaed !important;
+        }
+        body.dark-mode th {
+            background: #35373a !important;
+            color: #e8eaed !important;
+            border-bottom-color: #3c4043 !important;
+        }
+        body.dark-mode td {
+            border-bottom-color: #3c4043 !important;
+            color: #bdc1c6 !important;
+        }
+        body.dark-mode tr:hover td {
+            background: #35373a !important;
+        }
+        body.dark-mode .btn-print {
+            background: #2d2e30 !important;
+            border-color: #3c4043 !important;
+            color: #8ab4f8 !important;
+        }
+        body.dark-mode .btn-print:hover {
+            background: #383a3d !important;
+            border-color: #8ab4f8 !important;
+        }
+        body.dark-mode .badge-pending {
+            background: #3c4043 !important;
+            color: #bdc1c6 !important;
+            border-color: #48494b !important;
+        }
+        body.dark-mode .badge-verif {
+            background: rgba(251, 192, 45, 0.16) !important;
+            color: #fdd663 !important;
+            border-color: rgba(251, 192, 45, 0.3) !important;
+        }
+        body.dark-mode .badge-selesai {
+            background: rgba(129, 201, 149, 0.16) !important;
+            color: #81c995 !important;
+            border-color: rgba(129, 201, 149, 0.3) !important;
+        }
+        body.dark-mode .filter-bar .form-control {
+            background: #3c4043 !important;
+            border-color: #48494b !important;
+            color: #e8eaed !important;
+        }
+        body.dark-mode .filter-bar .form-control::placeholder {
+            color: #9aa0a6 !important;
+        }
+        body.dark-mode #laporanEmpty {
+            color: #9aa0a6 !important;
+        }
+
         @media print {
             .navbar, .btn-print, .filter-bar { display: none !important; }
             .laporan-container { max-width: 100%; margin: 0; padding: 0; }
-            .laporan-card, .stat-card { box-shadow: none; border: 1px solid #ccc; }
+            .laporan-card, .stat-card { box-shadow: none; border: 1px solid #ccc; background: #fff !important; color: #000 !important; }
+            table { background: #fff !important; color: #000 !important; }
+            th { background: #eee !important; color: #000 !important; }
+            td { color: #000 !important; }
         }
         @media (max-width: 768px) {
             .laporan-card { padding: 16px; }
@@ -109,12 +243,12 @@
             <div class="laporan-card animated">
                 <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:1.5rem;">
                     <div style="display:flex; align-items:center; gap:12px;">
-                        <div style="width: 44px; height: 44px; border-radius: 50%; background: #e8f0fe; display: flex; align-items: center; justify-content: center; color: #1a73e8;">
+                        <div class="laporan-header-icon">
                             <i data-feather="bar-chart-2" style="width:22px;height:22px;"></i>
                         </div>
                         <div>
-                            <h2 style="margin:0; font-size:1.3rem; font-weight:600; color:#202124;">Laporan Rekap Permohonan Tanah</h2>
-                            <p style="margin:4px 0 0 0; color:#5f6368; font-size:0.85rem;">Ringkasan statistik dan rekap status berkas pendaftaran tanah Kota Probolinggo</p>
+                            <h2 class="laporan-title">Laporan Rekap Permohonan Tanah</h2>
+                            <p class="laporan-desc">Ringkasan statistik dan rekap status berkas pendaftaran tanah Kota Probolinggo</p>
                         </div>
                     </div>
                     <button class="btn-print" onclick="window.print()">
@@ -124,7 +258,7 @@
 
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-icon" style="background:#e8f0fe; color:#1a73e8;">
+                        <div class="stat-icon icon-blue">
                             <i data-feather="file-text"></i>
                         </div>
                         <div>
@@ -133,7 +267,7 @@
                         </div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon" style="background:#fef7e0; color:#b06000;">
+                        <div class="stat-icon icon-yellow">
                             <i data-feather="clock"></i>
                         </div>
                         <div>
@@ -142,7 +276,7 @@
                         </div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon" style="background:#e8f0fe; color:#1a73e8;">
+                        <div class="stat-icon icon-blue">
                             <i data-feather="check-circle"></i>
                         </div>
                         <div>
@@ -151,7 +285,7 @@
                         </div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon" style="background:#e6f4ea; color:#137333;">
+                        <div class="stat-icon icon-green">
                             <i data-feather="award"></i>
                         </div>
                         <div>

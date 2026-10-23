@@ -101,11 +101,11 @@
         active: page === 'tracker.html'
       },
       {
-        href: 'portal.html',
+        href: 'report.html',
         icon: 'plus',
         label: 'Input',
         center: true,
-        active: page === 'portal.html'
+        active: page === 'report.html'
       },
       {
         href: 'laporan.html',

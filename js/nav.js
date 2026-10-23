@@ -74,8 +74,7 @@
         { href: 'dashboard.html', label: 'Peta Tematik', id: 'dashboard.html' },
         { href: 'tracker.html', label: 'Daftar Permohonan', id: 'tracker.html' },
         { href: 'report.html', label: 'Input Lahan', id: 'report.html' },
-        { href: 'laporan.html', label: 'Laporan', id: 'laporan.html' },
-        { href: 'portal.html', label: 'Portal', id: 'portal.html' }
+        { href: 'laporan.html', label: 'Laporan', id: 'laporan.html' }
       ];
       if (user && user.role === 'admin') {
         links.push({ href: 'admin.html', label: 'Admin', id: 'admin.html' });
