@@ -9,6 +9,8 @@
 <meta name="apple-mobile-web-app-title" content="Peta Tematik">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <!-- Theme toggle (early load) -->
+    <script src="js/theme.js"></script>
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
     <script src="js/pwa.js"></script>
@@ -130,17 +132,19 @@
         .file-item, .user-item {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            padding: 1rem 1.25rem;
+            align-items: flex-start;
+            padding: 0.85rem 1.1rem;
             background: var(--gm-surface, #ffffff);
             border: 1px solid var(--gm-border, #dadce0);
             border-radius: 10px;
-            margin-bottom: 0.75rem;
-            box-shadow: 0 1px 3px rgba(60,64,67,0.08);
-            transition: box-shadow 0.2s;
+            margin-bottom: 0.6rem;
+            box-shadow: 0 1px 3px rgba(60,64,67,0.06);
+            transition: box-shadow 0.2s, border-color 0.2s;
+            gap: 10px;
         }
         .file-item:hover, .user-item:hover {
-            box-shadow: 0 2px 6px rgba(60,64,67,0.15);
+            box-shadow: 0 2px 8px rgba(60,64,67,0.14);
+            border-color: #c0c4c8;
         }
         .status-badge {
             font-size: 0.75rem;
@@ -155,6 +159,33 @@
             align-items: end;
         }
 
+        /* === Compact Admin UI classes === */
+        .admin-ctrl-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            background: #f8f9fa;
+            border: 1px solid #e8eaed;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            margin-top: 8px;
+        }
+        body.dark-mode .admin-ctrl-row { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); }
+        .admin-ctrl-item { display: flex; align-items: center; gap: 5px; }
+        .admin-ctrl-item label { font-size: 0.78rem; color: #5f6368; white-space: nowrap; margin: 0; }
+        .admin-bm-name { font-weight: 600; font-size: 0.9rem; color: #202124; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .admin-bm-meta { font-size: 0.75rem; color: #5f6368; margin-top: 3px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .admin-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
+        .admin-perm-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
+        .admin-perm-info { min-width: 0; flex: 1; }
+        .admin-perm-name { font-weight: 600; font-size: 0.9rem; color: #202124; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .admin-perm-sub { font-size: 0.75rem; color: #5f6368; margin-top: 3px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .perm-status-badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 99px; font-weight: 700; display: inline-flex; align-items: center; letter-spacing: 0.03em; }
+        body.dark-mode .admin-bm-name, body.dark-mode .admin-perm-name { color: #e8eaed; }
+        body.dark-mode .admin-bm-meta, body.dark-mode .admin-perm-sub, body.dark-mode .admin-ctrl-item label { color: #9aa0a6; }
+
         @media (max-width: 768px) {
             .admin-user-grid {
                 grid-template-columns: 1fr;
@@ -166,6 +197,8 @@
                 margin: 1rem auto;
                 padding: 0 12px;
             }
+            .admin-actions { flex-wrap: wrap; }
+            .admin-ctrl-row { gap: 6px; padding: 6px 10px; }
         }
 
         /* === Category Panel (admin) === */
@@ -417,16 +450,19 @@
         function renderPermohonans(data) {
             const list = document.getElementById('permohonanList');
             list.innerHTML = '';
-            if (data.length === 0) { list.innerHTML = '<p class="text-center">Belum ada data permohonan.</p>'; return; }
+            if (data.length === 0) {
+                list.innerHTML = '<p style="text-align:center;color:#5f6368;padding:2rem;">Belum ada data permohonan.</p>';
+                return;
+            }
             data.forEach(item => {
                 const status = item.status || 'pending';
-                const statusColors = {
-                    pending:  { bg: 'rgba(234,179,8,0.15)',  color: '#eab308',  border: 'rgba(234,179,8,0.3)'  },
-                    proses:   { bg: 'rgba(59,130,246,0.15)', color: '#3b82f6',  border: 'rgba(59,130,246,0.3)' },
-                    selesai:  { bg: 'rgba(34,197,94,0.15)',  color: '#22c55e',  border: 'rgba(34,197,94,0.3)'  },
-                    ditolak:  { bg: 'rgba(239,68,68,0.15)',  color: '#ef4444',  border: 'rgba(239,68,68,0.3)'  },
+                const statusMap = {
+                    pending: { bg: 'rgba(234,179,8,0.12)',  color: '#b45309', border: 'rgba(234,179,8,0.3)',  label: 'PENDING' },
+                    proses:  { bg: 'rgba(59,130,246,0.12)', color: '#1d4ed8', border: 'rgba(59,130,246,0.3)', label: 'PROSES' },
+                    selesai: { bg: 'rgba(34,197,94,0.12)',  color: '#15803d', border: 'rgba(34,197,94,0.3)',  label: 'SELESAI' },
+                    ditolak: { bg: 'rgba(239,68,68,0.12)',  color: '#b91c1c', border: 'rgba(239,68,68,0.3)',  label: 'DITOLAK' },
                 };
-                const sc = statusColors[status] || statusColors.pending;
+                const sc = statusMap[status] || statusMap.pending;
 
                 const div = document.createElement('div');
                 div.className = 'file-item';
@@ -434,59 +470,69 @@
                 div.style.flexDirection = 'column';
                 div.style.alignItems = 'stretch';
                 div.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <div>
-                            <strong>${item.no_permohonan || '-'}</strong>
-                            <span style="margin-left:8px; font-size:0.72rem; padding:2px 8px; border-radius:99px; background:${sc.bg}; color:${sc.color}; border:1px solid ${sc.border}; font-weight:700;">${status.toUpperCase()}</span><br>
-                            <small style="color:var(--text-secondary)">${item.nama_pemohon} &mdash; ${item.kecamatan}, ${item.kelurahan}</small>
+                    <div class="admin-perm-header">
+                        <div class="admin-perm-info">
+                            <div class="admin-perm-name">
+                                <span>${item.no_permohonan || '-'}</span>
+                                <span class="perm-status-badge" style="background:${sc.bg};color:${sc.color};border:1px solid ${sc.border};">${sc.label}</span>
+                            </div>
+                            <div class="admin-perm-sub">
+                                <span><i data-feather="user" style="width:10px;height:10px;"></i> ${item.nama_pemohon || '-'}</span>
+                                <span style="color:#dadce0;">·</span>
+                                <span><i data-feather="map-pin" style="width:10px;height:10px;"></i> ${item.kecamatan || '-'}, ${item.kelurahan || '-'}</span>
+                                <span style="color:#dadce0;">·</span>
+                                <span><i data-feather="calendar" style="width:10px;height:10px;"></i> ${item.created_at ? item.created_at.substring(0,10) : '-'}</span>
+                            </div>
                         </div>
-                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <div class="admin-actions">
                             ${item.shp_file ? `
                                 <button class="cat-toggle-btn ${item.category_field ? 'active' : ''}" id="permCatToggle_${item.id}" onclick="togglePermCatPanel(${item.id})" title="Warna Kategori SHP">
-                                    <i data-feather="sliders" style="width:13px;height:13px;"></i> Warna Kategori
+                                    <i data-feather="sliders" style="width:12px;height:12px;"></i>
                                 </button>
-                                <a href="${item.shp_file}" download class="btn" style="padding:5px 10px; font-size:0.8rem; background:rgba(34,197,94,0.1); color:#22c55e; border:1px solid rgba(34,197,94,0.2);" title="Download SHP">
-                                    <i data-feather="download" style="width:13px;height:13px;"></i> Download SHP
+                                <a href="${item.shp_file}" download class="btn" style="padding:4px 10px;font-size:0.78rem;background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.2);" title="Download SHP">
+                                    <i data-feather="download" style="width:12px;height:12px;"></i>
                                 </a>
                             ` : ''}
-                            <button class="btn" style="padding:5px 10px; font-size:0.8rem; background:rgba(59,130,246,0.1); color:#3b82f6; border:1px solid rgba(59,130,246,0.2);" onclick="savePermStatus(${item.id})">
-                                <i data-feather="save" style="width:13px;height:13px;"></i> Simpan
+                            <button class="btn" style="padding:4px 12px;font-size:0.78rem;background:rgba(26,115,232,0.1);color:#1a73e8;border:1px solid rgba(26,115,232,0.2);" onclick="savePermStatus(${item.id})" title="Simpan">
+                                <i data-feather="save" style="width:12px;height:12px;"></i>
                             </button>
-                            <button class="btn" style="background:rgba(239,68,68,0.1); color:#ef4444; padding:5px 10px; font-size:0.8rem;" onclick="deletePermohonan(${item.id})">
-                                <i data-feather="trash-2" style="width:13px;height:13px;"></i> Hapus
+                            <button class="btn" style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2);padding:4px 10px;font-size:0.78rem;" onclick="deletePermohonan(${item.id})" title="Hapus">
+                                <i data-feather="trash-2" style="width:12px;height:12px;"></i>
                             </button>
                         </div>
                     </div>
-                    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; background:var(--gm-surface-var, #f8f9fa); border:1px solid var(--gm-border, #dadce0); padding:10px; border-radius:8px; font-size:0.82rem;">
-                        <div style="display:flex; align-items:center; gap:6px;">
-                            <label style="color:var(--text-secondary);">Status:</label>
-                            <select id="status_${item.id}" class="form-control" style="padding:4px 8px; width:auto; font-size:0.8rem;">
-                                <option value="pending"  ${status==='pending'  ? 'selected':''}>Pending</option>
-                                <option value="proses"   ${status==='proses'   ? 'selected':''}>Proses</option>
-                                <option value="selesai"  ${status==='selesai'  ? 'selected':''}>Selesai</option>
-                                <option value="ditolak"  ${status==='ditolak'  ? 'selected':''}>Ditolak</option>
+                    <div class="admin-ctrl-row">
+                        <div class="admin-ctrl-item">
+                            <label>Status:</label>
+                            <select id="status_${item.id}" class="form-control" style="padding:3px 6px;width:auto;font-size:0.78rem;height:28px;">
+                                <option value="pending" ${status==='pending' ? 'selected':''}>Pending</option>
+                                <option value="proses"  ${status==='proses'  ? 'selected':''}>Proses</option>
+                                <option value="selesai" ${status==='selesai' ? 'selected':''}>Selesai</option>
+                                <option value="ditolak" ${status==='ditolak' ? 'selected':''}>Ditolak</option>
                             </select>
                         </div>
-                        <div style="display:flex; align-items:center; gap:5px;">
-                            <label style="font-size:0.8rem; color:var(--text-secondary);">Warna:</label>
-                            <input type="color" id="perm_color_${item.id}" value="${item.color || '#3b82f6'}" style="width:28px; height:28px; padding:0; border:none; border-radius:4px; cursor:pointer; background:transparent;">
+                        <div class="admin-ctrl-item">
+                            <label>Warna:</label>
+                            <input type="color" id="perm_color_${item.id}" value="${item.color || '#3b82f6'}" style="width:26px;height:26px;padding:0;border:none;border-radius:3px;cursor:pointer;background:transparent;">
                         </div>
-                        <select id="perm_fill_${item.id}" class="form-control" style="padding:4px 8px; width:auto; font-size:0.8rem;">
-                            <option value="fill"   ${(item.fill_type||'fill')==='fill'   ? 'selected':''}>Berisi (Fill)</option>
-                            <option value="hollow" ${(item.fill_type||'fill')==='hollow' ? 'selected':''}>Kosong (Hollow)</option>
-                        </select>
-                        <div style="display:flex; align-items:center; gap:5px;">
-                            <label style="font-size:0.8rem; color:var(--text-secondary);">Tebal:</label>
-                            <input type="number" id="perm_weight_${item.id}" class="form-control" value="${item.weight || 2}" min="1" max="10" style="padding:4px; width:55px; font-size:0.8rem;">
+                        <div class="admin-ctrl-item">
+                            <label>Tipe:</label>
+                            <select id="perm_fill_${item.id}" class="form-control" style="padding:3px 6px;width:auto;font-size:0.78rem;height:28px;">
+                                <option value="fill"   ${(item.fill_type||'fill')==='fill'   ? 'selected':''}>Fill</option>
+                                <option value="hollow" ${(item.fill_type||'fill')==='hollow' ? 'selected':''}>Hollow</option>
+                            </select>
                         </div>
-                        <select id="perm_dash_${item.id}" class="form-control" style="padding:4px 8px; width:auto; font-size:0.8rem;">
-                            <option value=""    ${!(item.dash_array) ? 'selected':''}>Garis Solid</option>
-                            <option value="5,5" ${item.dash_array==='5,5'  ? 'selected':''}>Garis Putus-putus</option>
-                            <option value="10,5" ${item.dash_array==='10,5' ? 'selected':''}>Garis Panjang Putus</option>
-                        </select>
-                        <div style="color:var(--text-secondary); margin-left:auto;">
-                            <i data-feather="calendar" style="width:12px;height:12px;vertical-align:middle;"></i>
-                            ${item.created_at ? item.created_at.substring(0,10) : '-'}
+                        <div class="admin-ctrl-item">
+                            <label>Tebal:</label>
+                            <input type="number" id="perm_weight_${item.id}" class="form-control" value="${item.weight || 2}" min="1" max="10" style="padding:3px;width:50px;font-size:0.78rem;height:28px;">
+                        </div>
+                        <div class="admin-ctrl-item">
+                            <label>Garis:</label>
+                            <select id="perm_dash_${item.id}" class="form-control" style="padding:3px 6px;width:auto;font-size:0.78rem;height:28px;">
+                                <option value=""    ${!(item.dash_array) ? 'selected':''}>Solid</option>
+                                <option value="5,5" ${item.dash_array==='5,5' ? 'selected':''}>Putus</option>
+                                <option value="10,5" ${item.dash_array==='10,5' ? 'selected':''}>Panjang</option>
+                            </select>
                         </div>
                     </div>
                     ${item.shp_file ? `
@@ -495,7 +541,7 @@
                             <i data-feather="sliders" style="width:12px;height:12px;"></i> Pengaturan Warna Kategori SHP
                         </div>
                         <div class="cat-admin-body" id="permCatBody_${item.id}">
-                            <div class="cat-loading" id="permCatLoading_${item.id}">Klik tombol "Warna Kategori" untuk memuat atribut SHP...</div>
+                            <div class="cat-loading" id="permCatLoading_${item.id}">Klik tombol warna kategori untuk memuat atribut SHP...</div>
                             <select id="permCatField_${item.id}" class="form-control cat-field-select" style="font-size:0.82rem;margin-bottom:10px;display:none;"></select>
                             <div class="admin-palette-row" id="permCatPalette_${item.id}" style="display:none;"></div>
                             <div class="admin-cat-values" id="permCatValues_${item.id}"></div>
@@ -727,65 +773,81 @@
         function renderBasemaps(data) {
             const list = document.getElementById('basemapList');
             list.innerHTML = '';
-            if (data.length === 0) { list.innerHTML = '<p class="text-center">Belum ada basemap.</p>'; return; }
+            if (data.length === 0) {
+                list.innerHTML = '<p style="text-align:center;color:#5f6368;padding:2rem;">Belum ada layer basemap. Upload file SHP untuk memulai.</p>';
+                return;
+            }
             data.forEach(bm => {
-                const color = bm.color || '#3b82f6';
-                const fill_type = bm.fill_type || 'fill';
-                const weight = bm.weight || 3;
+                const color      = bm.color      || '#3b82f6';
+                const fill_type  = bm.fill_type  || 'fill';
+                const weight     = bm.weight     || 3;
                 const dash_array = bm.dash_array || '';
-                const hasCat = bm.category_field ? true : false;
-                
+                const hasCat     = !!bm.category_field;
+
                 const item = document.createElement('div');
                 item.className = 'file-item';
                 item.id = `bm-item-${bm.id}`;
                 item.style.flexDirection = 'column';
                 item.style.alignItems = 'stretch';
                 item.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <div>
-                            <strong>${bm.name}</strong>
-                            ${hasCat ? `<span class="cat-field-badge"><i data-feather="sliders" style="width:10px;height:10px;vertical-align:middle;"></i> ${bm.category_field}</span>` : ''}<br>
-                            <small style="color:var(--text-secondary)">${bm.file_path}</small>
+                    <div class="admin-perm-header">
+                        <div class="admin-perm-info">
+                            <div class="admin-bm-name">
+                                <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${color};margin-right:4px;flex-shrink:0;"></span>
+                                ${bm.name}
+                                ${hasCat ? `<span class="cat-field-badge"><i data-feather="sliders" style="width:9px;height:9px;vertical-align:middle;"></i> ${bm.category_field}</span>` : ''}
+                            </div>
+                            <div class="admin-bm-meta">
+                                <span><i data-feather="file" style="width:10px;height:10px;"></i> ${bm.file_path ? bm.file_path.split('/').pop() : '-'}</span>
+                                <span style="color:#dadce0;">·</span>
+                                <span>${fill_type === 'hollow' ? 'Hollow' : 'Fill'}</span>
+                                <span style="color:#dadce0;">·</span>
+                                <span>Tebal: ${weight}</span>
+                                <span style="color:#dadce0;">·</span>
+                                <span>${dash_array ? 'Putus-putus' : 'Solid'}</span>
+                            </div>
                         </div>
-                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap:wrap;">
-                            <button class="btn" style="padding: 5px 10px; font-size: 0.8rem; background: rgba(255,255,255,0.05);" onclick="editLayerName(${bm.id}, '${bm.name}')" title="Edit Nama Layer">
-                                <i data-feather="edit-2" style="width: 13px; height: 13px;"></i> Edit Nama
+                        <div class="admin-actions">
+                            <button class="btn" style="padding:4px 10px;font-size:0.78rem;" onclick="editLayerName(${bm.id}, '${bm.name.replace(/'/g, '&#39;')}')" title="Edit Nama">
+                                <i data-feather="edit-2" style="width:12px;height:12px;"></i>
                             </button>
-                            ${bm.file_path ? `
-                                <a href="${bm.file_path}" download class="btn" style="padding: 5px 10px; font-size: 0.8rem; background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2);" title="Download SHP">
-                                    <i data-feather="download" style="width: 13px; height: 13px;"></i> Download
-                                </a>
-                            ` : ''}
-                            <button class="cat-toggle-btn ${hasCat ? 'active' : ''}" id="catToggle_${bm.id}" onclick="toggleCatPanel(${bm.id})">
-                                <i data-feather="sliders" style="width:13px;height:13px;"></i> Warna Kategori
+                            ${bm.file_path ? `<a href="${bm.file_path}" download class="btn" style="padding:4px 10px;font-size:0.78rem;background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.2);" title="Download SHP"><i data-feather="download" style="width:12px;height:12px;"></i></a>` : ''}
+                            <button class="cat-toggle-btn ${hasCat ? 'active' : ''}" id="catToggle_${bm.id}" onclick="toggleCatPanel(${bm.id})" title="Warna Kategori">
+                                <i data-feather="sliders" style="width:12px;height:12px;"></i>
                             </button>
-                            <button class="btn btn-primary" style="padding: 5px 10px; font-size: 0.8rem;" onclick="updateBasemap(${bm.id})">Simpan</button>
-                            <button class="btn" style="background:rgba(239, 68, 68, 0.1); color:#ef4444; padding: 5px 10px; font-size: 0.8rem;" onclick="deleteBasemap(${bm.id})">Hapus</button>
+                            <button class="btn btn-primary" style="padding:4px 12px;font-size:0.78rem;" onclick="updateBasemap(${bm.id})">
+                                <i data-feather="save" style="width:12px;height:12px;"></i> Simpan
+                            </button>
+                            <button class="btn" style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2);padding:4px 10px;font-size:0.78rem;" onclick="deleteBasemap(${bm.id})" title="Hapus">
+                                <i data-feather="trash-2" style="width:12px;height:12px;"></i>
+                            </button>
                         </div>
                     </div>
-                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: rgba(0,0,0,0.1); padding: 10px; border-radius: 6px;">
+                    <div class="admin-ctrl-row">
                         <input type="hidden" id="name_${bm.id}" value="${bm.name}">
-                        
-                        <div style="display:flex; align-items:center; gap: 5px;">
-                            <label style="font-size:0.8rem;">Warna:</label>
-                            <input type="color" id="color_${bm.id}" value="${color}" style="width: 30px; height: 30px; padding: 0; border: none; border-radius: 4px; cursor: pointer; background: transparent;">
+                        <div class="admin-ctrl-item">
+                            <label>Warna:</label>
+                            <input type="color" id="color_${bm.id}" value="${color}" style="width:26px;height:26px;padding:0;border:none;border-radius:3px;cursor:pointer;background:transparent;">
                         </div>
-                        
-                        <select id="fill_type_${bm.id}" class="form-control" style="padding: 5px; width: 100px; font-size: 0.8rem;">
-                            <option value="fill" ${fill_type === 'fill' ? 'selected' : ''}>Berisi (Fill)</option>
-                            <option value="hollow" ${fill_type === 'hollow' ? 'selected' : ''}>Kosong (Hollow)</option>
-                        </select>
-                        
-                        <div style="display:flex; align-items:center; gap: 5px;">
-                            <label style="font-size:0.8rem;">Tebal:</label>
-                            <input type="number" id="weight_${bm.id}" class="form-control" value="${weight}" min="1" max="10" style="padding: 5px; width: 60px;">
+                        <div class="admin-ctrl-item">
+                            <label>Tipe:</label>
+                            <select id="fill_type_${bm.id}" class="form-control" style="padding:3px 6px;width:auto;font-size:0.78rem;height:28px;">
+                                <option value="fill"   ${fill_type === 'fill'   ? 'selected' : ''}>Fill</option>
+                                <option value="hollow" ${fill_type === 'hollow' ? 'selected' : ''}>Hollow</option>
+                            </select>
                         </div>
-                        
-                        <select id="dash_array_${bm.id}" class="form-control" style="padding: 5px; width: 120px; font-size: 0.8rem;">
-                            <option value="" ${dash_array === '' ? 'selected' : ''}>Garis Solid</option>
-                            <option value="5,5" ${dash_array === '5,5' ? 'selected' : ''}>Garis Putus-putus</option>
-                            <option value="10,5" ${dash_array === '10,5' ? 'selected' : ''}>Garis Panjang Putus</option>
-                        </select>
+                        <div class="admin-ctrl-item">
+                            <label>Tebal:</label>
+                            <input type="number" id="weight_${bm.id}" class="form-control" value="${weight}" min="1" max="10" style="padding:3px;width:50px;font-size:0.78rem;height:28px;">
+                        </div>
+                        <div class="admin-ctrl-item">
+                            <label>Garis:</label>
+                            <select id="dash_array_${bm.id}" class="form-control" style="padding:3px 6px;width:auto;font-size:0.78rem;height:28px;">
+                                <option value=""    ${dash_array === ''    ? 'selected' : ''}>Solid</option>
+                                <option value="5,5" ${dash_array === '5,5' ? 'selected' : ''}>Putus</option>
+                                <option value="10,5" ${dash_array === '10,5' ? 'selected' : ''}>Panjang Putus</option>
+                            </select>
+                        </div>
                     </div>
 
                     <!-- Category Color Panel -->

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tematikmap-v8';
+const CACHE_NAME = 'tematikmap-v9';
 const ASSETS = [
     './',
     './index.html',
@@ -13,6 +13,7 @@ const ASSETS = [
     './css/mobile.css',
     './js/app.js',
     './js/mobile-nav.js',
+    './js/theme.js',
     './manifest.json',
     './images/logo.png',
     './images/favicon.png',

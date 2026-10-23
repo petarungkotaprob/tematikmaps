@@ -18,6 +18,8 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
+    <!-- Theme toggle (early load to prevent FOUC) -->
+    <script src="js/theme.js"></script>
     <!-- Feather Icons -->
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="js/pwa.js"></script>
@@ -107,6 +109,9 @@
                     <i data-feather="search"></i>
                 </button>
                 <div class="gm-search-divider"></div>
+                <button type="button" class="gm-search-icon-btn gm-theme-toggle" id="btnToggleTheme" title="Ganti Tema Gelap/Terang" aria-label="Ganti tema">
+                    <i data-feather="moon" id="themeIcon"></i>
+                </button>
                 <button type="button" class="gm-search-icon-btn" id="btnToggleSidePanel" aria-label="Tutup / Buka Panel" title="Tutup / Buka Panel">
                     <i data-feather="sidebar"></i>
                 </button>

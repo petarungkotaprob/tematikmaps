@@ -1083,3 +1083,61 @@
     transition: none !important;
   }
 }
+
+/* ============================================================
+   DARK MODE — Mobile overrides
+   ============================================================ */
+body.dark-mode .mobile-dock {
+  background: #1e1f21 !important;
+  border-top-color: #3c4043 !important;
+}
+body.dark-mode .dock-item {
+  color: #9aa0a6 !important;
+}
+body.dark-mode .dock-item.active {
+  color: #8ab4f8 !important;
+}
+body.dark-mode .dock-item.active svg {
+  stroke: #8ab4f8 !important;
+}
+body.dark-mode .mobile-sheet {
+  background: #2d2e30 !important;
+  border-top-color: #3c4043 !important;
+  color: #e8eaed !important;
+}
+body.dark-mode .sheet-handle-bar {
+  background: #5f6368 !important;
+}
+body.dark-mode .sheet-close {
+  background: #3c4043 !important;
+  border-color: #48494b !important;
+  color: #9aa0a6 !important;
+}
+body.dark-mode .sheet-backdrop {
+  background: rgba(0,0,0,0.6) !important;
+}
+body.dark-mode .mobile-search-pill {
+  background: #2d2e30 !important;
+  border-color: #3c4043 !important;
+  color: #e8eaed !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5) !important;
+}
+body.dark-mode .mobile-search-pill input {
+  color: #e8eaed !important;
+  background: transparent !important;
+}
+body.dark-mode .mobile-search-pill input::placeholder {
+  color: #9aa0a6 !important;
+}
+body.dark-mode .map-fab-btn {
+  background: #2d2e30 !important;
+  border-color: #3c4043 !important;
+  color: #e8eaed !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5) !important;
+}
+body.dark-mode .panel-open-fab {
+  background: #2d2e30 !important;
+  border-color: #3c4043 !important;
+  color: #8ab4f8 !important;
+}
+
