@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -178,6 +178,7 @@
         <div class="nav-links">
             <a href="dashboard.html">Peta Tematik</a>
             <a href="tracker.html">Daftar Permohonan</a>
+            <a href="laporan.html">Laporan</a>
             <a href="report.html">Input Lahan</a>
         </div>
     </nav>
@@ -185,10 +186,15 @@
     <main class="main-content" style="display: block; height: auto;">
         <div class="admin-container">
             <div class="glass-panel animated">
-                <div class="admin-tabs">
-                    <button class="tab-btn active" onclick="switchTab('basemap')">Manajemen Basemap</button>
-                    <button class="tab-btn" onclick="switchTab('users')">Manajemen User</button>
-                    <button class="tab-btn" onclick="switchTab('permohonan')">Manajemen Permohonan</button>
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:1rem;">
+                    <div class="admin-tabs" style="margin-bottom:0; flex:1;">
+                        <button class="tab-btn active" onclick="switchTab('basemap')">Manajemen Basemap</button>
+                        <button class="tab-btn" onclick="switchTab('users')">Manajemen User</button>
+                        <button class="tab-btn" onclick="switchTab('permohonan')">Manajemen Permohonan</button>
+                    </div>
+                    <a href="admin-system-settings.html" class="btn" style="background:rgba(59,130,246,0.12); color:#3b82f6; border:1px solid rgba(59,130,246,0.25);">
+                        <i data-feather="settings" style="width:16px;height:16px; margin-right:5px; vertical-align:middle;"></i> Pengaturan Sistem
+                    </a>
                 </div>
 
                 <!-- Tab Basemap -->
@@ -264,6 +270,7 @@
 
     <script src="js/auth.js"></script>
     <script src="js/mobile-nav.js"></script>
+    <script src="js/site.js"></script>
     <script>
         feather.replace();
 
@@ -442,7 +449,7 @@
             } catch (e) { showAdminToast('Terjadi kesalahan koneksi.', 'error'); }
         }
 
-        // ── Permohonan Category Color State ─────────────────
+        // â”€â”€ Permohonan Category Color State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         const _permCatState = {};  // { [id]: { field, colors, filePath } }
         const _permShpCache = {};  // { [id]: features[] }
 
@@ -459,7 +466,7 @@
 
             const state = _permCatState[id];
             const filePath = state && state.filePath ? state.filePath : null;
-            if (!filePath) { setPermLoading(id, '⚠ File SHP tidak tersedia.'); return; }
+            if (!filePath) { setPermLoading(id, 'âš  File SHP tidak tersedia.'); return; }
 
             setPermLoading(id, '<i data-feather="loader"></i> Memuat atribut SHP...');
             feather.replace();
@@ -475,7 +482,7 @@
                 _permShpCache[id] = features;
                 buildPermCatUI(id);
             } catch(e) {
-                setPermLoading(id, '⚠ Gagal memuat SHP: ' + e.message);
+                setPermLoading(id, 'âš  Gagal memuat SHP: ' + e.message);
             }
         }
 
@@ -804,7 +811,7 @@
             } catch (e) { showAdminToast('Terjadi kesalahan koneksi.', 'error'); }
         }
 
-        // ── Category Color State (per basemap id) ─────────
+        // â”€â”€ Category Color State (per basemap id) â”€â”€â”€â”€â”€â”€â”€â”€â”€
         const _bmCatState  = {};   // { [id]: { field, colors: {val: color} } }
         const _bmShpCache  = {};   // { [id]: features[] }
 
@@ -849,7 +856,7 @@
                 _bmShpCache[id] = features;
                 buildAdminCatUI(id);
             } catch(e) {
-                setLoading(id, '⚠ Gagal memuat SHP: ' + e.message);
+                setLoading(id, 'âš  Gagal memuat SHP: ' + e.message);
             }
         }
 

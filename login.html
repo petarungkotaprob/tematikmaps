@@ -11,48 +11,161 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/mobile.css">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#070e1c">
+    <meta name="theme-color" content="#ffffff">
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="js/pwa.js"></script>
+    <style>
+        /* Google Sign-in style login page */
+        body.login-centered {
+            background: #f8f9fa;
+        }
+
+        .login-card {
+            text-align: center;
+        }
+
+        .login-card .login-logo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .login-card .login-logo img {
+            height: 56px;
+            width: auto;
+            border-radius: 8px;
+        }
+
+        .login-card .login-logo .brand-name {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #202124;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .login-card .login-logo .brand-name span {
+            color: #1a73e8;
+        }
+
+        .login-card .login-subtitle {
+            color: #5f6368;
+            font-size: 0.88rem;
+            margin-bottom: 28px;
+            margin-top: 4px;
+        }
+
+        .login-divider {
+            text-align: center;
+            position: relative;
+            margin: 20px 0;
+        }
+
+        .login-divider::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #dadce0;
+        }
+
+        .login-footer {
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #dadce0;
+            font-size: 0.78rem;
+            color: #5f6368;
+            text-align: center;
+        }
+
+        /* Subtle error highlight */
+        #loginError {
+            background: #fce8e6;
+            border: 1px solid #f5b8b5;
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: #c5221f;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+            text-align: left;
+        }
+
+        /* Google-style input */
+        .login-card .form-group label {
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: #5f6368;
+            text-align: left;
+            display: block;
+        }
+
+        .login-card .form-control {
+            text-align: left;
+            background: #f8f9fa;
+        }
+
+        .login-card .form-control:focus {
+            background: #ffffff;
+        }
+
+        .login-card form {
+            text-align: left;
+        }
+
+        /* Sign-in button — pill shaped */
+        #btnLogin {
+            border-radius: 24px;
+            min-height: 48px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            letter-spacing: 0.01em;
+        }
+    </style>
 </head>
 <body class="login-centered login-page">
 
     <div class="login-card animated">
-        <a href="#" class="brand">
-            <img src="images/logo.png" alt="Peta Tematik Logo" style="height: 60px; width: auto; border-radius: 8px; margin-bottom: 5px;">
-            Peta<span>Tematik</span>
-        </a>
-        <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.9rem;">Peta Tematik Kantor Pertanahan Kota Probolinggo</p>
+        <div class="login-logo">
+            <img src="images/logo.png" alt="Peta Tematik Logo">
+            <div class="brand-name">Peta<span>Tematik</span></div>
+        </div>
+        <p class="login-subtitle">Peta Tematik Kantor Pertanahan Kota Probolinggo</p>
 
         <form id="loginForm" style="text-align: left;" autocomplete="off">
             <div class="form-group">
                 <label>Username / ID Pegawai</label>
-                <input type="text" id="username" class="form-control" placeholder="Username" autocomplete="off" required>
+                <input type="text" id="username" class="form-control" placeholder="Masukkan username" autocomplete="off" required>
             </div>
             <div class="form-group">
                 <label>Password</label>
                 <div class="password-wrap">
-                    <input type="password" id="password" class="form-control" placeholder="Masukkan kata sandi..." autocomplete="new-password" required>
+                    <input type="password" id="password" class="form-control" placeholder="Masukkan kata sandi" autocomplete="new-password" required>
                     <button type="button" class="password-toggle" id="togglePassword" aria-label="Tampilkan kata sandi">
                         <i data-feather="eye"></i>
                     </button>
                 </div>
             </div>
             
-            <div id="loginError" style="color: #ef4444; font-size: 0.85rem; margin-bottom: 1rem; display: none;"></div>
+            <div id="loginError" style="display: none;"></div>
 
-            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;" id="btnLogin">
-                <i data-feather="log-in" style="width: 16px; height: 16px; margin-right: 5px; vertical-align: middle;"></i> Masuk
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;" id="btnLogin">
+                <i data-feather="log-in" style="width: 16px; height: 16px;"></i> Masuk
             </button>
         </form>
 
-        <div style="margin-top: 2rem; font-size: 0.8rem; color: var(--text-secondary);">
-            Khusus Admin dan Petugas Lapangan BPN.
+        <div class="login-footer">
+            Akses khusus untuk Admin dan Petugas Lapangan BPN.
         </div>
     </div>
 
     <script src="js/auth.js"></script>
     <script src="js/mobile-nav.js"></script>
+    <script src="js/site.js"></script>
     <script>
         feather.replace();
 
@@ -70,4 +183,3 @@
     </script>
 </body>
 </html>
-

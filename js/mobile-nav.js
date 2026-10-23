@@ -68,6 +68,13 @@
           label: 'Admin',
           active: page === 'admin.html'
         });
+      } else {
+        items.push({
+          href: 'laporan.html',
+          icon: 'bar-chart-2',
+          label: 'Laporan',
+          active: page === 'laporan.html'
+        });
       }
 
       items.push({

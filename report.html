@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -370,9 +370,10 @@
             <div class="brand-motto">Peta Tematik Kantor Pertanahan Kota Probolinggo</div>
         </a>
         <div class="nav-links">
-            <a href="dashboard.html">Dashboard</a>
-            <a href="tracker.html">Daftar</a>
-            <a href="report.html" class="active">Input</a>
+            <a href="dashboard.html">Peta Tematik</a>
+            <a href="tracker.html">Daftar Permohonan</a>
+            <a href="laporan.html">Laporan</a>
+            <a href="report.html" class="active">Input Lahan</a>
         </div>
     </nav>
 
@@ -444,7 +445,7 @@
                     <!-- Luas & Keadaan Tanah -->
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Luas Sertipikat (m²)</label>
+                            <label>Luas Sertipikat (mÂ²)</label>
                             <input type="text" id="luas_sertipikat" class="form-control" placeholder="Cth: 1500">
                         </div>
                         <div class="form-group">
@@ -630,6 +631,7 @@
     <script src="js/auth.js"></script>
     <script src="js/app.js"></script>
     <script src="js/mobile-nav.js"></script>
+    <script src="js/site.js"></script>
     <script>
         feather.replace();
 
@@ -787,7 +789,7 @@
         let shpLegendControl = null;
         let defaultShpColor = '#3b82f6';
 
-        // ── Palette presets ──────────────────────────
+        // â”€â”€ Palette presets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         const COLOR_PALETTES = {
             'Vivid':    ['#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#8b5cf6','#ec4899','#14b8a6'],
             'Pastel':   ['#fca5a5','#fdba74','#fde68a','#86efac','#93c5fd','#c4b5fd','#f9a8d4','#6ee7b7'],
@@ -796,7 +798,7 @@
             'Monochrome':['#f8fafc','#cbd5e1','#94a3b8','#64748b','#475569','#334155','#1e293b','#0f172a'],
         };
 
-        // ── DOM refs ──────────────────────────────────
+        // â”€â”€ DOM refs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         const shpDropZone    = document.getElementById('shpDropZone');
         const shpFileInput   = document.getElementById('shpFileInput');
         const shpProgress    = document.getElementById('shpProgress');
@@ -810,7 +812,7 @@
         const catPaletteRow  = document.getElementById('catPaletteRow');
         const btnApplyCat    = document.getElementById('btnApplyCat');
 
-        // ── Drag & Drop ───────────────────────────────
+        // â”€â”€ Drag & Drop â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         shpDropZone.addEventListener('dragover', e => { e.preventDefault(); shpDropZone.classList.add('drag-over'); });
         shpDropZone.addEventListener('dragleave', () => shpDropZone.classList.remove('drag-over'));
         shpDropZone.addEventListener('drop', e => {
@@ -834,7 +836,7 @@
             clearShp();
         });
 
-        // ── Clear ─────────────────────────────────────
+        // â”€â”€ Clear â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function clearShp() {
             if (shpGeoJsonLayer) { miniMap.removeLayer(shpGeoJsonLayer); shpGeoJsonLayer = null; }
             if (shpLegendControl) { miniMap.removeControl(shpLegendControl); shpLegendControl = null; }
@@ -851,7 +853,7 @@
             btnApplyCat.style.display = 'none';
         }
 
-        // ── Progress helpers ──────────────────────────
+        // â”€â”€ Progress helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function showShpProgress() {
             shpProgress.style.display = 'block';
             shpProgressBar.style.width = '30%';
@@ -877,7 +879,7 @@
             if(typeof feather !== 'undefined') feather.replace();
         }
 
-        // ── Centroid ──────────────────────────────────
+        // â”€â”€ Centroid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function calcCentroid(geojson) {
             let sumLat = 0, sumLng = 0, count = 0;
             function walk(coords) {
@@ -888,7 +890,7 @@
             return count > 0 ? { lat: sumLat/count, lng: sumLng/count } : null;
         }
 
-        // ── Auto-generate distinct colors ────────────
+        // â”€â”€ Auto-generate distinct colors â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function generateColors(n) {
             const base = COLOR_PALETTES['Vivid'];
             const out = [];
@@ -896,7 +898,7 @@
             return out;
         }
 
-        // ── Render layer with current categoryColorMap ─
+        // â”€â”€ Render layer with current categoryColorMap â”€
         function renderShpLayer() {
             if (!shpCombinedData) return;
             if (shpGeoJsonLayer) miniMap.removeLayer(shpGeoJsonLayer);
@@ -936,7 +938,7 @@
             else if (shpLegendControl) { miniMap.removeControl(shpLegendControl); shpLegendControl = null; }
         }
 
-        // ── Build legend on map ───────────────────────
+        // â”€â”€ Build legend on map â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function buildLegend() {
             if (shpLegendControl) miniMap.removeControl(shpLegendControl);
             shpLegendControl = L.control({ position: 'bottomleft' });
@@ -951,7 +953,7 @@
             shpLegendControl.addTo(miniMap);
         }
 
-        // ── Build category UI panel ───────────────────
+        // â”€â”€ Build category UI panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function buildCategoryPanel(features) {
             const props = features[0]?.properties || {};
             const fields = Object.keys(props);
@@ -1031,7 +1033,7 @@
             });
         }
 
-        // ── Apply button ──────────────────────────────
+        // â”€â”€ Apply button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         btnApplyCat.addEventListener('click', () => {
             // Re-read all color inputs in case user changed them
             catValuesList.querySelectorAll('.cat-color-input').forEach(inp => {
@@ -1040,7 +1042,7 @@
             renderShpLayer();
         });
 
-        // ── Process SHP file ──────────────────────────
+        // â”€â”€ Process SHP file â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         async function processShpFile(file) {
             if (!file.name.toLowerCase().endsWith('.zip')) {
                 showShpError('File harus berformat .zip (arsip shapefile).');
@@ -1082,7 +1084,7 @@
                 const gType = combinedFeatures[0]?.geometry?.type || 'Unknown';
                 const typeLabel = { Point:'Titik', MultiPoint:'Multi-Titik', Polygon:'Polygon', MultiPolygon:'Multi-Polygon', LineString:'Garis', MultiLineString:'Multi-Garis' }[gType] || gType;
 
-                showShpSuccess(`✓ ${combinedFeatures.length} fitur (${typeLabel}) dimuat — atur warna kategori di bawah`);
+                showShpSuccess(`âœ“ ${combinedFeatures.length} fitur (${typeLabel}) dimuat â€” atur warna kategori di bawah`);
 
                 // Build category panel
                 buildCategoryPanel(combinedFeatures);

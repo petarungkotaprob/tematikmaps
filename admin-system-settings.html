@@ -1,0 +1,162 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Pengaturan Sistem - Admin</title>
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link rel="apple-touch-icon" href="images/pwa-192.png">
+    <meta name="apple-mobile-web-app-title" content="Peta Tematik">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="js/pwa.js"></script>
+    <style>
+        .admin-container { max-width: 800px; margin: 2rem auto; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .preview-logo { height: 60px; width: auto; border-radius: 6px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.03); padding: 4px; }
+        @media (max-width: 600px){ .form-row { grid-template-columns: 1fr; } }
+    </style>
+    <link rel="stylesheet" href="css/mobile.css">
+</head>
+<body class="admin-page">
+    <nav class="navbar">
+        <a href="dashboard.html" class="brand">
+            <img src="images/logo.png" alt="Logo" style="height: 40px; width: auto; border-radius: 4px;">
+            Peta<span>Tematik</span>
+            <div class="brand-motto">Peta Tematik Kantor Pertanahan Kota Probolinggo</div>
+        </a>
+        <div class="nav-links">
+            <a href="dashboard.html">Peta Tematik</a>
+            <a href="tracker.html">Daftar Permohonan</a>
+            <a href="laporan.html">Laporan</a>
+            <a href="admin.html">Admin</a>
+        </div>
+    </nav>
+
+    <main class="main-content" style="display: block; height: auto;">
+        <div class="admin-container">
+            <div class="glass-panel animated">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:1.5rem; border-bottom:1px solid var(--glass-border); padding-bottom:1rem;">
+                    <i data-feather="sliders" style="width:24px;height:24px; color:var(--accent-orange);"></i>
+                    <h2 style="margin:0;">Pengaturan Sistem</h2>
+                </div>
+                <p style="color:var(--text-secondary); margin-bottom:2rem;">Atur nama aplikasi, motto, logo dan favicon yang digunakan di seluruh aplikasi.</p>
+
+                <form id="systemSettingsForm">
+                    <div class="form-group">
+                        <label>Nama Aplikasi</label>
+                        <input type="text" id="app_name" class="form-control" required placeholder="Peta Tematik">
+                    </div>
+                    <div class="form-group">
+                        <label>Motto / Deskripsi</label>
+                        <input type="text" id="app_motto" class="form-control" placeholder="Peta Tematik Kantor Pertanahan Kota Probolinggo">
+                    </div>
+                    <div class="form-group">
+                        <label>Nama Singkat</label>
+                        <input type="text" id="app_short_name" class="form-control" placeholder="PetaTematik">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Logo Utama</label>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <input type="text" id="app_logo" class="form-control" placeholder="images/logo.png">
+                            <label class="btn" style="background:rgba(59,130,246,0.12); color:#3b82f6; border:1px solid rgba(59,130,246,0.25); white-space:nowrap; cursor:pointer;">
+                                <i data-feather="upload" style="width:16px;height:16px; margin-right:5px;"></i> Upload Logo
+                                <input type="file" id="uploadLogo" accept="image/*" hidden>
+                            </label>
+                        </div>
+                        <div style="margin-top:10px; display:flex; align-items:center; gap:10px;">
+                            <img id="preview_logo" src="images/logo.png" class="preview-logo" onerror="this.src='images/logo.png'">
+                            <img id="preview_favicon" src="images/favicon.png" style="height:32px;width:32px;border-radius:4px;border:1px solid var(--glass-border);" onerror="this.src='images/favicon.png'">
+                            <small style="color:var(--text-secondary);">Favicon otomatis mengikuti logo utama</small>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width:100%; margin-top:1rem;" id="btnSaveSystem">Simpan Pengaturan</button>
+                    <div id="systemMsg" style="text-align:center; margin-top:1rem; display:none;"></div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/auth.js"></script>
+    <script src="js/mobile-nav.js"></script>
+    <script src="js/site.js"></script>
+    <script>
+        feather.replace();
+        const user = JSON.parse(localStorage.getItem('silisa_user')||'null');
+        if(!user || user.role!=='admin'){ window.location.href='dashboard.html'; }
+
+        async function loadSettings(){
+            try{
+                const res = await fetch('api/site-settings.php');
+                const json = await res.json();
+                if(json.status==='success'){
+                    const s=json.settings||{};
+                    document.getElementById('app_name').value=s.app_name||'Peta Tematik';
+                    document.getElementById('app_motto').value=s.app_motto||'';
+                    document.getElementById('app_short_name').value=s.app_short_name||'PetaTematik';
+                    document.getElementById('app_logo').value=s.app_logo||'images/logo.png';
+                    updatePreviews();
+                }
+            }catch(e){}
+        }
+
+        function updatePreviews(){
+            const l1=document.getElementById('app_logo').value;
+            if(l1){
+                document.getElementById('preview_logo').src=l1;
+                document.getElementById('preview_favicon').src=l1;
+            }
+        }
+        document.getElementById('app_logo').addEventListener('input',updatePreviews);
+
+        async function uploadFile(file){
+            if(!file) return;
+            const fd=new FormData();
+            fd.append('logo', file);
+            try{
+                const res=await fetch('api/upload-logo.php', {method:'POST', body: fd});
+                const json=await res.json();
+                if(json.status==='success' && json.path){
+                    document.getElementById('app_logo').value=json.path;
+                    updatePreviews();
+                }else{
+                    alert(json.message||'Gagal upload');
+                }
+            }catch(e){ alert('Gagal upload'); }
+        }
+        document.getElementById('uploadLogo').addEventListener('change', e=>{ uploadFile(e.target.files[0]); });
+
+        document.getElementById('systemSettingsForm').addEventListener('submit', async (e)=>{
+            e.preventDefault();
+            const btn=document.getElementById('btnSaveSystem');
+            const msg=document.getElementById('systemMsg');
+            btn.disabled=true; btn.innerHTML='Menyimpan...'; msg.style.display='none';
+            const logo = document.getElementById('app_logo').value;
+            const payload={
+                app_name:document.getElementById('app_name').value,
+                app_motto:document.getElementById('app_motto').value,
+                app_short_name:document.getElementById('app_short_name').value,
+                app_logo:logo,
+                app_favicon:logo
+            };
+            try{
+                const res=await fetch('api/site-settings.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+                const json=await res.json();
+                if(json.status==='success'){
+                    msg.style.color='#22c55e'; msg.innerText=json.message; msg.style.display='block';
+                    setTimeout(()=>location.reload(),1000);
+                }else throw new Error(json.message);
+            }catch(err){
+                msg.style.color='#ef4444'; msg.innerText=err.message; msg.style.display='block';
+            }finally{
+                btn.disabled=false; btn.innerHTML='Simpan Pengaturan';
+            }
+        });
+
+        loadSettings();
+    </script>
+</body>
+</html>

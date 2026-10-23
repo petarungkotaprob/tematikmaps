@@ -1,0 +1,194 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Laporan - Peta Tematik</title>
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link rel="apple-touch-icon" href="images/pwa-192.png">
+    <meta name="apple-mobile-web-app-title" content="Peta Tematik">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="js/pwa.js"></script>
+    <style>
+        .laporan-container { max-width: 1100px; margin: 2rem auto; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { padding: 1.25rem; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); display: flex; align-items: center; gap: 12px; }
+        .stat-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--glass-border); font-size: 0.9rem; }
+        th { color: var(--text-secondary); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: .05em; }
+        tr:hover td { background: rgba(255,255,255,0.02); }
+        .badge { display: inline-flex; padding: 2px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; }
+        .badge-pending { background: rgba(234,179,8,0.15); color: #f59e0b; border: 1px solid rgba(234,179,8,0.25); }
+        .badge-verif { background: rgba(59,130,246,0.15); color: #3b82f6; border: 1px solid rgba(59,130,246,0.25); }
+        .badge-selesai { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.25); }
+        .filter-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 1.5rem; }
+    </style>
+    <link rel="stylesheet" href="css/mobile.css">
+</head>
+<body class="tracker-page">
+    <nav class="navbar">
+        <a href="dashboard.html" class="brand">
+            <img src="images/logo.png" alt="Peta Tematik Logo" style="height: 40px; width: auto; border-radius: 4px;">
+            Peta<span>Tematik</span>
+            <div class="brand-motto">Peta Tematik Kantor Pertanahan Kota Probolinggo</div>
+        </a>
+        <div class="nav-links">
+            <a href="dashboard.html">Peta Tematik</a>
+            <a href="tracker.html">Daftar Permohonan</a>
+            <a href="laporan.html" class="active">Laporan</a>
+            <a href="report.html">Input Lahan</a>
+        </div>
+    </nav>
+
+    <main class="main-content" style="display: block; height: auto;">
+        <div class="laporan-container">
+            <div class="glass-panel animated" style="margin-bottom: 2rem;">
+                <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:1.5rem;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <i data-feather="bar-chart-2" style="width:24px;height:24px; color:var(--accent-orange);"></i>
+                        <div>
+                            <h2 style="margin:0;">Laporan Rekap Permohonan</h2>
+                            <p style="margin:4px 0 0 0; color:var(--text-secondary); font-size:0.9rem;">Ringkasan statistik dan rekap data permohonan</p>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="window.print()" style="background:rgba(255,255,255,0.05);">
+                        <i data-feather="printer" style="width:16px;height:16px; margin-right:6px;"></i> Cetak Laporan
+                    </button>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:rgba(59,130,246,0.15); color:#3b82f6;">
+                            <i data-feather="file-text"></i>
+                        </div>
+                        <div>
+                            <div style="font-size:1.8rem; font-weight:700;" id="statTotal">0</div>
+                            <div style="color:var(--text-secondary); font-size:0.85rem;">Total Permohonan</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:rgba(234,179,8,0.15); color:#f59e0b;">
+                            <i data-feather="clock"></i>
+                        </div>
+                        <div>
+                            <div style="font-size:1.8rem; font-weight:700;" id="statPending">0</div>
+                            <div style="color:var(--text-secondary); font-size:0.85rem;">Menunggu Verifikasi</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:rgba(59,130,246,0.15); color:#3b82f6;">
+                            <i data-feather="check-circle"></i>
+                        </div>
+                        <div>
+                            <div style="font-size:1.8rem; font-weight:700;" id="statVerif">0</div>
+                            <div style="color:var(--text-secondary); font-size:0.85rem;">Proses Verifikasi</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:rgba(34,197,94,0.15); color:#22c55e;">
+                            <i data-feather="award"></i>
+                        </div>
+                        <div>
+                            <div style="font-size:1.8rem; font-weight:700;" id="statSelesai">0</div>
+                            <div style="color:var(--text-secondary); font-size:0.85rem;">Selesai</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel animated">
+                <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:1.5rem;">
+                    <h3 style="margin:0; display:flex; align-items:center; gap:10px;">
+                        <i data-feather="list"></i> Rekap Detail Permohonan
+                    </h3>
+                    <div class="filter-bar" style="margin-bottom:0;">
+                        <input type="text" id="searchLaporan" class="form-control" placeholder="Cari No. Permohonan / Nama..." style="max-width:280px;">
+                        <select id="filterStatus" class="form-control" style="max-width:180px;">
+                            <option value="all">Semua Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="verifikasi">Verifikasi</option>
+                            <option value="selesai">Selesai</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>No. Permohonan</th>
+                                <th>Tanggal</th>
+                                <th>Nama Pemohon</th>
+                                <th>NIK</th>
+                                <th>Jenis Hak</th>
+                                <th>No. Hak</th>
+                                <th>Kecamatan/Kelurahan</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="laporanBody"></tbody>
+                    </table>
+                </div>
+                <div id="laporanEmpty" style="text-align:center; padding:2rem; color:var(--text-secondary); display:none;">Tidak ada data</div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/auth.js"></script>
+    <script src="js/mobile-nav.js"></script>
+    <script src="js/site.js"></script>
+    <script>
+        feather.replace();
+        let allData = [];
+        async function loadLaporan(){
+            try{
+                const res = await fetch('api/reports.php');
+                const json = await res.json();
+                if(json.status==='success'){
+                    allData = json.data||[];
+                    render();
+                }
+            }catch(e){}
+        }
+        function render(){
+            const search = document.getElementById('searchLaporan').value.toLowerCase();
+            const status = document.getElementById('filterStatus').value;
+            let data = allData.filter(d=>{
+                const matchSearch = !search || (d.no_permohonan||'').toLowerCase().includes(search) || (d.nama_pemohon||'').toLowerCase().includes(search);
+                const matchStatus = status==='all' || d.status===status;
+                return matchSearch && matchStatus;
+            });
+            let pending=0,verif=0,selesai=0;
+            allData.forEach(d=>{
+                if(d.status==='pending') pending++;
+                else if(d.status==='verifikasi') verif++;
+                else if(d.status==='selesai') selesai++;
+            });
+            document.getElementById('statTotal').textContent = allData.length;
+            document.getElementById('statPending').textContent = pending;
+            document.getElementById('statVerif').textContent = verif;
+            document.getElementById('statSelesai').textContent = selesai;
+            const body = document.getElementById('laporanBody');
+            body.innerHTML='';
+            if(data.length===0){ document.getElementById('laporanEmpty').style.display='block'; return; }
+            document.getElementById('laporanEmpty').style.display='none';
+            data.forEach((d,i)=>{
+                const tr=document.createElement('tr');
+                let badge='<span class="badge badge-pending">Pending</span>';
+                if(d.status==='verifikasi') badge='<span class="badge badge-verif">Verifikasi</span>';
+                if(d.status==='selesai') badge='<span class="badge badge-selesai">Selesai</span>';
+                tr.innerHTML=`<td>${i+1}</td><td>${d.no_permohonan||'-'}</td><td>${(d.created_at||'').substring(0,10)}</td><td>${d.nama_pemohon||'-'}</td><td>${d.nik||'-'}</td><td>${d.jenis_hak||'-'}</td><td>${d.nomor_hak||'-'}</td><td>${d.kecamatan||'-'}/${d.kelurahan||'-'}</td><td>${badge}</td>`;
+                body.appendChild(tr);
+            });
+        }
+        document.getElementById('searchLaporan').addEventListener('input',render);
+        document.getElementById('filterStatus').addEventListener('change',render);
+        loadLaporan();
+    </script>
+</body>
+</html>
