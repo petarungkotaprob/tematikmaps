@@ -12,7 +12,8 @@
     <!-- Theme toggle (early load) -->
     <script src="js/theme.js"></script>
     <script src="https://unpkg.com/feather-icons"></script>
-    <script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.js"></script>
+    <script src="js/shp.js"></script>
     <script src="js/pwa.js"></script>
     <style>
         .admin-container {
@@ -800,7 +801,8 @@
                 _permShpCache[id] = features;
                 buildPermCatUI(id);
             } catch(e) {
-                setPermLoading(id, '⚠ Gagal memuat SHP: ' + e.message);
+                const errMsg = e?.message || (typeof e === 'string' ? e : 'Terjadi kesalahan saat membaca file');
+                setPermLoading(id, '⚠ Gagal memuat SHP: ' + errMsg);
             }
         }
 
@@ -816,7 +818,7 @@
             const palette   = document.getElementById(`permCatPalette_${id}`);
             const values    = document.getElementById(`permCatValues_${id}`);
             const saveBtn   = document.getElementById(`btnSavePermCat_${id}`);
-            if (!loading) return;
+            if (!loading || !fieldSel || !palette || !values || !saveBtn) return;
 
             loading.style.display = 'none';
             fieldSel.style.display = 'block';
@@ -824,13 +826,17 @@
 
             const fields = Object.keys(features[0]?.properties || {});
             const savedField = _permCatState[id]?.field;
-            fieldSel.innerHTML = '<option value="">-- Pilih kolom atribut --</option>';
-            fields.forEach(f => {
-                const opt = document.createElement('option');
-                opt.value = f; opt.textContent = f;
-                if (f === savedField) opt.selected = true;
-                fieldSel.appendChild(opt);
-            });
+            if (fields.length === 0) {
+                fieldSel.innerHTML = '<option value="" disabled selected>-- Tidak ada atribut (DBF tidak ada) --</option>';
+            } else {
+                fieldSel.innerHTML = '<option value="">-- Pilih kolom atribut --</option>';
+                fields.forEach(f => {
+                    const opt = document.createElement('option');
+                    opt.value = f; opt.textContent = f;
+                    if (f === savedField) opt.selected = true;
+                    fieldSel.appendChild(opt);
+                });
+            }
 
             const buildValues = (field, savedColors) => {
                 values.innerHTML = '';
@@ -889,11 +895,12 @@
 
             if (savedField) buildValues(savedField, _permCatState[id]?.colors);
 
-            fieldSel.addEventListener('change', function() {
+            // Assign (not add) the handler so reopening the panel does not stack listeners
+            fieldSel.onchange = function() {
                 if (_permCatState[id]) _permCatState[id].colors = {};
                 buildValues(this.value, null);
                 if (_permCatState[id]) _permCatState[id].field = this.value || null;
-            });
+            };
             feather.replace();
         }
 
@@ -1028,13 +1035,18 @@
                 `;
                 list.appendChild(item);
 
-                // Restore saved category if exists
-                if (hasCat && bm.category_colors) {
+                // Restore saved category configuration and keep the SHP path for attribute loading
+                let savedCat = null;
+                if (bm.category_colors) {
                     try {
-                        const saved = typeof bm.category_colors === 'string' ? JSON.parse(bm.category_colors) : bm.category_colors;
-                        _bmCatState[bm.id] = { field: bm.category_field, colors: saved };
-                    } catch(e) {}
+                        savedCat = typeof bm.category_colors === 'string' ? JSON.parse(bm.category_colors) : bm.category_colors;
+                    } catch(e) { savedCat = null; }
                 }
+                _bmCatState[bm.id] = {
+                    field: bm.category_field || null,
+                    colors: (savedCat && typeof savedCat === 'object') ? savedCat : {},
+                    filePath: bm.file_path || null
+                };
             });
             feather.replace();
         }
@@ -1170,10 +1182,13 @@
             // Already loaded?
             if (_bmShpCache[id]) { buildAdminCatUI(id); return; }
 
-            // Find basemap file path
-            const bmRow = document.querySelector(`#bm-item-${id}`);
-            const filePath = bmRow ? bmRow.querySelector('small').textContent.trim() : null;
-            if (!filePath) { setLoading(id, 'File path tidak ditemukan.'); return; }
+            // Use the file path stored from the basemap data (the list no longer has a <small> element)
+            const filePath = _bmCatState[id]?.filePath || null;
+            if (!filePath) {
+                setLoading(id, '⚠ File SHP tidak tersedia.');
+                if (typeof feather !== 'undefined') feather.replace();
+                return;
+            }
 
             setLoading(id, '<i data-feather="loader"></i> Memuat atribut SHP...');
             feather.replace();
@@ -1190,7 +1205,8 @@
                 _bmShpCache[id] = features;
                 buildAdminCatUI(id);
             } catch(e) {
-                setLoading(id, '⚠ Gagal memuat SHP: ' + e.message);
+                const errMsg = e?.message || (typeof e === 'string' ? e : 'Terjadi kesalahan saat membaca file');
+                setLoading(id, '⚠ Gagal memuat SHP: ' + errMsg);
             }
         }
 
@@ -1207,6 +1223,8 @@
             const values   = document.getElementById(`catValues_${id}`);
             const saveBtn  = document.getElementById(`btnSaveCat_${id}`);
 
+            if (!loading || !fieldSel || !palette || !values || !saveBtn) return;
+
             loading.style.display = 'none';
             fieldSel.style.display = 'block';
             saveBtn.style.display = 'flex';
@@ -1214,13 +1232,17 @@
             // Populate field select
             const fields = Object.keys(features[0]?.properties || {});
             const savedField = _bmCatState[id]?.field;
-            fieldSel.innerHTML = '<option value="">-- Pilih kolom atribut --</option>';
-            fields.forEach(f => {
-                const opt = document.createElement('option');
-                opt.value = f; opt.textContent = f;
-                if (f === savedField) opt.selected = true;
-                fieldSel.appendChild(opt);
-            });
+            if (fields.length === 0) {
+                fieldSel.innerHTML = '<option value="" disabled selected>-- Tidak ada atribut (DBF tidak ada) --</option>';
+            } else {
+                fieldSel.innerHTML = '<option value="">-- Pilih kolom atribut --</option>';
+                fields.forEach(f => {
+                    const opt = document.createElement('option');
+                    opt.value = f; opt.textContent = f;
+                    if (f === savedField) opt.selected = true;
+                    fieldSel.appendChild(opt);
+                });
+            }
 
             const buildValues = (field, savedColors) => {
                 values.innerHTML = '';
@@ -1283,11 +1305,12 @@
             // Initial render with saved state
             if (savedField) buildValues(savedField, _bmCatState[id]?.colors);
 
-            fieldSel.addEventListener('change', function() {
+            // Assign (not add) the handler so reopening the panel does not stack listeners
+            fieldSel.onchange = function() {
                 if (_bmCatState[id]) _bmCatState[id].colors = {};
                 buildValues(this.value, null);
                 if (_bmCatState[id]) _bmCatState[id].field = this.value || null;
-            });
+            };
 
             feather.replace();
         }

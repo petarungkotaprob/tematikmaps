@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.js"></script>
-    <script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
+    <script src="js/shp.js"></script>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#070e1c">
     <!-- Theme toggle (early load) -->
@@ -963,20 +963,42 @@
             const props = features[0]?.properties || {};
             const fields = Object.keys(props);
 
+            // Reset any previous category selection before showing the new layer's attributes
+            activeCatField = null;
+            categoryColorMap = {};
+            catValuesList.innerHTML = '';
+            catPaletteRow.innerHTML = '';
+            catPaletteRow.style.display = 'none';
+            btnApplyCat.style.display = 'none';
+
             // Populate field select
-            catFieldSelect.innerHTML = '<option value="">-- Pilih kolom atribut --</option>';
-            fields.forEach(f => {
+            catFieldSelect.innerHTML = '';
+            if (fields.length === 0) {
                 const opt = document.createElement('option');
-                opt.value = f; opt.textContent = f;
+                opt.value = '';
+                opt.textContent = '-- Tidak ada atribut (DBF tidak ada) --';
+                opt.disabled = true;
+                opt.selected = true;
                 catFieldSelect.appendChild(opt);
-            });
+            } else {
+                const placeholder = document.createElement('option');
+                placeholder.value = '';
+                placeholder.textContent = '-- Pilih kolom atribut --';
+                catFieldSelect.appendChild(placeholder);
+                fields.forEach(f => {
+                    const opt = document.createElement('option');
+                    opt.value = f; opt.textContent = f;
+                    catFieldSelect.appendChild(opt);
+                });
+            }
 
             catPanel.style.display = 'block';
-            if(typeof feather !== 'undefined') feather.replace();
 
-            catFieldSelect.addEventListener('change', function() {
+            // Assign (not add) the handler so uploading another SHP does not stack listeners
+            catFieldSelect.onchange = function() {
                 activeCatField = this.value || null;
                 catValuesList.innerHTML = '';
+                catPaletteRow.innerHTML = '';
                 catPaletteRow.style.display = 'none';
                 btnApplyCat.style.display = 'none';
                 categoryColorMap = {};
@@ -995,7 +1017,6 @@
                 uniqVals.forEach((v,i) => { categoryColorMap[v] = autoColors[i]; });
 
                 // Render value rows
-                catValuesList.innerHTML = '';
                 uniqVals.forEach((val, i) => {
                     const row = document.createElement('div');
                     row.className = 'cat-row';
@@ -1014,7 +1035,6 @@
                 });
 
                 // Build palette buttons
-                catPaletteRow.innerHTML = '';
                 Object.entries(COLOR_PALETTES).forEach(([name, colors]) => {
                     const btn = document.createElement('button');
                     btn.type = 'button';
@@ -1035,7 +1055,9 @@
                 });
                 catPaletteRow.style.display = 'flex';
                 btnApplyCat.style.display = 'flex';
-            });
+            };
+
+            if(typeof feather !== 'undefined') feather.replace();
         }
 
         // ── Apply button ──────────────────────────────

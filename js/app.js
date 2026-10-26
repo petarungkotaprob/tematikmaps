@@ -155,7 +155,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     if (customLayers[id]) {
                         customLayers[id].addTo(map);
-                        if (activeLegends[id]) activeLegends[id].addTo(map);
+
+                        // Rebuild the category legend when restoring a previously loaded layer
+                        let catField = selectedBasemap.category_field;
+                        let catColors = null;
+                        if (catField && selectedBasemap.category_colors) {
+                            try { catColors = typeof selectedBasemap.category_colors === 'string' ? JSON.parse(selectedBasemap.category_colors) : selectedBasemap.category_colors; } catch(e){}
+                        }
+                        buildSpatialLegend(id, selectedBasemap, catField, catColors);
                     } else {
                         // Load using shpjs
                         const response = await fetch(selectedBasemap.file_path);
@@ -212,21 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         map.fitBounds(geoJsonLayer.getBounds(), { padding: [40, 40] });
 
                         // Build legend if categorical
-                        if (catColors) {
-                            const legendElements = document.querySelectorAll(`.legend-container-${id}`);
-                            if (legendElements.length > 0) {
-                                let html = `<div style="font-weight:600;font-size:0.75rem;text-transform:uppercase;color:#5f6368;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #dadce0;">${selectedBasemap.name} - ${catField}</div>`;
-                                Object.entries(catColors).forEach(([val, color]) => {
-                                    const display = val === '__null__' ? '(kosong)' : val;
-                                    html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:0.75rem;color:#202124;"><span style="width:12px;height:12px;border-radius:2px;flex-shrink:0;background:${color};"></span><span>${display}</span></div>`;
-                                });
-                                legendElements.forEach(legendDiv => {
-                                    legendDiv.innerHTML = html;
-                                    legendDiv.style.display = 'block';
-                                });
-                                activeLegends[id] = true;
-                            }
-                        }
+                        buildSpatialLegend(id, selectedBasemap, catField, catColors);
                     }
                 } catch (e) {
                     console.error("Gagal memuat SHP:", e);
@@ -242,6 +235,26 @@ document.addEventListener('DOMContentLoaded', () => {
                     delete activeLegends[id];
                 }
             }
+        }
+
+        // Render/refresh the category legend for a spatial basemap
+        function buildSpatialLegend(id, basemap, catField, catColors) {
+            if (!catField || !catColors || Object.keys(catColors).length === 0) return;
+
+            const legendElements = document.querySelectorAll(`.legend-container-${id}`);
+            if (legendElements.length === 0) return;
+
+            let html = `<div style="font-weight:600;font-size:0.75rem;text-transform:uppercase;color:#5f6368;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #dadce0;">${basemap.name} - ${catField}</div>`;
+            Object.entries(catColors).forEach(([val, color]) => {
+                const display = val === '__null__' ? '(kosong)' : val;
+                html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:0.75rem;color:#202124;"><span style="width:12px;height:12px;border-radius:2px;flex-shrink:0;background:${color};"></span><span>${display}</span></div>`;
+            });
+
+            legendElements.forEach(legendDiv => {
+                legendDiv.innerHTML = html;
+                legendDiv.style.display = 'block';
+            });
+            activeLegends[id] = true;
         }
 
         // Fetch extra basemaps and render in both layer containers
@@ -609,7 +622,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const layer = L.geoJSON(combinedGeojson, {
                             style: (feature) => {
                                 let featureColor = shpColor;
-                                if (catField && feature.properties && feature.properties[catField] !== undefined) {
+                                if (catField && feature.properties) {
                                     const val = String(feature.properties[catField] ?? '__null__');
                                     featureColor = catColors[val] || shpColor;
                                 }
