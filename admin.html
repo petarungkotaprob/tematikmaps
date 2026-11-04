@@ -286,7 +286,8 @@
             }
             .admin-actions .btn,
             .admin-actions a.btn,
-            .admin-actions .cat-toggle-btn {
+            .admin-actions .cat-toggle-btn,
+            .admin-actions .style-toggle-btn {
                 flex: 1 1 auto !important;
                 justify-content: center !important;
                 text-align: center !important;
@@ -417,6 +418,79 @@
         }
         .btn-save-cat:hover { background:rgba(139,92,246,0.28); }
         .cat-loading { font-size:0.8rem;color:var(--text-secondary);padding:8px 0;text-align:center; }
+
+        /* === Symbol & Label Panel (admin) === */
+        .style-toggle-btn {
+            background: rgba(26,115,232,0.1);
+            color: #1a73e8;
+            border: 1px solid rgba(26,115,232,0.25);
+            border-radius: 6px;
+            padding: 4px 12px;
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .style-toggle-btn:hover { background: rgba(26,115,232,0.2); }
+        .style-toggle-btn.active { background: rgba(26,115,232,0.2); border-color: #60a5fa; }
+        body.dark-mode .style-toggle-btn { color: #60a5fa; border-color: rgba(96,165,250,0.3); }
+        .style-admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .style-admin-grid .admin-ctrl-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 7px;
+            padding: 6px 10px;
+        }
+        body.dark-mode .style-admin-grid .admin-ctrl-item { background: rgba(255,255,255,0.04); }
+        .style-admin-grid .admin-ctrl-item select,
+        .style-admin-grid .admin-ctrl-item input[type="number"] {
+            flex: 1;
+            max-width: 140px;
+            height: 30px;
+            padding: 2px 6px;
+            font-size: 0.78rem;
+        }
+        .style-admin-grid .admin-ctrl-item input[type="color"] {
+            width: 32px;
+            height: 30px;
+            padding: 0;
+            border: none;
+            border-radius: 4px;
+            background: transparent;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .style-preview-box {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-height: 58px;
+            padding: 10px 14px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border: 1px dashed var(--glass-border);
+            background: rgba(255,255,255,0.02);
+            overflow: hidden;
+        }
+        body.dark-mode .style-preview-box { background: rgba(255,255,255,0.04); }
+        .style-preview-box .style-preview-symbol { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .style-preview-box .style-preview-label { font-weight: 600; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .style-preview-empty { font-size: 0.78rem; color: var(--text-secondary); }
+        .style-toggle-label { font-size: 0.76rem; }
+        @media (max-width: 768px) {
+            .style-toggle-label { display: none; }
+        }
     </style>
     <link rel="stylesheet" href="css/mobile.css">
 </head>
@@ -929,6 +1003,68 @@
         }
 
         // BASEMAP LOGIC
+        // ── Simbol & label layer spasial ─────────────────────
+        const ADMIN_SYMBOLS = {
+            circle:   'Bulat',
+            square:   'Kotak',
+            triangle: 'Segitiga',
+            diamond:  'Belah Ketupat',
+            star:     'Bintang',
+            pin:      'Pin'
+        };
+
+        function escapeAdminHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, ch => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[ch]));
+        }
+
+        function clampAdminNumber(value, min, max, fallback) {
+            const n = parseInt(value, 10);
+            if (!Number.isFinite(n)) return fallback;
+            return Math.min(max, Math.max(min, n));
+        }
+
+        function adminSymbolSvg(symbol, size, color) {
+            const px = clampAdminNumber(size, 3, 30, 7) * 2;
+            const shapes = {
+                circle: `<circle cx="12" cy="12" r="9" fill="${color}" stroke="#fff" stroke-width="1.8"/>`,
+                square: `<rect x="3.5" y="3.5" width="17" height="17" rx="2" fill="${color}" stroke="#fff" stroke-width="1.8"/>`,
+                triangle: `<polygon points="12,2.5 21.5,20.5 2.5,20.5" fill="${color}" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/>`,
+                diamond: `<polygon points="12,2.5 21.5,12 12,21.5 2.5,12" fill="${color}" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/>`,
+                star: `<polygon points="12,2.2 15,9 22.2,9.3 16.6,14.3 18.6,21.5 12,17.4 5.4,21.5 7.4,14.3 1.8,9.3 9,9" fill="${color}" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>`,
+                pin: `<path d="M12 1.5C7.03 1.5 3 5.53 3 10.5c0 6.75 9 12 9 12s9-5.25 9-12c0-4.97-4.03-9-9-9z" fill="${color}" stroke="#fff" stroke-width="1.6"/><circle cx="12" cy="10.2" r="3.4" fill="#fff"/>`
+            };
+            return `<svg xmlns="http://www.w3.org/2000/svg" width="${px}" height="${px}" viewBox="0 0 24 24">${shapes[symbol] || shapes.circle}</svg>`;
+        }
+
+        function updateStylePreview(id) {
+            const box = document.getElementById(`stylePreview_${id}`);
+            if (!box) return;
+
+            const symbol = document.getElementById(`symbol_${id}`)?.value || 'circle';
+            const symbolSize = clampAdminNumber(document.getElementById(`symbol_size_${id}`)?.value, 3, 30, 7);
+            const color = document.getElementById(`color_${id}`)?.value || '#3b82f6';
+            const labelField = document.getElementById(`label_field_${id}`)?.value || '';
+            const labelSize = clampAdminNumber(document.getElementById(`label_size_${id}`)?.value, 8, 32, 11);
+            const labelColor = document.getElementById(`label_color_${id}`)?.value || '#202124';
+            const halo = document.getElementById(`label_halo_${id}`)?.checked;
+
+            let sample = '';
+            if (labelField && _bmShpCache[id]?.length) {
+                const raw = _bmShpCache[id][0]?.properties?.[labelField];
+                if (raw !== null && raw !== undefined && String(raw).trim() !== '') sample = String(raw);
+            }
+            if (labelField && !sample) sample = 'Contoh Label';
+
+            const haloStyle = halo ? 'text-shadow:-1px -1px 0 rgba(255,255,255,0.95),1px -1px 0 rgba(255,255,255,0.95),-1px 1px 0 rgba(255,255,255,0.95),1px 1px 0 rgba(255,255,255,0.95),0 0 4px rgba(255,255,255,0.9);' : '';
+            const labelHtml = sample
+                ? `<span class="style-preview-label" style="font-size:${labelSize}px;color:${labelColor};${haloStyle}">${escapeAdminHtml(sample)}</span>`
+                : '<span class="style-preview-empty">Tanpa label</span>';
+
+            box.innerHTML = `<span class="style-preview-symbol">${adminSymbolSvg(symbol, symbolSize, color)}</span>${labelHtml}`;
+        }
+
         async function loadBasemaps() {
             try {
                 const response = await fetch('api/basemaps.php');
@@ -950,6 +1086,14 @@
                 const weight     = bm.weight     || 3;
                 const dash_array = bm.dash_array || '';
                 const hasCat     = !!bm.category_field;
+                const symbol     = ADMIN_SYMBOLS[bm.symbol] ? bm.symbol : 'circle';
+                const symbolSize = clampAdminNumber(bm.symbol_size, 3, 30, 7);
+                const labelField = bm.label_field || '';
+                const labelSize  = clampAdminNumber(bm.label_size, 8, 32, 11);
+                const labelColor = /^#[0-9a-fA-F]{6}$/.test(bm.label_color || '') ? bm.label_color : '#202124';
+                const labelHalo  = !(bm.label_halo === 0 || bm.label_halo === '0' || bm.label_halo === false || bm.label_halo === 'false');
+                const labelMode  = bm.label_mode === 'hover' ? 'hover' : 'permanent';
+                const hasStyle   = (bm.symbol && bm.symbol !== 'circle') || !!labelField || symbolSize !== 7;
 
                 const item = document.createElement('div');
                 item.className = 'file-item';
@@ -972,6 +1116,10 @@
                                 <span>Tebal: ${weight}</span>
                                 <span style="color:#dadce0;">·</span>
                                 <span>${dash_array ? 'Putus-putus' : 'Solid'}</span>
+                                <span style="color:#dadce0;">·</span>
+                                <span>Simbol: ${ADMIN_SYMBOLS[symbol]}</span>
+                                <span style="color:#dadce0;">·</span>
+                                <span>${labelField ? 'Label: ' + escapeAdminHtml(labelField) : 'Tanpa label'}</span>
                             </div>
                         </div>
                         <div class="admin-actions">
@@ -981,6 +1129,10 @@
                             ${bm.file_path ? `<a href="${bm.file_path}" download class="btn" style="padding:4px 10px;font-size:0.78rem;background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.2);" title="Download SHP"><i data-feather="download" style="width:12px;height:12px;"></i></a>` : ''}
                             <button class="cat-toggle-btn ${hasCat ? 'active' : ''}" id="catToggle_${bm.id}" onclick="toggleCatPanel(${bm.id})" title="Warna Kategori">
                                 <i data-feather="sliders" style="width:12px;height:12px;"></i>
+                            </button>
+                            <button class="style-toggle-btn ${hasStyle ? 'active' : ''}" id="styleToggle_${bm.id}" onclick="toggleStylePanel(${bm.id})" title="Pengaturan Simbol & Label">
+                                <i data-feather="crosshair" style="width:12px;height:12px;"></i>
+                                <span class="style-toggle-label">Simbol & Label</span>
                             </button>
                             <button class="btn btn-primary" style="padding:4px 12px;font-size:0.78rem;" onclick="updateBasemap(${bm.id})">
                                 <i data-feather="save" style="width:12px;height:12px;"></i> Simpan
@@ -994,7 +1146,7 @@
                         <input type="hidden" id="name_${bm.id}" value="${bm.name}">
                         <div class="admin-ctrl-item">
                             <label>Warna:</label>
-                            <input type="color" id="color_${bm.id}" value="${color}" style="width:26px;height:26px;padding:0;border:none;border-radius:3px;cursor:pointer;background:transparent;">
+                            <input type="color" id="color_${bm.id}" value="${color}" oninput="updateStylePreview(${bm.id})" style="width:26px;height:26px;padding:0;border:none;border-radius:3px;cursor:pointer;background:transparent;">
                         </div>
                         <div class="admin-ctrl-item">
                             <label>Tipe:</label>
@@ -1032,6 +1184,58 @@
                             </button>
                         </div>
                     </div>
+
+                    <!-- Symbol & Label Panel -->
+                    <div class="cat-admin-panel">
+                        <div class="cat-admin-title">
+                            <i data-feather="crosshair" style="width:12px;height:12px;"></i> Pengaturan Simbol & Label
+                        </div>
+                        <div class="cat-admin-body" id="styleBody_${bm.id}">
+                            <div class="style-admin-grid">
+                                <div class="admin-ctrl-item">
+                                    <label>Simbol titik:</label>
+                                    <select id="symbol_${bm.id}" class="form-control" onchange="updateStylePreview(${bm.id})">
+                                        ${Object.entries(ADMIN_SYMBOLS).map(([key, label]) => `<option value="${key}" ${symbol === key ? 'selected' : ''}>${label}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div class="admin-ctrl-item">
+                                    <label>Ukuran simbol:</label>
+                                    <input type="number" id="symbol_size_${bm.id}" class="form-control" min="3" max="30" value="${symbolSize}" oninput="updateStylePreview(${bm.id})">
+                                </div>
+                                <div class="admin-ctrl-item">
+                                    <label>Field label:</label>
+                                    <select id="label_field_${bm.id}" class="form-control" onchange="updateStylePreview(${bm.id})">
+                                        <option value="">-- Tanpa label --</option>
+                                        ${labelField ? `<option value="${escapeAdminHtml(labelField)}" selected>${escapeAdminHtml(labelField)}</option>` : ''}
+                                    </select>
+                                </div>
+                                <div class="admin-ctrl-item">
+                                    <label>Ukuran label:</label>
+                                    <input type="number" id="label_size_${bm.id}" class="form-control" min="8" max="32" value="${labelSize}" oninput="updateStylePreview(${bm.id})">
+                                </div>
+                                <div class="admin-ctrl-item">
+                                    <label>Warna label:</label>
+                                    <input type="color" id="label_color_${bm.id}" value="${labelColor}" oninput="updateStylePreview(${bm.id})">
+                                </div>
+                                <div class="admin-ctrl-item">
+                                    <label>Tampilan:</label>
+                                    <select id="label_mode_${bm.id}" class="form-control" onchange="updateStylePreview(${bm.id})">
+                                        <option value="permanent" ${labelMode === 'permanent' ? 'selected' : ''}>Selalu tampil</option>
+                                        <option value="hover" ${labelMode === 'hover' ? 'selected' : ''}>Saat hover</option>
+                                    </select>
+                                </div>
+                                <div class="admin-ctrl-item">
+                                    <label>Halo teks:</label>
+                                    <input type="checkbox" id="label_halo_${bm.id}" ${labelHalo ? 'checked' : ''} onchange="updateStylePreview(${bm.id})" style="width:18px;height:18px;accent-color:#1a73e8;cursor:pointer;">
+                                </div>
+                            </div>
+                            <div class="cat-loading" id="styleLoading_${bm.id}">Klik tombol "Simbol & Label" untuk memuat atribut SHP...</div>
+                            <div class="style-preview-box" id="stylePreview_${bm.id}"></div>
+                            <button type="button" class="btn-save-cat" onclick="updateBasemap(${bm.id})">
+                                <i data-feather="save" style="width:14px;height:14px;"></i> Simpan Simbol & Label
+                            </button>
+                        </div>
+                    </div>
                 `;
                 list.appendChild(item);
 
@@ -1047,6 +1251,17 @@
                     colors: (savedCat && typeof savedCat === 'object') ? savedCat : {},
                     filePath: bm.file_path || null
                 };
+                _bmStyleState[bm.id] = {
+                    symbol: symbol,
+                    symbol_size: symbolSize,
+                    label_field: labelField,
+                    label_size: labelSize,
+                    label_color: labelColor,
+                    label_halo: labelHalo,
+                    label_mode: labelMode,
+                    filePath: bm.file_path || null
+                };
+                updateStylePreview(bm.id);
             });
             feather.replace();
         }
@@ -1132,6 +1347,23 @@
             const newDashArray = document.getElementById('dash_array_' + id).value;
             
             const catState = _bmCatState[id];
+            const styleState = _bmStyleState[id] || {};
+
+            const symbolEl     = document.getElementById('symbol_' + id);
+            const symbolSizeEl = document.getElementById('symbol_size_' + id);
+            const labelFieldEl = document.getElementById('label_field_' + id);
+            const labelSizeEl  = document.getElementById('label_size_' + id);
+            const labelColorEl = document.getElementById('label_color_' + id);
+            const labelModeEl  = document.getElementById('label_mode_' + id);
+            const labelHaloEl  = document.getElementById('label_halo_' + id);
+
+            const newSymbol     = symbolEl ? symbolEl.value : (styleState.symbol || 'circle');
+            const newSymbolSize = symbolSizeEl ? symbolSizeEl.value : (styleState.symbol_size || 7);
+            const newLabelField = labelFieldEl ? labelFieldEl.value : (styleState.label_field || '');
+            const newLabelSize  = labelSizeEl ? labelSizeEl.value : (styleState.label_size || 11);
+            const newLabelColor = labelColorEl ? labelColorEl.value : (styleState.label_color || '#202124');
+            const newLabelMode  = labelModeEl ? labelModeEl.value : (styleState.label_mode || 'permanent');
+            const newLabelHalo  = labelHaloEl ? labelHaloEl.checked : !!styleState.label_halo;
             
             try {
                 const res = await fetch('api/basemaps.php', {
@@ -1146,7 +1378,14 @@
                         weight: newWeight,
                         dash_array: newDashArray,
                         category_field: catState ? catState.field : null,
-                        category_colors: catState ? catState.colors : null
+                        category_colors: catState ? catState.colors : null,
+                        symbol: newSymbol,
+                        symbol_size: newSymbolSize,
+                        label_field: newLabelField,
+                        label_size: newLabelSize,
+                        label_color: newLabelColor,
+                        label_mode: newLabelMode,
+                        label_halo: newLabelHalo
                     })
                 });
                 const result = await res.json();
@@ -1160,6 +1399,7 @@
         // ── Category Color State (per basemap id) ─────────
         const _bmCatState  = {};   // { [id]: { field, colors: {val: color} } }
         const _bmShpCache  = {};   // { [id]: features[] }
+        const _bmStyleState = {};  // { [id]: { symbol, symbol_size, label_* } }
 
         const ADMIN_PALETTES = {
             'Vivid':      ['#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#8b5cf6','#ec4899','#14b8a6'],
@@ -1213,6 +1453,103 @@
         function setLoading(id, msg) {
             const el = document.getElementById(`catLoading_${id}`);
             if (el) { el.innerHTML = msg; el.style.display = 'block'; }
+        }
+
+        // ── Panel Simbol & Label ─────────────────────────────
+        async function toggleStylePanel(id) {
+            const body = document.getElementById(`styleBody_${id}`);
+            const btn  = document.getElementById(`styleToggle_${id}`);
+            if (!body) return;
+
+            if (body.classList.contains('open')) {
+                body.classList.remove('open');
+                if (btn) btn.classList.remove('active');
+                return;
+            }
+
+            body.classList.add('open');
+            if (btn) btn.classList.add('active');
+
+            if (_bmShpCache[id]) {
+                populateStyleFields(id);
+                updateStylePreview(id);
+                return;
+            }
+
+            const filePath = _bmStyleState[id]?.filePath || _bmCatState[id]?.filePath || null;
+            const loading  = document.getElementById(`styleLoading_${id}`);
+
+            if (!filePath) {
+                if (loading) {
+                    loading.style.display = 'block';
+                    loading.textContent = '⚠ File SHP tidak tersedia. Pengaturan simbol tetap bisa disimpan.';
+                }
+                updateStylePreview(id);
+                return;
+            }
+
+            if (loading) {
+                loading.style.display = 'block';
+                loading.innerHTML = '<i data-feather="loader"></i> Memuat atribut SHP...';
+            }
+            if (typeof feather !== 'undefined') feather.replace();
+
+            try {
+                const resp = await fetch(filePath);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const buf = await resp.arrayBuffer();
+                const geojson = await shp(buf);
+                const layers = Array.isArray(geojson) ? geojson : [geojson];
+                const features = [];
+                layers.forEach(l => { if (l?.features) features.push(...l.features); });
+                if (features.length === 0) throw new Error('Tidak ada fitur.');
+                _bmShpCache[id] = features;
+                populateStyleFields(id);
+                updateStylePreview(id);
+            } catch(e) {
+                const errMsg = e?.message || (typeof e === 'string' ? e : 'Terjadi kesalahan saat membaca file');
+                if (loading) {
+                    loading.style.display = 'block';
+                    loading.textContent = '⚠ Gagal memuat atribut SHP: ' + errMsg;
+                }
+                updateStylePreview(id);
+            }
+        }
+
+        function populateStyleFields(id) {
+            const features = _bmShpCache[id];
+            const sel      = document.getElementById(`label_field_${id}`);
+            const loading  = document.getElementById(`styleLoading_${id}`);
+            if (!sel) return;
+
+            const saved = _bmStyleState[id]?.label_field || sel.value || '';
+            const fields = Object.keys(features?.[0]?.properties || {});
+
+            sel.innerHTML = '<option value="">-- Tanpa label --</option>';
+            if (fields.length === 0) {
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = '-- Tidak ada atribut (DBF tidak ada) --';
+                opt.disabled = true;
+                sel.appendChild(opt);
+            } else {
+                fields.forEach(field => {
+                    const opt = document.createElement('option');
+                    opt.value = field;
+                    opt.textContent = field;
+                    sel.appendChild(opt);
+                });
+            }
+
+            if (saved && !fields.includes(saved)) {
+                const opt = document.createElement('option');
+                opt.value = saved;
+                opt.textContent = saved;
+                sel.appendChild(opt);
+            }
+
+            sel.value = saved || '';
+            if (loading) loading.style.display = 'none';
         }
 
         function buildAdminCatUI(id) {

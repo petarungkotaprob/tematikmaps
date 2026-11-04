@@ -85,6 +85,69 @@ document.addEventListener('DOMContentLoaded', () => {
         let activeBasemaps = [];
         const activeLegends = {}; // To store legend controls for active basemaps
 
+        // ── Pengaturan simbol & label layer spasial ──────────────
+        const SPATIAL_SYMBOLS = ['circle', 'square', 'triangle', 'diamond', 'star', 'pin'];
+
+        function escapeSpatialHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, ch => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[ch]));
+        }
+
+        function clampSpatialNumber(value, min, max, fallback) {
+            const n = parseInt(value, 10);
+            if (!Number.isFinite(n)) return fallback;
+            return Math.min(max, Math.max(min, n));
+        }
+
+        function spatialSymbolSvg(symbol, size, color, filled = true) {
+            const px = clampSpatialNumber(size, 3, 30, 7) * 2;
+            const fillOpacity = filled ? 1 : 0;
+            const shapes = {
+                circle: `<circle cx="12" cy="12" r="9" fill="${color}" fill-opacity="${fillOpacity}" stroke="#fff" stroke-width="1.8"/>`,
+                square: `<rect x="3.5" y="3.5" width="17" height="17" rx="2" fill="${color}" fill-opacity="${fillOpacity}" stroke="#fff" stroke-width="1.8"/>`,
+                triangle: `<polygon points="12,2.5 21.5,20.5 2.5,20.5" fill="${color}" fill-opacity="${fillOpacity}" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/>`,
+                diamond: `<polygon points="12,2.5 21.5,12 12,21.5 2.5,12" fill="${color}" fill-opacity="${fillOpacity}" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/>`,
+                star: `<polygon points="12,2.2 15,9 22.2,9.3 16.6,14.3 18.6,21.5 12,17.4 5.4,21.5 7.4,14.3 1.8,9.3 9,9" fill="${color}" fill-opacity="${fillOpacity}" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>`,
+                pin: `<path d="M12 1.5C7.03 1.5 3 5.53 3 10.5c0 6.75 9 12 9 12s9-5.25 9-12c0-4.97-4.03-9-9-9z" fill="${color}" fill-opacity="${fillOpacity}" stroke="#fff" stroke-width="1.6"/><circle cx="12" cy="10.2" r="3.4" fill="#fff"/>`
+            };
+            return `<svg xmlns="http://www.w3.org/2000/svg" width="${px}" height="${px}" viewBox="0 0 24 24">${shapes[symbol] || shapes.circle}</svg>`;
+        }
+
+        function getSpatialFeatureColor(feature, baseColor, catField, catColors) {
+            if (catField && catColors && feature && feature.properties) {
+                const val = String(feature.properties[catField] ?? '__null__');
+                if (catColors[val]) return catColors[val];
+            }
+            return baseColor;
+        }
+
+        function bindSpatialLabel(feature, layer, bm, isPoint) {
+            const labelField = bm.label_field;
+            if (!labelField || !feature || !feature.properties) return;
+
+            const raw = feature.properties[labelField];
+            if (raw === null || raw === undefined || String(raw).trim() === '') return;
+
+            const labelSize = clampSpatialNumber(bm.label_size, 8, 32, 11);
+            const labelColor = /^#[0-9a-fA-F]{6}$/.test(bm.label_color || '') ? bm.label_color : '#202124';
+            const permanent = (bm.label_mode || 'permanent') !== 'hover';
+            const halo = !(bm.label_halo === 0 || bm.label_halo === '0' || bm.label_halo === false || bm.label_halo === 'false');
+            const symbolSize = clampSpatialNumber(bm.symbol_size, 3, 30, 7);
+
+            layer.bindTooltip(
+                `<span class="spatial-label-text" style="font-size:${labelSize}px;color:${labelColor};">${escapeSpatialHtml(raw)}</span>`,
+                {
+                    permanent: permanent,
+                    direction: isPoint ? 'top' : 'center',
+                    offset: isPoint ? [0, -symbolSize] : [0, 0],
+                    className: 'spatial-map-label' + (halo ? ' has-halo' : ''),
+                    opacity: 1,
+                    interactive: false
+                }
+            );
+        }
+
         // 1. Basemap Switch Logic (Sync Radio & Google Maps Widget Cards & LocalStorage)
         window.setBasemap = function(val) {
             val = val || 'satelit';
@@ -175,6 +238,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         const layerWeight = selectedBasemap.weight || 3;
                         const fillOpacity = selectedBasemap.fill_type === 'hollow' ? 0 : 0.25;
                         const dashArray = selectedBasemap.dash_array || '';
+                        const symbol = SPATIAL_SYMBOLS.includes(selectedBasemap.symbol) ? selectedBasemap.symbol : 'circle';
+                        const symbolSize = clampSpatialNumber(selectedBasemap.symbol_size, 3, 30, 7);
                         
                         let catField = selectedBasemap.category_field;
                         let catColors = null;
@@ -184,11 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         const geoJsonLayer = L.geoJSON(geojson, {
                             style: feature => {
-                                let c = layerColor;
-                                if (catColors && feature.properties) {
-                                    const val = String(feature.properties[catField] ?? '__null__');
-                                    if (catColors[val]) c = catColors[val];
-                                }
+                                const c = getSpatialFeatureColor(feature, layerColor, catField, catColors);
                                 return { 
                                     color: c, 
                                     fillColor: c, 
@@ -198,20 +259,32 @@ document.addEventListener('DOMContentLoaded', () => {
                                 };
                             },
                             pointToLayer: (feature, latlng) => {
-                                let c = layerColor;
-                                if (catColors && feature.properties) {
-                                    const val = String(feature.properties[catField] ?? '__null__');
-                                    if (catColors[val]) c = catColors[val];
+                                const c = getSpatialFeatureColor(feature, layerColor, catField, catColors);
+                                if (symbol === 'circle') {
+                                    return L.circleMarker(latlng, { radius: symbolSize, fillColor: c, color: '#fff', weight: 1.5, opacity: 1, fillOpacity: fillOpacity === 0 ? 0 : 0.9 });
                                 }
-                                return L.circleMarker(latlng, { radius: 7, fillColor: c, color: '#fff', weight: 1.5, opacity: 1, fillOpacity: fillOpacity === 0 ? 0 : 0.9 });
+
+                                const iconSize = symbolSize * 2;
+                                const isPin = symbol === 'pin';
+                                return L.marker(latlng, {
+                                    icon: L.divIcon({
+                                        className: 'spatial-symbol-marker',
+                                        html: spatialSymbolSvg(symbol, symbolSize, c, fillOpacity !== 0),
+                                        iconSize: [iconSize, iconSize],
+                                        iconAnchor: isPin ? [symbolSize, iconSize] : [symbolSize, symbolSize],
+                                        popupAnchor: [0, isPin ? -iconSize : -symbolSize]
+                                    })
+                                });
                             },
                             onEachFeature: (feature, layer) => {
                                 if (feature.properties) {
                                     const rows = Object.entries(feature.properties)
-                                        .map(([k,v]) => `<tr><td style="color:#5f6368;padding:3px 6px;font-size:0.75rem;">${k}</td><td style="padding:3px 6px;font-size:0.75rem;font-weight:500;">${v ?? '-'}</td></tr>`)
+                                        .map(([k,v]) => `<tr><td style="color:#5f6368;padding:3px 6px;font-size:0.75rem;">${escapeSpatialHtml(k)}</td><td style="padding:3px 6px;font-size:0.75rem;font-weight:500;">${escapeSpatialHtml(v ?? '-')}</td></tr>`)
                                         .join('');
                                     layer.bindPopup(`<table style="border-collapse:collapse;min-width:180px;">${rows}</table>`, { maxHeight: 200, className: 'gm-leaflet-popup' });
                                 }
+                                const isPoint = !!(feature.geometry && /Point/.test(feature.geometry.type));
+                                bindSpatialLabel(feature, layer, selectedBasemap, isPoint);
                             }
                         }).addTo(map);
                         

@@ -1889,6 +1889,52 @@ body.map-page #map {
 }
 
 /* ============================================================
+   17b. SPATIAL LAYER SYMBOLS & LABELS
+   ============================================================ */
+.spatial-symbol-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.spatial-symbol-marker svg {
+  display: block;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.35));
+}
+
+.spatial-map-label {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.spatial-map-label::before {
+  display: none !important;
+}
+
+.spatial-map-label .spatial-label-text {
+  display: inline-block;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: top;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+}
+
+.spatial-map-label.has-halo .spatial-label-text {
+  text-shadow:
+    -1px -1px 0 rgba(255,255,255,0.95),
+     1px -1px 0 rgba(255,255,255,0.95),
+    -1px  1px 0 rgba(255,255,255,0.95),
+     1px  1px 0 rgba(255,255,255,0.95),
+     0 0 4px rgba(255,255,255,0.9);
+}
+
+/* ============================================================
    18. LEAFLET POPUP (Google Maps style)
    ============================================================ */
 .gm-leaflet-popup .leaflet-popup-content-wrapper {
