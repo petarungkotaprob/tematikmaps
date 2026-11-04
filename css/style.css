@@ -1326,7 +1326,8 @@ body.map-page #map {
    ============================================================ */
 .gm-desktop-tools {
   position: fixed;
-  bottom: 88px;
+  /* Sit 8px above the Leaflet zoom control (which ends at 108px from bottom) */
+  bottom: 116px;
   right: 12px;
   z-index: 200;
   display: flex;

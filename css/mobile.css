@@ -663,8 +663,9 @@
   /* ==========================================================
      LEAFLET CONTROLS — Mobile map page
      ========================================================== */
+  /* Keep zoom controls below the search bar + filter chips (no overlap) */
   body.map-page .leaflet-top.leaflet-right {
-    top: calc(72px + var(--safe-top));
+    top: calc(104px + var(--safe-top));
     right: 8px;
   }
 
@@ -1106,6 +1107,15 @@
   }
 
   body.report-page #mini-map { height: 180px !important; }
+}
+
+/* Wide phones in landscape still use the desktop layout (no mobile search bar),
+   so keep the zoom control clear of the top-right user pill. */
+@media (min-width: 769px) and (max-width: 900px) and (orientation: landscape) and (max-height: 500px) {
+  body.map-page .leaflet-top.leaflet-right {
+    top: calc(64px + var(--safe-top));
+    right: 8px;
+  }
 }
 
 /* ============================================================
