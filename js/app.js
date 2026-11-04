@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const activeLegends = {}; // To store legend controls for active basemaps
 
         // ── Pengaturan simbol & label layer spasial ──────────────
-        const SPATIAL_SYMBOLS = ['circle', 'square', 'triangle', 'diamond', 'star', 'pin'];
+        const SPATIAL_SYMBOLS = ['circle', 'square', 'triangle', 'diamond', 'star', 'pin', 'pentagon', 'hexagon', 'cross', 'arrow'];
 
         function escapeSpatialHtml(value) {
             return String(value ?? '').replace(/[&<>"']/g, ch => ({
@@ -109,7 +109,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 triangle: `<polygon points="12,2.5 21.5,20.5 2.5,20.5" fill="${color}" fill-opacity="${fillOpacity}" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/>`,
                 diamond: `<polygon points="12,2.5 21.5,12 12,21.5 2.5,12" fill="${color}" fill-opacity="${fillOpacity}" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/>`,
                 star: `<polygon points="12,2.2 15,9 22.2,9.3 16.6,14.3 18.6,21.5 12,17.4 5.4,21.5 7.4,14.3 1.8,9.3 9,9" fill="${color}" fill-opacity="${fillOpacity}" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>`,
-                pin: `<path d="M12 1.5C7.03 1.5 3 5.53 3 10.5c0 6.75 9 12 9 12s9-5.25 9-12c0-4.97-4.03-9-9-9z" fill="${color}" fill-opacity="${fillOpacity}" stroke="#fff" stroke-width="1.6"/><circle cx="12" cy="10.2" r="3.4" fill="#fff"/>`
+                pin: `<path d="M12 1.5C7.03 1.5 3 5.53 3 10.5c0 6.75 9 12 9 12s9-5.25 9-12c0-4.97-4.03-9-9-9z" fill="${color}" fill-opacity="${fillOpacity}" stroke="#fff" stroke-width="1.6"/><circle cx="12" cy="10.2" r="3.4" fill="#fff"/>`,
+                pentagon: `<polygon points="12,2.4 22,9.7 18.2,21.2 5.8,21.2 2,9.7" fill="${color}" fill-opacity="${fillOpacity}" stroke="#fff" stroke-width="1.7" stroke-linejoin="round"/>`,
+                hexagon: `<polygon points="12,2.2 20.6,7.2 20.6,16.8 12,21.8 3.4,16.8 3.4,7.2" fill="${color}" fill-opacity="${fillOpacity}" stroke="#fff" stroke-width="1.7" stroke-linejoin="round"/>`,
+                cross: `<path d="M9.5 2h5v7.5H22v5h-7.5V22h-5v-7.5H2v-5h7.5z" fill="${color}" fill-opacity="${fillOpacity}" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/>`,
+                arrow: `<polygon points="12,2 21.5,11.5 15.5,11.5 15.5,22 8.5,22 8.5,11.5 2.5,11.5" fill="${color}" fill-opacity="${fillOpacity}" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>`
             };
             return `<svg xmlns="http://www.w3.org/2000/svg" width="${px}" height="${px}" viewBox="0 0 24 24">${shapes[symbol] || shapes.circle}</svg>`;
         }
@@ -120,6 +124,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (catColors[val]) return catColors[val];
             }
             return baseColor;
+        }
+
+        function getSpatialFeatureSymbol(feature, baseSymbol, catField, catSymbols) {
+            if (catField && catSymbols && feature && feature.properties) {
+                const val = String(feature.properties[catField] ?? '__null__');
+                if (SPATIAL_SYMBOLS.includes(catSymbols[val])) return catSymbols[val];
+            }
+            return baseSymbol;
+        }
+
+        function getSpatialGeoJsonFeatures(geojson) {
+            if (Array.isArray(geojson)) {
+                return geojson.reduce((all, item) => all.concat(Array.isArray(item?.features) ? item.features : []), []);
+            }
+            return Array.isArray(geojson?.features) ? geojson.features : [];
         }
 
         function bindSpatialLabel(feature, layer, bm, isPoint) {
@@ -222,10 +241,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Rebuild the category legend when restoring a previously loaded layer
                         let catField = selectedBasemap.category_field;
                         let catColors = null;
+                        let catSymbols = null;
                         if (catField && selectedBasemap.category_colors) {
                             try { catColors = typeof selectedBasemap.category_colors === 'string' ? JSON.parse(selectedBasemap.category_colors) : selectedBasemap.category_colors; } catch(e){}
                         }
-                        buildSpatialLegend(id, selectedBasemap, catField, catColors);
+                        if (catField && selectedBasemap.category_symbols) {
+                            try { catSymbols = typeof selectedBasemap.category_symbols === 'string' ? JSON.parse(selectedBasemap.category_symbols) : selectedBasemap.category_symbols; } catch(e){}
+                        }
+                        buildSpatialLegend(id, selectedBasemap, catField, catColors, catSymbols, customLayers[id]._spatialHasPoints);
                     } else {
                         // Load using shpjs
                         const response = await fetch(selectedBasemap.file_path);
@@ -243,9 +266,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                         let catField = selectedBasemap.category_field;
                         let catColors = null;
+                        let catSymbols = null;
                         if (catField && selectedBasemap.category_colors) {
                             try { catColors = typeof selectedBasemap.category_colors === 'string' ? JSON.parse(selectedBasemap.category_colors) : selectedBasemap.category_colors; } catch(e){}
                         }
+                        if (catField && selectedBasemap.category_symbols) {
+                            try { catSymbols = typeof selectedBasemap.category_symbols === 'string' ? JSON.parse(selectedBasemap.category_symbols) : selectedBasemap.category_symbols; } catch(e){}
+                        }
+
+                        const sourceFeatures = getSpatialGeoJsonFeatures(geojson);
+                        const hasPointGeometry = sourceFeatures.some(f => f?.geometry && /Point/.test(f.geometry.type));
 
                         const geoJsonLayer = L.geoJSON(geojson, {
                             style: feature => {
@@ -260,16 +290,17 @@ document.addEventListener('DOMContentLoaded', () => {
                             },
                             pointToLayer: (feature, latlng) => {
                                 const c = getSpatialFeatureColor(feature, layerColor, catField, catColors);
-                                if (symbol === 'circle') {
+                                const featureSymbol = getSpatialFeatureSymbol(feature, symbol, catField, catSymbols);
+                                if (featureSymbol === 'circle') {
                                     return L.circleMarker(latlng, { radius: symbolSize, fillColor: c, color: '#fff', weight: 1.5, opacity: 1, fillOpacity: fillOpacity === 0 ? 0 : 0.9 });
                                 }
 
                                 const iconSize = symbolSize * 2;
-                                const isPin = symbol === 'pin';
+                                const isPin = featureSymbol === 'pin';
                                 return L.marker(latlng, {
                                     icon: L.divIcon({
                                         className: 'spatial-symbol-marker',
-                                        html: spatialSymbolSvg(symbol, symbolSize, c, fillOpacity !== 0),
+                                        html: spatialSymbolSvg(featureSymbol, symbolSize, c, fillOpacity !== 0),
                                         iconSize: [iconSize, iconSize],
                                         iconAnchor: isPin ? [symbolSize, iconSize] : [symbolSize, symbolSize],
                                         popupAnchor: [0, isPin ? -iconSize : -symbolSize]
@@ -288,11 +319,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                         }).addTo(map);
                         
+                        geoJsonLayer._spatialHasPoints = hasPointGeometry;
                         customLayers[id] = geoJsonLayer;
                         map.fitBounds(geoJsonLayer.getBounds(), { padding: [40, 40] });
 
                         // Build legend if categorical
-                        buildSpatialLegend(id, selectedBasemap, catField, catColors);
+                        buildSpatialLegend(id, selectedBasemap, catField, catColors, catSymbols, hasPointGeometry);
                     }
                 } catch (e) {
                     console.error("Gagal memuat SHP:", e);
@@ -311,7 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Render/refresh the category legend for a spatial basemap
-        function buildSpatialLegend(id, basemap, catField, catColors) {
+        function buildSpatialLegend(id, basemap, catField, catColors, catSymbols, hasPoints) {
             if (!catField || !catColors || Object.keys(catColors).length === 0) return;
 
             const legendElements = document.querySelectorAll(`.legend-container-${id}`);
@@ -320,7 +352,11 @@ document.addEventListener('DOMContentLoaded', () => {
             let html = `<div style="font-weight:600;font-size:0.75rem;text-transform:uppercase;color:#5f6368;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #dadce0;">${basemap.name} - ${catField}</div>`;
             Object.entries(catColors).forEach(([val, color]) => {
                 const display = val === '__null__' ? '(kosong)' : val;
-                html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:0.75rem;color:#202124;"><span style="width:12px;height:12px;border-radius:2px;flex-shrink:0;background:${color};"></span><span>${display}</span></div>`;
+                const symbol = catSymbols?.[val];
+                const swatch = (hasPoints && SPATIAL_SYMBOLS.includes(symbol))
+                    ? `<span style="width:14px;height:14px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;">${spatialSymbolSvg(symbol, 7, color)}</span>`
+                    : `<span style="width:12px;height:12px;border-radius:2px;flex-shrink:0;background:${color};"></span>`;
+                html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:0.75rem;color:#202124;">${swatch}<span>${escapeSpatialHtml(display)}</span></div>`;
             });
 
             legendElements.forEach(legendDiv => {

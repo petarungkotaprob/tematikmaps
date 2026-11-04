@@ -28,6 +28,7 @@ function ensureBasemapStyleColumns($pdo) {
             'label_color' => "VARCHAR(20) NOT NULL DEFAULT '#202124'",
             'label_halo'  => "TINYINT(1) NOT NULL DEFAULT 1",
             'label_mode'  => "VARCHAR(20) NOT NULL DEFAULT 'permanent'",
+            'category_symbols' => "MEDIUMTEXT DEFAULT NULL",
         ];
 
         foreach ($columns as $column => $definition) {
@@ -42,6 +43,10 @@ function ensureBasemapStyleColumns($pdo) {
 
 function isHexColor($value) {
     return is_string($value) && preg_match('/^#[0-9a-fA-F]{6}$/', $value) === 1;
+}
+
+function allowedSpatialSymbols() {
+    return ['circle', 'square', 'triangle', 'diamond', 'star', 'pin', 'pentagon', 'hexagon', 'cross', 'arrow'];
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -77,7 +82,7 @@ if ($method === 'GET') {
         exit;
     }
 
-    $allowedSymbols = ['circle', 'square', 'triangle', 'diamond', 'star', 'pin'];
+    $allowedSymbols = allowedSpatialSymbols();
     $updates = [];
     $params  = [];
 
@@ -148,6 +153,27 @@ if ($method === 'GET') {
             }
             $updates[] = 'category_colors = ?';
             $params[]  = $jsonColors;
+        }
+
+        if (array_key_exists('category_symbols', $input)) {
+            $symbols = $input['category_symbols'];
+            if (is_string($symbols)) {
+                $decoded = json_decode($symbols, true);
+                $symbols = is_array($decoded) ? $decoded : null;
+            }
+            if ($symbols === null || $symbols === '') {
+                $jsonSymbols = null;
+            } elseif (is_array($symbols)) {
+                $clean = [];
+                foreach ($symbols as $key => $value) {
+                    if (in_array($value, $allowedSymbols, true)) $clean[(string)$key] = $value;
+                }
+                $jsonSymbols = json_encode($clean, JSON_UNESCAPED_UNICODE);
+            } else {
+                throw new InvalidArgumentException('Simbol kategori tidak valid.');
+            }
+            $updates[] = 'category_symbols = ?';
+            $params[]  = $jsonSymbols;
         }
 
         if (array_key_exists('symbol', $input)) {

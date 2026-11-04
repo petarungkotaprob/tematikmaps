@@ -398,6 +398,22 @@
         .admin-cat-row:hover { border-color: var(--glass-border); }
         .admin-cat-color { width:26px;height:26px;border-radius:5px;border:none;padding:1px;cursor:pointer;background:none;flex-shrink:0; }
         .admin-cat-label { font-size:0.8rem; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .admin-cat-symbol {
+            width: 112px;
+            height: 28px;
+            flex-shrink: 0;
+            padding: 2px 4px;
+            border-radius: 5px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.04);
+            color: var(--text-primary);
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+        body.dark-mode .admin-cat-symbol { background: rgba(255,255,255,0.06); color: #f8fafc; }
+        @media (max-width: 768px) {
+            .admin-cat-symbol { width: 96px; font-size: 0.72rem; }
+        }
         .admin-cat-count { font-size:0.7rem; color:var(--text-secondary); flex-shrink:0; }
         .admin-palette-row { display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px; }
         .admin-palette-btn {
@@ -1010,7 +1026,11 @@
             triangle: 'Segitiga',
             diamond:  'Belah Ketupat',
             star:     'Bintang',
-            pin:      'Pin'
+            pin:      'Pin',
+            pentagon: 'Segi Lima',
+            hexagon:  'Segi Enam',
+            cross:    'Plus',
+            arrow:    'Panah'
         };
 
         function escapeAdminHtml(value) {
@@ -1033,7 +1053,11 @@
                 triangle: `<polygon points="12,2.5 21.5,20.5 2.5,20.5" fill="${color}" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/>`,
                 diamond: `<polygon points="12,2.5 21.5,12 12,21.5 2.5,12" fill="${color}" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/>`,
                 star: `<polygon points="12,2.2 15,9 22.2,9.3 16.6,14.3 18.6,21.5 12,17.4 5.4,21.5 7.4,14.3 1.8,9.3 9,9" fill="${color}" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>`,
-                pin: `<path d="M12 1.5C7.03 1.5 3 5.53 3 10.5c0 6.75 9 12 9 12s9-5.25 9-12c0-4.97-4.03-9-9-9z" fill="${color}" stroke="#fff" stroke-width="1.6"/><circle cx="12" cy="10.2" r="3.4" fill="#fff"/>`
+                pin: `<path d="M12 1.5C7.03 1.5 3 5.53 3 10.5c0 6.75 9 12 9 12s9-5.25 9-12c0-4.97-4.03-9-9-9z" fill="${color}" stroke="#fff" stroke-width="1.6"/><circle cx="12" cy="10.2" r="3.4" fill="#fff"/>`,
+                pentagon: `<polygon points="12,2.4 22,9.7 18.2,21.2 5.8,21.2 2,9.7" fill="${color}" stroke="#fff" stroke-width="1.7" stroke-linejoin="round"/>`,
+                hexagon: `<polygon points="12,2.2 20.6,7.2 20.6,16.8 12,21.8 3.4,16.8 3.4,7.2" fill="${color}" stroke="#fff" stroke-width="1.7" stroke-linejoin="round"/>`,
+                cross: `<path d="M9.5 2h5v7.5H22v5h-7.5V22h-5v-7.5H2v-5h7.5z" fill="${color}" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/>`,
+                arrow: `<polygon points="12,2 21.5,11.5 15.5,11.5 15.5,22 8.5,22 8.5,11.5 2.5,11.5" fill="${color}" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>`
             };
             return `<svg xmlns="http://www.w3.org/2000/svg" width="${px}" height="${px}" viewBox="0 0 24 24">${shapes[symbol] || shapes.circle}</svg>`;
         }
@@ -1094,6 +1118,13 @@
                 const labelHalo  = !(bm.label_halo === 0 || bm.label_halo === '0' || bm.label_halo === false || bm.label_halo === 'false');
                 const labelMode  = bm.label_mode === 'hover' ? 'hover' : 'permanent';
                 const hasStyle   = (bm.symbol && bm.symbol !== 'circle') || !!labelField || symbolSize !== 7;
+                let hasCatSymbols = false;
+                if (bm.category_symbols) {
+                    try {
+                        const parsedSymbols = typeof bm.category_symbols === 'string' ? JSON.parse(bm.category_symbols) : bm.category_symbols;
+                        hasCatSymbols = !!(parsedSymbols && Object.keys(parsedSymbols).length);
+                    } catch(e) { hasCatSymbols = false; }
+                }
 
                 const item = document.createElement('div');
                 item.className = 'file-item';
@@ -1117,7 +1148,7 @@
                                 <span style="color:#dadce0;">·</span>
                                 <span>${dash_array ? 'Putus-putus' : 'Solid'}</span>
                                 <span style="color:#dadce0;">·</span>
-                                <span>Simbol: ${ADMIN_SYMBOLS[symbol]}</span>
+                                <span>Simbol: ${hasCatSymbols ? 'Per kategori' : ADMIN_SYMBOLS[symbol]}</span>
                                 <span style="color:#dadce0;">·</span>
                                 <span>${labelField ? 'Label: ' + escapeAdminHtml(labelField) : 'Tanpa label'}</span>
                             </div>
@@ -1127,7 +1158,7 @@
                                 <i data-feather="edit-2" style="width:12px;height:12px;"></i>
                             </button>
                             ${bm.file_path ? `<a href="${bm.file_path}" download class="btn" style="padding:4px 10px;font-size:0.78rem;background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.2);" title="Download SHP"><i data-feather="download" style="width:12px;height:12px;"></i></a>` : ''}
-                            <button class="cat-toggle-btn ${hasCat ? 'active' : ''}" id="catToggle_${bm.id}" onclick="toggleCatPanel(${bm.id})" title="Warna Kategori">
+                            <button class="cat-toggle-btn ${hasCat ? 'active' : ''}" id="catToggle_${bm.id}" onclick="toggleCatPanel(${bm.id})" title="Warna & Simbol Kategori">
                                 <i data-feather="sliders" style="width:12px;height:12px;"></i>
                             </button>
                             <button class="style-toggle-btn ${hasStyle ? 'active' : ''}" id="styleToggle_${bm.id}" onclick="toggleStylePanel(${bm.id})" title="Pengaturan Simbol & Label">
@@ -1169,18 +1200,18 @@
                         </div>
                     </div>
 
-                    <!-- Category Color Panel -->
+                    <!-- Category Color & Symbol Panel -->
                     <div class="cat-admin-panel">
                         <div class="cat-admin-title">
-                            <i data-feather="sliders" style="width:12px;height:12px;"></i> Pengaturan Warna Kategori
+                            <i data-feather="sliders" style="width:12px;height:12px;"></i> Pengaturan Warna & Simbol Kategori
                         </div>
                         <div class="cat-admin-body" id="catBody_${bm.id}">
-                            <div class="cat-loading" id="catLoading_${bm.id}">Klik tombol "Warna Kategori" untuk memuat atribut SHP...</div>
+                            <div class="cat-loading" id="catLoading_${bm.id}">Klik tombol "Warna & Simbol Kategori" untuk memuat atribut SHP...</div>
                             <select id="catField_${bm.id}" class="form-control cat-field-select" style="font-size:0.82rem;margin-bottom:10px;display:none;"></select>
                             <div class="admin-palette-row" id="catPalette_${bm.id}" style="display:none;"></div>
                             <div class="admin-cat-values" id="catValues_${bm.id}"></div>
                             <button type="button" class="btn-save-cat" id="btnSaveCat_${bm.id}" style="display:none;" onclick="saveCategory(${bm.id})">
-                                <i data-feather="save" style="width:14px;height:14px;"></i> Simpan Konfigurasi Warna
+                                <i data-feather="save" style="width:14px;height:14px;"></i> Simpan Warna & Simbol Kategori
                             </button>
                         </div>
                     </div>
@@ -1246,9 +1277,16 @@
                         savedCat = typeof bm.category_colors === 'string' ? JSON.parse(bm.category_colors) : bm.category_colors;
                     } catch(e) { savedCat = null; }
                 }
+                let savedCatSymbols = null;
+                if (bm.category_symbols) {
+                    try {
+                        savedCatSymbols = typeof bm.category_symbols === 'string' ? JSON.parse(bm.category_symbols) : bm.category_symbols;
+                    } catch(e) { savedCatSymbols = null; }
+                }
                 _bmCatState[bm.id] = {
                     field: bm.category_field || null,
                     colors: (savedCat && typeof savedCat === 'object') ? savedCat : {},
+                    symbols: (savedCatSymbols && typeof savedCatSymbols === 'object') ? savedCatSymbols : {},
                     filePath: bm.file_path || null
                 };
                 _bmStyleState[bm.id] = {
@@ -1379,6 +1417,7 @@
                         dash_array: newDashArray,
                         category_field: catState ? catState.field : null,
                         category_colors: catState ? catState.colors : null,
+                        category_symbols: catState ? catState.symbols : null,
                         symbol: newSymbol,
                         symbol_size: newSymbolSize,
                         label_field: newLabelField,
@@ -1581,7 +1620,7 @@
                 });
             }
 
-            const buildValues = (field, savedColors) => {
+            const buildValues = (field, savedColors, savedSymbols) => {
                 values.innerHTML = '';
                 palette.innerHTML = '';
                 palette.style.display = 'none';
@@ -1594,30 +1633,42 @@
                 });
                 const uniqVals = Object.keys(freq).sort();
                 const autoColors = ADMIN_PALETTES['Vivid'];
+                const symbolKeys = Object.keys(ADMIN_SYMBOLS);
 
                 // Init state
-                if (!_bmCatState[id]) _bmCatState[id] = { field, colors: {} };
+                if (!_bmCatState[id]) _bmCatState[id] = { field, colors: {}, symbols: {} };
+                if (!_bmCatState[id].symbols) _bmCatState[id].symbols = {};
                 _bmCatState[id].field = field;
                 uniqVals.forEach((v, i) => {
                     if (!_bmCatState[id].colors[v]) {
                         _bmCatState[id].colors[v] = savedColors?.[v] || autoColors[i % autoColors.length];
+                    }
+                    if (!_bmCatState[id].symbols[v]) {
+                        _bmCatState[id].symbols[v] = savedSymbols?.[v] || symbolKeys[i % symbolKeys.length];
                     }
                 });
 
                 // Render rows
                 uniqVals.forEach(val => {
                     const color = _bmCatState[id].colors[val] || '#3b82f6';
+                    const symbol = _bmCatState[id].symbols[val] || 'circle';
                     const display = val === '__null__' ? '(kosong)' : val;
                     const row = document.createElement('div');
                     row.className = 'admin-cat-row';
                     row.innerHTML = `
-                        <input type="color" class="admin-cat-color" data-id="${id}" data-val="${val}" value="${color}">
-                        <span class="admin-cat-label" title="${display}">${display}</span>
+                        <input type="color" class="admin-cat-color" data-id="${id}" data-val="${val}" value="${color}" title="Warna kategori">
+                        <span class="admin-cat-label" title="${escapeAdminHtml(display)}">${escapeAdminHtml(display)}</span>
+                        <select class="admin-cat-symbol" data-id="${id}" data-val="${val}" title="Simbol kategori">
+                            ${symbolKeys.map(key => `<option value="${key}" ${symbol === key ? 'selected' : ''}>${ADMIN_SYMBOLS[key]}</option>`).join('')}
+                        </select>
                         <span class="admin-cat-count">${freq[val]} fitur</span>
                     `;
                     values.appendChild(row);
                     row.querySelector('.admin-cat-color').addEventListener('input', function() {
                         _bmCatState[id].colors[this.dataset.val] = this.value;
+                    });
+                    row.querySelector('.admin-cat-symbol').addEventListener('change', function() {
+                        _bmCatState[id].symbols[this.dataset.val] = this.value;
                     });
                 });
 
@@ -1640,12 +1691,15 @@
             };
 
             // Initial render with saved state
-            if (savedField) buildValues(savedField, _bmCatState[id]?.colors);
+            if (savedField) buildValues(savedField, _bmCatState[id]?.colors, _bmCatState[id]?.symbols);
 
             // Assign (not add) the handler so reopening the panel does not stack listeners
             fieldSel.onchange = function() {
-                if (_bmCatState[id]) _bmCatState[id].colors = {};
-                buildValues(this.value, null);
+                if (_bmCatState[id]) {
+                    _bmCatState[id].colors = {};
+                    _bmCatState[id].symbols = {};
+                }
+                buildValues(this.value, null, null);
                 if (_bmCatState[id]) _bmCatState[id].field = this.value || null;
             };
 
@@ -1658,6 +1712,10 @@
             // Re-read inputs
             document.querySelectorAll(`.admin-cat-color[data-id="${id}"]`).forEach(inp => {
                 catState.colors[inp.dataset.val] = inp.value;
+            });
+            if (!catState.symbols) catState.symbols = {};
+            document.querySelectorAll(`.admin-cat-symbol[data-id="${id}"]`).forEach(sel => {
+                catState.symbols[sel.dataset.val] = sel.value;
             });
             // Save via update API
             const newColor = document.getElementById('color_' + id)?.value || '#22c55e';
@@ -1673,11 +1731,12 @@
                         action:'update', id, color:newColor, name:newName,
                         fill_type:newFillType, weight:newWeight, dash_array:newDashArray,
                         category_field: catState.field,
-                        category_colors: catState.colors
+                        category_colors: catState.colors,
+                        category_symbols: catState.symbols
                     })
                 });
                 const result = await res.json();
-                if (result.status === 'success') { showAdminToast('Konfigurasi warna kategori tersimpan!', 'success'); loadBasemaps(); }
+                if (result.status === 'success') { showAdminToast('Warna & simbol kategori tersimpan!', 'success'); loadBasemaps(); }
                 else showAdminToast(result.message, 'error');
             } catch(e) { showAdminToast('Kesalahan koneksi.', 'error'); }
         }
