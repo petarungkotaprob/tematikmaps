@@ -46,7 +46,17 @@ function isHexColor($value) {
 }
 
 function allowedSpatialSymbols() {
-    return ['circle', 'square', 'triangle', 'diamond', 'star', 'pin', 'pentagon', 'hexagon', 'cross', 'arrow'];
+    return [
+        // Bentuk Dasar
+        'circle', 'square', 'triangle', 'diamond', 'star', 'pin', 'pentagon', 'hexagon', 'cross', 'arrow',
+        // Toponimi (ArcGIS)
+        'capital', 'city', 'town', 'village', 'mountain', 'water',
+        // Fasilitas Umum (Google Maps Style)
+        'hospital', 'school', 'mosque', 'church', 'government', 'office',
+        'shop', 'restaurant', 'hotel', 'park', 'airport', 'harbor',
+        'police', 'fire', 'bank', 'gas', 'parking', 'cemetery',
+        'factory', 'warehouse', 'stadium', 'library', 'museum', 'market'
+    ];
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
