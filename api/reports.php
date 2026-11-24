@@ -9,6 +9,35 @@ header("Access-Control-Allow-Headers: Content-Type");
 
 require_once 'db.php';
 
+const SHP_MAX_UPLOAD_BYTES = 50 * 1024 * 1024; // 50 MB
+
+/**
+ * Validasi file SHP yang diunggah (.shp / .zip).
+ * Mengembalikan pesan error, atau null jika valid.
+ */
+function shpUploadValidationError(array $file) {
+    if (!isset($file['error']) || $file['error'] !== UPLOAD_ERR_OK) {
+        return 'Gagal mengunggah file (kode error: ' . ($file['error'] ?? 'unknown') . ')';
+    }
+    $ext = strtolower(pathinfo($file['name'] ?? '', PATHINFO_EXTENSION));
+    if (!in_array($ext, ['shp', 'zip'], true)) {
+        return 'Format file harus .shp atau .zip';
+    }
+    if (($file['size'] ?? 0) > SHP_MAX_UPLOAD_BYTES) {
+        return 'Ukuran file maksimal 50 MB';
+    }
+    if (!is_uploaded_file($file['tmp_name'])) {
+        return 'File upload tidak valid';
+    }
+    return null;
+}
+
+function shpSafeFilename($originalName) {
+    $clean = preg_replace('/[^a-zA-Z0-9_\.-]/', '_', basename((string)$originalName));
+    if ($clean === '' || $clean === null) $clean = 'upload.shp';
+    return time() . '_' . bin2hex(random_bytes(4)) . '_' . $clean;
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
@@ -107,6 +136,59 @@ if ($method === 'GET') {
         exit;
     }
 
+    if ($action === 'update_shp') {
+        $id = isset($input['id']) ? (int)$input['id'] : (isset($_POST['id']) ? (int)$_POST['id'] : 0);
+        $file = $_FILES['shp_file'] ?? null;
+        if ($id <= 0 || !$file) {
+            echo json_encode(['status' => 'error', 'message' => 'ID permohonan dan file SHP baru wajib diisi']);
+            exit;
+        }
+
+        $uploadError = shpUploadValidationError($file);
+        if ($uploadError !== null) {
+            echo json_encode(['status' => 'error', 'message' => $uploadError]);
+            exit;
+        }
+
+        try {
+            $stmtOld = $pdo->prepare("SELECT shp_file FROM permohonan WHERE id = ?");
+            $stmtOld->execute([$id]);
+            $oldRow = $stmtOld->fetch();
+            if (!$oldRow) {
+                echo json_encode(['status' => 'error', 'message' => 'Permohonan tidak ditemukan']);
+                exit;
+            }
+
+            $upload_dir = '../uploads/shp/';
+            if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
+
+            $filename = shpSafeFilename($file['name']);
+            $target = $upload_dir . $filename;
+
+            if (move_uploaded_file($file['tmp_name'], $target)) {
+                if (!empty($oldRow['shp_file'])) {
+                    $oldDiskPath = '../' . $oldRow['shp_file'];
+                    if (file_exists($oldDiskPath) && is_file($oldDiskPath)) {
+                        @unlink($oldDiskPath);
+                    }
+                }
+                $new_shp_path = 'uploads/shp/' . $filename;
+                $stmt = $pdo->prepare("UPDATE permohonan SET shp_file = ? WHERE id = ?");
+                $stmt->execute([$new_shp_path, $id]);
+                echo json_encode([
+                    'status' => 'success',
+                    'message' => 'File SHP permohonan berhasil diperbarui',
+                    'shp_file' => $new_shp_path
+                ]);
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'Gagal memindahkan file yang diunggah']);
+            }
+        } catch(Exception $e) {
+            echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+        }
+        exit;
+    }
+
     $required = ['nama_pemohon', 'kecamatan', 'kelurahan'];
     $missing = [];
     foreach($required as $f) {
@@ -118,14 +200,22 @@ if ($method === 'GET') {
     if (empty($missing)) {
         try {
             $shp_file_path = null;
-            if (isset($_FILES['shp_file']) && $_FILES['shp_file']['error'] === UPLOAD_ERR_OK) {
+            $file = $_FILES['shp_file'] ?? null;
+            if ($file && ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+                $uploadError = shpUploadValidationError($file);
+                if ($uploadError !== null) {
+                    http_response_code(400);
+                    echo json_encode(['status' => 'error', 'message' => $uploadError]);
+                    exit;
+                }
+
                 $upload_dir = '../uploads/shp/';
                 if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
-                
-                $filename = time() . '_' . basename($_FILES['shp_file']['name']);
+
+                $filename = shpSafeFilename($file['name']);
                 $target = $upload_dir . $filename;
-                
-                if (move_uploaded_file($_FILES['shp_file']['tmp_name'], $target)) {
+
+                if (move_uploaded_file($file['tmp_name'], $target)) {
                     $shp_file_path = 'uploads/shp/' . $filename;
                 }
             }

@@ -452,6 +452,24 @@
         .style-toggle-btn:hover { background: rgba(26,115,232,0.2); }
         .style-toggle-btn.active { background: rgba(26,115,232,0.2); border-color: #60a5fa; }
         body.dark-mode .style-toggle-btn { color: #60a5fa; border-color: rgba(96,165,250,0.3); }
+
+        /* === Update / ganti file SHP === */
+        .btn-update-shp {
+            background: rgba(14,165,233,0.1);
+            color: #0284c7;
+            border: 1px solid rgba(14,165,233,0.25);
+            border-radius: 6px;
+            padding: 4px 12px;
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+        .btn-update-shp:hover { background: rgba(14,165,233,0.2); }
+        body.dark-mode .btn-update-shp { color: #38bdf8 !important; border-color: rgba(56,189,248,0.3); }
         .style-admin-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
@@ -639,6 +657,38 @@
     <script>
         feather.replace();
 
+        const SHP_MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+
+        function validateShpFile(file) {
+            const ext = (file.name.split('.').pop() || '').toLowerCase();
+            if (!['shp', 'zip'].includes(ext)) return 'Format file harus .shp atau .zip.';
+            if (file.size > SHP_MAX_FILE_SIZE) return 'Ukuran file maksimal 50 MB.';
+            return null;
+        }
+
+        async function readJsonResponse(res) {
+            const text = await res.text();
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                throw new Error('Respons server tidak valid.');
+            }
+        }
+
+        async function replaceShpFile(id, file, endpoint, fieldName) {
+            const formData = new FormData();
+            formData.append('action', 'update_shp');
+            formData.append('id', id);
+            formData.append(fieldName, file);
+
+            const res = await fetch(endpoint, { method: 'POST', body: formData });
+            const result = await readJsonResponse(res);
+            if (result.status !== 'success') {
+                throw new Error(result.message || 'Gagal memperbarui file SHP.');
+            }
+            return result;
+        }
+
         function switchTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -762,6 +812,10 @@
                                     <i data-feather="download" style="width:12px;height:12px;"></i>
                                 </a>
                             ` : ''}
+                            <input type="file" id="permShpInput_${item.id}" accept=".shp,.zip" hidden onchange="updatePermohonanShp(${item.id}, this)">
+                            <button type="button" class="btn btn-update-shp" style="padding:4px 8px;font-size:0.75rem;" onclick="document.getElementById('permShpInput_${item.id}').click()" title="Update SHP dengan file SHP baru">
+                                <i data-feather="refresh-cw" style="width:12px;height:12px;"></i> ${item.shp_file ? 'Ganti SHP' : 'Upload SHP'}
+                            </button>
                             <button class="btn btn-primary" style="padding:4px 10px;font-size:0.75rem;" onclick="savePermStatus(${item.id})" title="Simpan">
                                 <i data-feather="save" style="width:12px;height:12px;"></i> Simpan
                             </button>
@@ -849,6 +903,33 @@
                     loadPermohonans();
                 } else showAdminToast(result.message, 'error');
             } catch (e) { showAdminToast('Terjadi kesalahan koneksi.', 'error'); }
+        }
+
+        async function updatePermohonanShp(id, input) {
+            const file = input.files && input.files[0];
+            if (!file) return;
+
+            const fileError = validateShpFile(file);
+            if (fileError) {
+                showAdminToast(fileError, 'error');
+                input.value = '';
+                return;
+            }
+
+            const ok = confirm(`Update SHP permohonan ini dengan "${file.name}"?\n\nFile SHP lama akan dihapus permanen.`);
+            if (!ok) { input.value = ''; return; }
+
+            try {
+                await replaceShpFile(id, file, 'api/reports.php', 'shp_file');
+                delete _permShpCache[id];
+                delete _permCatState[id];
+                showAdminToast('File SHP permohonan berhasil diperbarui.', 'success');
+                loadPermohonans();
+            } catch (e) {
+                showAdminToast(e.message || 'Gagal memperbarui file SHP.', 'error');
+            } finally {
+                input.value = '';
+            }
         }
 
         // ── Permohonan Category Color State ─────────────────
@@ -1271,6 +1352,10 @@
                                 <i data-feather="edit-2" style="width:12px;height:12px;"></i>
                             </button>
                             ${bm.file_path ? `<a href="${bm.file_path}" download class="btn" style="padding:4px 10px;font-size:0.78rem;background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.2);" title="Download SHP"><i data-feather="download" style="width:12px;height:12px;"></i></a>` : ''}
+                            <input type="file" id="bmShpInput_${bm.id}" accept=".shp,.zip" hidden onchange="updateBasemapShp(${bm.id}, this)">
+                            <button type="button" class="btn btn-update-shp" onclick="document.getElementById('bmShpInput_${bm.id}').click()" title="Update SHP dengan file SHP baru">
+                                <i data-feather="refresh-cw" style="width:12px;height:12px;"></i> Update SHP
+                            </button>
                             <button class="cat-toggle-btn ${hasCat ? 'active' : ''}" id="catToggle_${bm.id}" onclick="toggleCatPanel(${bm.id})" title="Warna & Simbol Kategori">
                                 <i data-feather="sliders" style="width:12px;height:12px;"></i>
                             </button>
@@ -1546,6 +1631,34 @@
                     loadBasemaps();
                 } else showAdminToast(result.message, 'error');
             } catch (e) { showAdminToast('Terjadi kesalahan koneksi.', 'error'); }
+        }
+
+        async function updateBasemapShp(id, input) {
+            const file = input.files && input.files[0];
+            if (!file) return;
+
+            const fileError = validateShpFile(file);
+            if (fileError) {
+                showAdminToast(fileError, 'error');
+                input.value = '';
+                return;
+            }
+
+            const ok = confirm(`Update SHP layer ini dengan "${file.name}"?\n\nFile SHP lama akan dihapus permanen. Pengaturan warna, simbol, dan label tetap dipertahankan.`);
+            if (!ok) { input.value = ''; return; }
+
+            try {
+                await replaceShpFile(id, file, 'api/upload_basemap.php', 'basemap');
+                delete _bmShpCache[id];
+                delete _bmCatState[id];
+                delete _bmStyleState[id];
+                showAdminToast('File SHP layer berhasil diperbarui.', 'success');
+                loadBasemaps();
+            } catch (e) {
+                showAdminToast(e.message || 'Gagal memperbarui file SHP.', 'error');
+            } finally {
+                input.value = '';
+            }
         }
 
         // ── Category Color State (per basemap id) ─────────
