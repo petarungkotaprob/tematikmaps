@@ -51,10 +51,10 @@ function allowedSpatialSymbols() {
         'circle', 'square', 'triangle', 'diamond', 'star', 'pin', 'pentagon', 'hexagon', 'cross', 'arrow',
         // Toponimi (ArcGIS)
         'capital', 'city', 'town', 'village', 'mountain', 'water',
-        // Fasilitas Umum (Google Maps Style)
-        'hospital', 'school', 'mosque', 'church', 'government', 'office',
-        'shop', 'restaurant', 'hotel', 'park', 'airport', 'harbor',
-        'police', 'fire', 'bank', 'gas', 'parking', 'cemetery',
+        // Fasilitas Umum & POI (Google Maps Style)
+        'cafe', 'restaurant', 'shop', 'hotel', 'hospital', 'school',
+        'mosque', 'church', 'government', 'office', 'park', 'airport',
+        'harbor', 'police', 'fire', 'bank', 'gas', 'parking', 'cemetery',
         'factory', 'warehouse', 'stadium', 'library', 'museum', 'market'
     ];
 }
