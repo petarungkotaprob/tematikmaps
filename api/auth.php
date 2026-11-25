@@ -34,7 +34,10 @@ if (session_status() === PHP_SESSION_NONE) {
         'httponly' => true,
         'samesite' => 'Lax',
     ]);
-    session_start();
+    if (!session_start()) {
+        error_log('Session start failed.');
+        authJson(['status' => 'error', 'message' => 'Sesi server tidak tersedia'], 503);
+    }
 }
 
 function authJson(array $payload, int $status = 200): void
@@ -60,7 +63,9 @@ function destroyAuthSession(): void
         ]);
     }
 
-    session_destroy();
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_destroy();
+    }
 }
 
 $action = isset($_GET['action']) ? trim((string) $_GET['action']) : '';
