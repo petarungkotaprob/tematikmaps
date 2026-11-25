@@ -7,7 +7,8 @@
   'use strict';
 
   var STORAGE_KEY = 'silisa_user';
-  var SESSION_TTL = 7 * 24 * 60 * 60 * 1000; // 7 hari
+  var SESSION_TTL = 60 * 60 * 1000; // 60 menit tanpa aktivitas
+  var TOUCH_INTERVAL = 5 * 60 * 1000; // perpanjang sesi maksimal sekali per 5 menit
   var PROTECTED_PAGES = [
     'dashboard.html',
     'tracker.html',
@@ -22,6 +23,8 @@
   var memorySession = null;
   var expiryTimer = null;
   var lastExpired = false;
+  var lastTouchAt = Date.now();
+  var touchInFlight = false;
 
   function getPageName() {
     var name = window.location.pathname.split('/').pop() || 'index.html';
@@ -78,6 +81,10 @@
     user.username = username;
     user.role = role;
     return user;
+  }
+
+  function sessionIdentity(user) {
+    return user ? user.id + '|' + user.username + '|' + user.role : '';
   }
 
   function scheduleExpiry(user) {
@@ -229,10 +236,28 @@
     return true;
   }
 
-  function verifyServerSession() {
+  function extendLocalSession() {
+    if (!memorySession) return;
+    try {
+      save(memorySession, Date.now() + SESSION_TTL);
+    } catch (e) { /* abaikan */ }
+  }
+
+  function refreshFromServer(extendOnFailure) {
     var user = currentUser();
     if (!user) return;
-    if (typeof navigator.onLine !== 'undefined' && navigator.onLine === false) return;
+
+    if (typeof navigator.onLine !== 'undefined' && navigator.onLine === false) {
+      if (extendOnFailure) extendLocalSession();
+      return;
+    }
+
+    if (touchInFlight) {
+      if (extendOnFailure) extendLocalSession();
+      return;
+    }
+
+    touchInFlight = true;
 
     fetch('api/auth.php?action=session', {
       method: 'GET',
@@ -257,18 +282,56 @@
         var fresh = normalizeUser(data.user);
         if (!fresh) return;
 
-        var changed = String(active.id) !== String(fresh.id) ||
-          active.username !== fresh.username ||
-          active.role !== fresh.role;
+        var changed = sessionIdentity(active) !== sessionIdentity(fresh);
+
+        // Simpan user terbaru sekaligus perpanjang masa berlaku lokal
+        // sesuai masa berlaku sesi di server.
+        fresh.login_at = Number(active.login_at) || Date.now();
+        save(fresh, data.expires_at);
 
         if (changed) {
-          save(fresh, data.expires_at);
           window.location.reload();
         }
       })
       .catch(function () {
         // Offline / server tidak merespons: pertahankan sesi lokal.
+        if (extendOnFailure) extendLocalSession();
+      })
+      .then(function () {
+        touchInFlight = false;
       });
+  }
+
+  function verifyServerSession() {
+    refreshFromServer(false);
+  }
+
+  function touchSession() {
+    if (!memorySession) return;
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+
+    var now = Date.now();
+    if (now - lastTouchAt < TOUCH_INTERVAL) return;
+    if (touchInFlight) {
+      extendLocalSession();
+      return;
+    }
+
+    lastTouchAt = now;
+    refreshFromServer(true);
+  }
+
+  function bindActivityTracking() {
+    var activityEvents = ['pointerdown', 'mousedown', 'keydown', 'touchstart', 'scroll', 'wheel'];
+    activityEvents.forEach(function (eventName) {
+      window.addEventListener(eventName, touchSession, { passive: true, capture: true });
+    });
+
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible') {
+        touchSession();
+      }
+    });
   }
 
   window.AuthSession = {
@@ -303,8 +366,10 @@
   window.addEventListener('storage', function (event) {
     if (event.key !== null && event.key !== STORAGE_KEY) return;
 
+    var previousIdentity = sessionIdentity(memorySession);
     var user = read();
     var page = getPageName();
+    var currentIdentity = sessionIdentity(user);
 
     if (!user && PROTECTED_PAGES.indexOf(page) !== -1) {
       redirectToLogin(false);
@@ -316,10 +381,14 @@
       return;
     }
 
-    if (PROTECTED_PAGES.indexOf(page) !== -1) {
+    // Reload hanya jika identitas/role berubah. Perubahan masa berlaku
+    // (aktivitas dari tab lain) cukup memperbarui timer tanpa reload.
+    if (PROTECTED_PAGES.indexOf(page) !== -1 && currentIdentity !== previousIdentity) {
       window.location.reload();
     }
   });
+
+  bindActivityTracking();
 
   document.addEventListener('DOMContentLoaded', function () {
     var loginForm = document.getElementById('loginForm');

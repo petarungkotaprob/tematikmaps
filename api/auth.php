@@ -10,7 +10,7 @@ header('Pragma: no-cache');
 
 require_once 'db.php';
 
-const AUTH_SESSION_TTL = 7 * 24 * 60 * 60; // 7 hari
+const AUTH_SESSION_TTL = 60 * 60; // 60 menit tanpa aktivitas
 
 $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
     || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
@@ -45,6 +45,23 @@ function authJson(array $payload, int $status = 200): void
     http_response_code($status);
     echo json_encode($payload);
     exit;
+}
+
+function refreshAuthCookie(int $expiresAt): void
+{
+    if (!ini_get('session.use_cookies') || session_id() === '') {
+        return;
+    }
+
+    $params = session_get_cookie_params();
+    setcookie(session_name(), session_id(), [
+        'expires' => $expiresAt,
+        'path' => $params['path'],
+        'domain' => $params['domain'],
+        'secure' => $params['secure'],
+        'httponly' => $params['httponly'],
+        'samesite' => $params['samesite'] ?? 'Lax',
+    ]);
 }
 
 function destroyAuthSession(): void
@@ -108,6 +125,11 @@ if ($action === 'session') {
             'username' => $freshUser['username'],
             'role' => $freshUser['role'],
         ];
+
+        // Setiap aktivitas memperpanjang sesi selama 60 menit sejak aktivitas terakhir.
+        $expiresAt = time() + AUTH_SESSION_TTL;
+        $_SESSION['expires_at'] = $expiresAt;
+        refreshAuthCookie($expiresAt);
 
         authJson([
             'status' => 'success',
