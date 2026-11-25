@@ -292,8 +292,9 @@
 
   // Cek ulang saat halaman diambil dari back/forward cache (mis. setelah logout).
   window.addEventListener('pageshow', function (event) {
+    if (!event.persisted) return;
     if (!guardPage()) return;
-    if (event.persisted && PROTECTED_PAGES.indexOf(getPageName()) !== -1) {
+    if (PROTECTED_PAGES.indexOf(getPageName()) !== -1) {
       verifyServerSession();
     }
   });

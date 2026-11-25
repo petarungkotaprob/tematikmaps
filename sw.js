@@ -51,6 +51,12 @@ self.addEventListener('activate', event => {
 
 // Fetch Event: Network-First for HTML pages & APIs to always display the latest dashboard
 self.addEventListener('fetch', event => {
+    // Respons autentikasi tidak boleh di-cache agar status sesi selalu segar.
+    if (event.request.url.includes('api/auth.php')) {
+        event.respondWith(fetch(event.request));
+        return;
+    }
+
     const isNavigation = event.request.mode === 'navigate' || 
                          event.request.destination === 'document' ||
                          event.request.url.includes('.html') || 
