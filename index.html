@@ -5,17 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Peta Tematik - Memuat...</title>
     <script>
-        // Check session before redirecting
-        try {
-            var user = localStorage.getItem('silisa_user');
-            if (user) {
+        // Arahkan ke dashboard hanya jika sesi masih valid.
+        (function () {
+            try {
+                var raw = localStorage.getItem('silisa_user');
+                if (!raw) {
+                    window.location.replace('login.html');
+                    return;
+                }
+
+                var user = JSON.parse(raw);
+                var expiresAt = Number(user && user.expires_at);
+                var invalid = !user ||
+                    user.id === undefined || user.id === null || user.id === '' ||
+                    !user.username ||
+                    (isFinite(expiresAt) && expiresAt > 0 && expiresAt <= Date.now());
+
+                if (invalid) {
+                    localStorage.removeItem('silisa_user');
+                    window.location.replace('login.html');
+                    return;
+                }
+
                 window.location.replace('dashboard.html');
-            } else {
+            } catch (e) {
+                try { localStorage.removeItem('silisa_user'); } catch (err) {}
                 window.location.replace('login.html');
             }
-        } catch (e) {
-            window.location.replace('dashboard.html');
-        }
+        })();
     </script>
     <!-- Theme toggle (early load) -->
     <script src="js/theme.js"></script>

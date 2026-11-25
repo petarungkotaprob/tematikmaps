@@ -1,153 +1,400 @@
 /**
- * Authentication Module
+ * Authentication & Session Module
+ * Mengelola sesi login di browser, memvalidasi ke server, dan menjaga
+ * halaman yang membutuhkan login tetap terlindungi.
  */
+(function () {
+  'use strict';
 
-// Declare globally for use in other scripts
-window.currentUser = JSON.parse(localStorage.getItem('silisa_user'));
+  var STORAGE_KEY = 'silisa_user';
+  var SESSION_TTL = 7 * 24 * 60 * 60 * 1000; // 7 hari
+  var PROTECTED_PAGES = [
+    'dashboard.html',
+    'tracker.html',
+    'report.html',
+    'settings.html',
+    'laporan.html',
+    'admin.html',
+    'admin-system-settings.html'
+  ];
+  var ADMIN_PAGES = ['admin.html', 'admin-system-settings.html'];
 
-document.addEventListener('DOMContentLoaded', () => {
+  var memorySession = null;
+  var expiryTimer = null;
+  var lastExpired = false;
 
-    // 1. Logika Halaman Login
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-        // Explicitly clear credentials on load to prevent auto-fill
-        const uField = document.getElementById('username');
-        const pField = document.getElementById('password');
-        if (uField) uField.value = '';
-        if (pField) pField.value = '';
+  function getPageName() {
+    var name = window.location.pathname.split('/').pop() || 'index.html';
+    return name.toLowerCase();
+  }
 
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btnLogin');
-            const errBox = document.getElementById('loginError');
-            
-            btn.innerHTML = 'Memproses...';
-            btn.disabled = true;
-            errBox.style.display = 'none';
+  function readRaw() {
+    try {
+      var localValue = window.localStorage.getItem(STORAGE_KEY);
+      if (localValue) return localValue;
+    } catch (e) { /* localStorage tidak tersedia */ }
 
-            const user = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
+    try {
+      return window.sessionStorage.getItem(STORAGE_KEY);
+    } catch (e) {
+      return null;
+    }
+  }
 
-            try {
-                const response = await fetch('api/auth.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: user, password: pass })
-                });
+  function writeRaw(value) {
+    var written = false;
+    try {
+      window.localStorage.setItem(STORAGE_KEY, value);
+      written = true;
+    } catch (e) { /* abaikan */ }
 
-                const data = await response.json();
+    try {
+      window.sessionStorage.setItem(STORAGE_KEY, value);
+      written = true;
+    } catch (e) { /* abaikan */ }
 
-                if (data.status === 'success') {
-                    // Simpan sesi di browser local storage (Simulasi token JWT / Session PHP)
-                    localStorage.setItem('silisa_user', JSON.stringify(data.user));
-                    window.location.href = 'dashboard.html'; // Pindah ke dashboard
-                } else {
-                    throw new Error(data.message || 'Login gagal.');
-                }
-            } catch (err) {
-                // Fallback / Error Handling
-                errBox.style.display = 'block';
-                errBox.innerText = err.message;
-                if (err.message.includes('fetch') || err.message.includes('Failed to fetch')) {
-                    errBox.innerText = 'Gagal terhubung ke API. Pastikan server dan database aktif.';
-                }
-            } finally {
-                btn.innerHTML = '<i data-feather="log-in" style="width: 16px; height: 16px; margin-right: 5px; vertical-align: middle;"></i> Masuk';
-                btn.disabled = false;
-                if(typeof feather !== 'undefined') feather.replace();
-            }
-        });
+    return written;
+  }
+
+  function removeRaw() {
+    try { window.localStorage.removeItem(STORAGE_KEY); } catch (e) { /* abaikan */ }
+    try { window.sessionStorage.removeItem(STORAGE_KEY); } catch (e) { /* abaikan */ }
+  }
+
+  function normalizeUser(value) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+    if (value.id === undefined || value.id === null || value.id === '') return null;
+
+    var username = typeof value.username === 'string' ? value.username.trim() : '';
+    var role = typeof value.role === 'string' ? value.role.trim().toLowerCase() : '';
+    if (!username || !role) return null;
+
+    var user = {};
+    for (var key in value) {
+      if (Object.prototype.hasOwnProperty.call(value, key)) {
+        user[key] = value[key];
+      }
+    }
+    user.username = username;
+    user.role = role;
+    return user;
+  }
+
+  function scheduleExpiry(user) {
+    if (expiryTimer) {
+      clearTimeout(expiryTimer);
+      expiryTimer = null;
     }
 
-    // 2. Logika Proteksi Halaman & Render Navigasi
-    const currentUser = window.currentUser;
-    
-    // Halaman yang dilindungi (redirect ke login jika belum login)
-    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-    const protectedPages = ['dashboard.html', 'admin.html', 'tracker.html', 'report.html', 'settings.html'];
+    var remaining = Number(user.expires_at) - Date.now();
+    if (!isFinite(remaining) || remaining <= 0) return;
 
-    // Jika sudah login dan mengakses login.html, otomatis arahkan ke dashboard
-    if (currentPage === 'login.html' && currentUser) {
+    expiryTimer = setTimeout(function () {
+      if (!read()) {
+        redirectToLogin(true);
+      }
+    }, Math.min(remaining + 1000, 2147483647));
+  }
+
+  function read() {
+    var raw = readRaw();
+    if (!raw) {
+      memorySession = null;
+      window.currentUser = null;
+      return null;
+    }
+
+    var parsed = null;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (e) {
+      removeRaw();
+      memorySession = null;
+      window.currentUser = null;
+      return null;
+    }
+
+    var user = normalizeUser(parsed);
+    if (!user) {
+      removeRaw();
+      memorySession = null;
+      window.currentUser = null;
+      return null;
+    }
+
+    var now = Date.now();
+    var expiresAt = Number(user.expires_at);
+
+    if (!isFinite(expiresAt) || expiresAt <= 0) {
+      // Sesi lama belum punya masa berlaku: beri masa berlaku satu kali.
+      user.login_at = Number(user.login_at) || now;
+      user.expires_at = now + SESSION_TTL;
+      writeRaw(JSON.stringify(user));
+    } else if (expiresAt <= now) {
+      lastExpired = true;
+      clear();
+      return null;
+    }
+
+    lastExpired = false;
+    memorySession = user;
+    window.currentUser = user;
+    scheduleExpiry(user);
+    return user;
+  }
+
+  function save(user, serverExpiresAt) {
+    var record = normalizeUser(user);
+    if (!record) {
+      throw new Error('Data sesi tidak valid.');
+    }
+
+    var now = Date.now();
+    var expiresAt = Number(serverExpiresAt);
+
+    record.login_at = Number(record.login_at) || now;
+    record.expires_at = isFinite(expiresAt) && expiresAt > now
+      ? expiresAt
+      : now + SESSION_TTL;
+
+    memorySession = record;
+    window.currentUser = record;
+    writeRaw(JSON.stringify(record));
+    scheduleExpiry(record);
+
+    return record;
+  }
+
+  function clear() {
+    removeRaw();
+    memorySession = null;
+    window.currentUser = null;
+    if (expiryTimer) {
+      clearTimeout(expiryTimer);
+      expiryTimer = null;
+    }
+  }
+
+  function redirectToLogin(expired) {
+    var url = 'login.html';
+    if (expired) url += '?expired=1';
+    window.location.replace(url);
+  }
+
+  function logout() {
+    clear();
+
+    try {
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon('api/auth.php?action=logout');
+      } else {
+        fetch('api/auth.php?action=logout', {
+          method: 'POST',
+          credentials: 'same-origin',
+          keepalive: true
+        }).catch(function () { /* abaikan */ });
+      }
+    } catch (e) { /* abaikan */ }
+
+    window.location.replace('login.html');
+  }
+
+  function currentUser() {
+    return memorySession || read();
+  }
+
+  function guardPage() {
+    var page = getPageName();
+    var user = read();
+
+    if (page === 'login.html') {
+      if (user) {
         window.location.replace('dashboard.html');
-        return;
+        return false;
+      }
+      return true;
     }
 
-    if (protectedPages.includes(currentPage) && !currentUser) {
-        window.location.href = 'login.html';
-        return;
+    if (PROTECTED_PAGES.indexOf(page) !== -1 && !user) {
+      redirectToLogin(lastExpired);
+      return false;
     }
 
-    // Proteksi Tambahan: Halaman Admin hanya untuk role admin
-    if (currentPage === 'admin.html' && currentUser && currentUser.role !== 'admin') {
-        alert("Akses Ditolak: Halaman ini hanya untuk Administrator.");
-        window.location.href = 'dashboard.html';
+    if (ADMIN_PAGES.indexOf(page) !== -1 && user && user.role !== 'admin') {
+      alert('Akses Ditolak: Halaman ini hanya untuk Administrator.');
+      window.location.replace('dashboard.html');
+      return false;
     }
 
-    // Ubah Navigasi Dinamis
-    if (currentUser) {
-        const navContainer = document.querySelector('.nav-links');
-        if (navContainer) {
-            // Check if Admin Link already exists to prevent duplicate (Hanya untuk role admin)
-            if (!document.getElementById('adminLink') && currentUser.role === 'admin') {
-                 const adminA = document.createElement('a');
-                 adminA.href = 'admin.html';
-                 adminA.id = 'adminLink';
-                 adminA.innerHTML = 'Admin';
-                 if (currentPage === 'admin.html') adminA.className = 'active';
-                 navContainer.appendChild(adminA);
-            }
+    return true;
+  }
 
-            // Tambahkan identitas user dan logout & settings & theme switch
-            const userBadge = document.createElement('div');
-            userBadge.style.display = 'flex';
-            userBadge.style.alignItems = 'center';
-            userBadge.style.gap = '15px';
-            userBadge.style.marginLeft = '20px';
-            userBadge.style.paddingLeft = '20px';
-            userBadge.style.borderLeft = '1px solid var(--glass-border)';
+  function verifyServerSession() {
+    var user = currentUser();
+    if (!user) return;
+    if (typeof navigator.onLine !== 'undefined' && navigator.onLine === false) return;
 
-            userBadge.innerHTML = `
-                <div style="text-align: right; line-height: 1.2;">
-                    <span style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; max-width: 100px; white-space: nowrap;">${currentUser.username}</span>
-                    <span style="display: block; font-size: 0.7rem; color: var(--accent-orange); text-transform: uppercase;">${currentUser.role}</span>
-                </div>
-                <div style="display: flex; gap: 5px;">
-                    <a href="#" id="btnTheme" style="color: #eab308; background: rgba(0,0,0, 0.05); padding: 5px 10px; border-radius: 4px;" title="Ganti Mode"><i data-feather="sun" id="themeIcon" style="width: 14px; height: 14px;"></i></a>
-                    <a href="settings.html" style="color: var(--text-secondary); background: rgba(0,0,0, 0.05); padding: 5px 10px; border-radius: 4px;" title="Pengaturan Akun"><i data-feather="settings" style="width: 14px; height: 14px;"></i></a>
-                    <a href="#" id="btnLogout" style="color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 5px 10px; border-radius: 4px;" title="Logout"><i data-feather="log-out" style="width: 14px; height: 14px;"></i></a>
-                </div>
-            `;
-            navContainer.appendChild(userBadge);
-            if(typeof feather !== 'undefined') feather.replace();
-
-            // Theme Logic
-            const btnTheme = document.getElementById('btnTheme');
-            let isLightMode = localStorage.getItem('silisa_theme') === 'light';
-            
-            function renderTheme() {
-                if (isLightMode) {
-                    document.body.classList.add('light-mode');
-                    document.getElementById('themeIcon').setAttribute('data-feather', 'moon');
-                } else {
-                    document.body.classList.remove('light-mode');
-                    document.getElementById('themeIcon').setAttribute('data-feather', 'sun');
-                }
-                if(typeof feather !== 'undefined') feather.replace();
-            }
-            renderTheme(); // initial run
-
-            btnTheme.addEventListener('click', (e) => {
-                e.preventDefault();
-                isLightMode = !isLightMode;
-                localStorage.setItem('silisa_theme', isLightMode ? 'light' : 'dark');
-                renderTheme();
-            });
-
-            document.getElementById('btnLogout').addEventListener('click', (e) => {
-                e.preventDefault();
-                localStorage.removeItem('silisa_user');
-                window.location.href = 'login.html';
-            });
+    fetch('api/auth.php?action=session', {
+      method: 'GET',
+      credentials: 'same-origin',
+      cache: 'no-store'
+    })
+      .then(function (response) {
+        if (response.status === 401) {
+          clear();
+          redirectToLogin(true);
+          return null;
         }
+        if (!response.ok) return null;
+        return response.json();
+      })
+      .then(function (data) {
+        if (!data || data.status !== 'success' || !data.user) return;
+
+        var active = read();
+        if (!active) return;
+
+        var fresh = normalizeUser(data.user);
+        if (!fresh) return;
+
+        var changed = String(active.id) !== String(fresh.id) ||
+          active.username !== fresh.username ||
+          active.role !== fresh.role;
+
+        if (changed) {
+          save(fresh, data.expires_at);
+          window.location.reload();
+        }
+      })
+      .catch(function () {
+        // Offline / server tidak merespons: pertahankan sesi lokal.
+      });
+  }
+
+  window.AuthSession = {
+    KEY: STORAGE_KEY,
+    TTL: SESSION_TTL,
+    read: read,
+    save: save,
+    clear: clear,
+    logout: logout,
+    currentUser: currentUser,
+    redirectToLogin: redirectToLogin,
+    verify: verifyServerSession
+  };
+
+  var pageAllowed = guardPage();
+  window.currentUser = memorySession;
+
+  if (pageAllowed && PROTECTED_PAGES.indexOf(getPageName()) !== -1) {
+    verifyServerSession();
+  }
+
+  // Cek ulang saat halaman diambil dari back/forward cache (mis. setelah logout).
+  window.addEventListener('pageshow', function (event) {
+    if (!guardPage()) return;
+    if (event.persisted && PROTECTED_PAGES.indexOf(getPageName()) !== -1) {
+      verifyServerSession();
     }
-});
+  });
+
+  // Sinkronkan sesi antar-tab: login/logout di satu tab berlaku di tab lain.
+  window.addEventListener('storage', function (event) {
+    if (event.key !== null && event.key !== STORAGE_KEY) return;
+
+    var user = read();
+    var page = getPageName();
+
+    if (!user && PROTECTED_PAGES.indexOf(page) !== -1) {
+      redirectToLogin(false);
+      return;
+    }
+
+    if (user && page === 'login.html') {
+      window.location.replace('dashboard.html');
+      return;
+    }
+
+    if (PROTECTED_PAGES.indexOf(page) !== -1) {
+      window.location.reload();
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var loginForm = document.getElementById('loginForm');
+    var errBox = document.getElementById('loginError');
+
+    // Tampilkan pemberitahuan jika sesi sebelumnya telah berakhir.
+    if (loginForm && errBox) {
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('expired') === '1') {
+        errBox.style.display = 'block';
+        errBox.innerText = 'Sesi Anda telah berakhir. Silakan masuk kembali.';
+      }
+    }
+
+    if (!loginForm) return;
+
+    // Kosongkan kredensial saat halaman dimuat agar tidak terisi otomatis.
+    var uField = document.getElementById('username');
+    var pField = document.getElementById('password');
+    if (uField) uField.value = '';
+    if (pField) pField.value = '';
+
+    loginForm.addEventListener('submit', async function (event) {
+      event.preventDefault();
+
+      var btn = document.getElementById('btnLogin');
+      var defaultButtonHtml = btn ? btn.innerHTML : '';
+      var usernameField = document.getElementById('username');
+      var passwordField = document.getElementById('password');
+
+      if (btn) {
+        btn.innerHTML = 'Memproses...';
+        btn.disabled = true;
+      }
+      if (errBox) errBox.style.display = 'none';
+
+      try {
+        var response = await fetch('api/auth.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          cache: 'no-store',
+          body: JSON.stringify({
+            username: usernameField ? usernameField.value : '',
+            password: passwordField ? passwordField.value : ''
+          })
+        });
+
+        var data = null;
+        try {
+          data = await response.json();
+        } catch (e) {
+          throw new Error('Respons server tidak valid.');
+        }
+
+        if (data.status !== 'success' || !data.user) {
+          throw new Error(data.message || 'Login gagal.');
+        }
+
+        save(data.user, data.expires_at);
+        window.location.replace('dashboard.html');
+      } catch (err) {
+        if (errBox) {
+          errBox.style.display = 'block';
+          errBox.innerText = err.message;
+          if (err.message.indexOf('fetch') !== -1 || err.message.indexOf('Failed to fetch') !== -1) {
+            errBox.innerText = 'Gagal terhubung ke API. Pastikan server dan database aktif.';
+          }
+        }
+      } finally {
+        if (btn) {
+          btn.innerHTML = defaultButtonHtml || '<i data-feather="log-in" style="width: 16px; height: 16px; margin-right: 5px; vertical-align: middle;"></i> Masuk';
+          btn.disabled = false;
+          if (typeof feather !== 'undefined') feather.replace();
+        }
+      }
+    });
+  });
+})();

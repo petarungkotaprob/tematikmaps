@@ -6,6 +6,9 @@
   'use strict';
 
   function getCurrentUser() {
+    if (window.AuthSession && typeof window.AuthSession.read === 'function') {
+      return window.AuthSession.read();
+    }
     try {
       return JSON.parse(localStorage.getItem('silisa_user'));
     } catch (e) {
@@ -139,8 +142,12 @@
       var logoutBtn = e.target.closest('#dropdownLogoutBtn');
       if (logoutBtn) {
         e.preventDefault();
-        try { localStorage.removeItem('silisa_user'); } catch (err) {}
-        window.location.href = 'login.html';
+        if (window.AuthSession && typeof window.AuthSession.logout === 'function') {
+          window.AuthSession.logout();
+        } else {
+          try { localStorage.removeItem('silisa_user'); } catch (err) {}
+          window.location.replace('login.html');
+        }
       }
     });
 

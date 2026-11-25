@@ -88,8 +88,9 @@
     <script src="js/nav.js"></script>
     <script>
         feather.replace();
-        const user = JSON.parse(localStorage.getItem('silisa_user')||'null');
-        if(!user || user.role!=='admin'){ window.location.href='dashboard.html'; }
+        const user = window.AuthSession ? window.AuthSession.read() : null;
+        if(!user){ window.location.replace('login.html'); }
+        else if(user.role!=='admin'){ window.location.replace('dashboard.html'); }
 
         async function loadSettings(){
             try{

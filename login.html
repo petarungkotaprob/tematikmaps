@@ -16,9 +16,28 @@
     <script src="js/theme.js"></script>
     <script src="https://unpkg.com/feather-icons"></script>
     <script>
-        if (localStorage.getItem('silisa_user')) {
-            window.location.replace('dashboard.html');
-        }
+        // Jangan tampilkan form login jika sesi yang tersimpan masih valid.
+        (function () {
+            try {
+                var raw = localStorage.getItem('silisa_user');
+                if (!raw) return;
+
+                var user = JSON.parse(raw);
+                var expiresAt = Number(user && user.expires_at);
+                var valid = user &&
+                    user.id !== undefined && user.id !== null && user.id !== '' &&
+                    typeof user.username === 'string' && user.username.trim() !== '' &&
+                    (!isFinite(expiresAt) || expiresAt <= 0 || expiresAt > Date.now());
+
+                if (valid) {
+                    window.location.replace('dashboard.html');
+                } else {
+                    localStorage.removeItem('silisa_user');
+                }
+            } catch (e) {
+                try { localStorage.removeItem('silisa_user'); } catch (err) {}
+            }
+        })();
     </script>
     <script src="js/pwa.js"></script>
     <style>

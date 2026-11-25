@@ -126,13 +126,19 @@
 
         if (btnMobileLogout) {
             btnMobileLogout.addEventListener('click', function () {
+                if (window.AuthSession && typeof window.AuthSession.logout === 'function') {
+                    window.AuthSession.logout();
+                    return;
+                }
                 localStorage.removeItem('silisa_user');
-                window.location.href = 'login.html';
+                window.location.replace('login.html');
             });
         }
 
-        // Ambil ID dari LocalStorage (Auth.js sudah memastikan radar_user exist di protected page)
-        const activeSession = JSON.parse(localStorage.getItem('silisa_user'));
+        // Ambil sesi aktif (Auth.js sudah memastikan halaman ini hanya bisa diakses setelah login)
+        const activeSession = window.AuthSession
+            ? window.AuthSession.read()
+            : JSON.parse(localStorage.getItem('silisa_user') || 'null');
         if (activeSession) {
             document.getElementById('user_id').value = activeSession.id || 0;
             document.getElementById('role_label').value = String(activeSession.role).toUpperCase();
@@ -169,7 +175,11 @@
                     
                     // Update sesi di browser agar navbar ikut terganti
                     activeSession.username = result.new_username;
-                    localStorage.setItem('silisa_user', JSON.stringify(activeSession));
+                    if (window.AuthSession) {
+                        window.AuthSession.save(activeSession);
+                    } else {
+                        localStorage.setItem('silisa_user', JSON.stringify(activeSession));
+                    }
 
                     // Kosongkan kolom password setelah selesai
                     document.getElementById('password').value = '';
@@ -188,7 +198,11 @@
                 if (err.message.includes('fetch')) {
                     alert('Sesi gagal terhubung ke XAMPP API. Pengaturan disimpan secara offline (local).');
                     activeSession.username = payload.new_username;
-                    localStorage.setItem('silisa_user', JSON.stringify(activeSession));
+                    if (window.AuthSession) {
+                        window.AuthSession.save(activeSession);
+                    } else {
+                        localStorage.setItem('silisa_user', JSON.stringify(activeSession));
+                    }
                     location.reload();
                 }
             } finally {

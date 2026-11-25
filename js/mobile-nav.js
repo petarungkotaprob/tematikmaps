@@ -13,6 +13,9 @@
   let lastFocused = null;
 
   function currentUser() {
+    if (window.AuthSession && typeof window.AuthSession.read === 'function') {
+      return window.AuthSession.read();
+    }
     try {
       return JSON.parse(localStorage.getItem('silisa_user'));
     } catch (error) {
